@@ -1,5 +1,6 @@
 library(data.table)
 library(dplyr)
+library(tidyverse)
 
 # Path to folder where MYST projection data locates
 external_path3 <- "//sfp.idir.bcgov/s164/S63016/!Transfr/MSYT_Delivery/delivery2023/pspl_validation/YSM"
@@ -12,16 +13,27 @@ decidspc <- c('A','AC','ACT','ACB','AT',
               'MB','MV','KC','RA','V','VB','VP','VV',
               'W','WB','WP','WT','ZH','XH','XC')
 
+# Import YSM sample data
+sample_data <- fread("//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/test/data/sample_data_comp20240213.csv")
+
+# Import TIPSY projection
 MSYT_reference <- fread(paste0(external_path3, "/MSYT_reference.csv"))
+MSYT_current_input <- fread(paste0(external_path3, "/MSYT_current_input.csv"))
 MSYT_current_output <- fread(paste0(external_path3, "/MSYT_current_output.csv"))
 names(MSYT_reference) <- toupper(names(MSYT_reference))
+names(MSYT_current_input) <- toupper(names(MSYT_current_input))
 names(MSYT_current_output) <- toupper(names(MSYT_current_output))
 
+# Import VDYP projection 
 VDYP <- fread(paste0(external_path2, 
                      "/spatial_overlay/ISMC_VRI_Overlay/VDYP7/compiled_ISMC_inputs/VDYP7_OUTPUT_YLDTBL.csv"))
 
 # Import YSM tree data
 tree_data <- fread("//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/test/data/tree_data_comp20240213.csv") 
+
+# Import TASS output
+tass_output <- readRDS("//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/Data/TASS_output_YSM_240723_final_all.rds")
+
 
 # Select live standing trees
 ysm_trees <- tree_data %>%
@@ -55,33 +67,26 @@ ysm_trees1 <- ysm_trees1 %>%
 
 ysm_trees2 <- ysm_trees1 %>%
   group_by(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, SPC_GRP1) %>%
-  summarize(vol_mer_ha = sum(vol_mer_ha, na.rm = T),
+  summarize(vol_wsv_ha = sum(vol_wsv_ha, na.rm = T),
+            vol_mer_ha = sum(vol_mer_ha, na.rm = T),
             vol_ntwb_ha = sum(vol_ntwb_ha, na.rm = T),
+            vol_wsv_ha_nores = sum(vol_wsv_ha_nores, na.rm = T),
             vol_mer_ha_nores = sum(vol_mer_ha_nores, na.rm = T),
             vol_ntwb_ha_nores = sum(vol_ntwb_ha_nores, na.rm = T))
 
 ysm_trees3 <- ysm_trees2 %>%
   group_by(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID) %>%
-  summarize(vol_mer_ha = sum(vol_mer_ha, na.rm = T),
+  summarize(vol_wsv_ha = sum(vol_wsv_ha, na.rm = T),
+            vol_mer_ha = sum(vol_mer_ha, na.rm = T),
             vol_ntwb_ha = sum(vol_ntwb_ha, na.rm = T),
+            vol_wsv_ha_nores = sum(vol_wsv_ha_nores, na.rm = T),
             vol_mer_ha_nores = sum(vol_mer_ha_nores, na.rm = T),
             vol_ntwb_ha_nores = sum(vol_ntwb_ha_nores, na.rm = T))
 
-# Meanwhile, MSYT projection data
-msyt_input1 <- MSYT_current_input %>%
-  left_join(MSYT_reference, by = c("FEATURE_ID"), 
-            suffix = c("", "_ref"))
-
-msyt_input2 <- msyt_input1 %>%
-  left_join(sample_data, 
-            by = c("FEATURE_ID"), 
-            suffix = c("", "_sample"))
-
 ## First, get list of MSYT FEATURE_ID and associate it with SITE_IDENTIFIER
 msyt <- MSYT_reference %>%
-  left_join(sample_data %>% select(FEATURE_ID, MGMT_UNIT, BEC_ZONE, TSA_DESC, 
-                                   SITE_IDENTIFIER, CLSTR_ID, VISIT_NUMBER, MEAS_YR, 
-                                   PROJ_AGE_1, PROJECTED_DATE, PROJ_AGE_ADJ), 
+  left_join(sample_data %>% select(SITE_IDENTIFIER, FEATURE_ID, CLSTR_ID, 
+                                   MGMT_UNIT, MEAS_YR, PROJ_AGE_ADJ), 
             by = c("FEATURE_ID"), suffix = c("", "_YSM"))
 
 msyt <- msyt %>%
@@ -104,7 +109,7 @@ msyt <- msyt %>%
                         "RESULTS", "VEGCOMP")) %>%
   arrange(FEATURE_ID, SITE_IDENTIFIER, CLSTR_ID)
 
-### MSYT annual predicted volume
+# MSYT projected volume
 msyt_vol <- MSYT_current_output %>%
   filter(FEATURE_ID %in% unique(msyt$FEATURE_ID)) %>%
   select(FEATURE_ID, starts_with("MVCON_"), starts_with("MVDEC_")) %>%
@@ -140,12 +145,7 @@ msyt1 <- msyt %>%
   left_join(msyt_vol5, by = c("FEATURE_ID", "ref_age_adj" = "AGE")) %>%
   distinct
 
-# Merge MSYT - ysm
-# Join with sample data by PROJECTIOn_YEAR = MEAS_YR
-ysm_msyt <- msyt1 %>%
-  left_join(ysm_trees3, by = c("SITE_IDENTIFIER", "CLSTR_ID", "VISIT_NUMBER")) 
-
-## Meanwhile, VDYP projected volume
+# Meanwhile, VDYP projected volume
 vdyp1 <- VDYP %>%
   rename(SITE_IDENTIFIER = POLYGON_ID) %>%
   filter(SITE_IDENTIFIER %in% unique(sample_data$SITE_IDENTIFIER))  %>%
@@ -153,24 +153,78 @@ vdyp1 <- VDYP %>%
          SITE_IDENTIFIER, PROJECTION_YEAR, PRJ_TOTAL_AGE, 
          PRJ_DOM_HT, PRJ_BA, PRJ_TPH, PRJ_VOL_WS, PRJ_VOL_CU, PRJ_VOL_DWB)
 
+# Finally, TASS volume
+tass_nores <- tass_output %>%
+  filter(SPECIES == "ALL", RESID %in% c("N", NA), rust == "N") %>%
+  arrange(SITE_IDENTIFIER, VISIT_NUMBER, Age, desc(xy), desc(TASS_ver)) %>%
+  group_by(SITE_IDENTIFIER, VISIT_NUMBER, Age) %>%
+  slice(1)
+
+tass_nores1 <- tass_nores %>%
+  left_join(sample_data %>% select(CLSTR_ID, PROJ_AGE_ADJ), 
+            by = c("CLSTR_ID")) %>%
+  ungroup() %>%
+  mutate(age_join = PROJ_AGE_ADJ - Age)
+
+tass_nores2 <- tass_nores1 %>%
+  group_by(CLSTR_ID) %>%
+  slice(which.min(abs(age_join)))
+
+# Create YSM data frame with current volume
+currentvol <- sample_data %>%
+  select(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, FEATURE_ID, MEAS_YR, PROJ_AGE_ADJ, 
+         MGMT_UNIT, BEC = BEC_ZONE, BEC_SBZ, TSA_DESC) %>%
+  left_join(ysm_trees3, by = c("SITE_IDENTIFIER", "CLSTR_ID", "VISIT_NUMBER")) 
+
+# Merge TASS - YSM
+currentvol1 <- currentvol %>%
+  left_join(tass_nores2, by = c("SITE_IDENTIFIER", "CLSTR_ID", "VISIT_NUMBER", "PROJ_AGE_ADJ")) 
+
+# Merge MSYT - YSM
+# 1. TIPSY: Join with sample data 
+currentvol2 <- currentvol1 %>%
+  left_join(msyt1 %>% select(-MEAS_YR, -MGMT_UNIT, -PROJ_AGE_ADJ), 
+            by = c("SITE_IDENTIFIER", "CLSTR_ID", "FEATURE_ID")) 
+
 ## Merge VDYP - ysm
-ysm_msyt_vdyp <- ysm_msyt %>%
+currentvol3 <- currentvol2 %>%
   left_join(vdyp1, by = c("SITE_IDENTIFIER", "MEAS_YR" = "PROJECTION_YEAR"),
             suffix = c("_vegcomp", ""))
 
-ysm_msyt_vdyp <- ysm_msyt_vdyp %>%
-  mutate(PRJ_VOL_DWB = ifelse(is.na(PRJ_VOL_DWB), 0, PRJ_VOL_DWB),
+currentvol4 <- currentvol3 %>%
+  ungroup() %>%
+  mutate(#PRJ_VOL_DWB = ifelse(is.na(PRJ_VOL_DWB), 0, PRJ_VOL_DWB),
+    vol_wsv_ha = ifelse(is.na(vol_wsv_ha), 0, vol_mer_ha),
+    vol_wsv_ha_nores = ifelse(is.na(vol_wsv_ha_nores), 0, vol_mer_ha),
          vol_mer_ha = ifelse(is.na(vol_mer_ha), 0, vol_mer_ha),
          vol_mer_ha_nores = ifelse(is.na(vol_mer_ha_nores), 0, vol_mer_ha),
          vol_ntwb_ha = ifelse(is.na(vol_ntwb_ha), 0, vol_ntwb_ha),
-         vol_ntwb_ha_nores = ifelse(is.na(vol_ntwb_ha_nores), 0, vol_ntwb_ha_nores),  ### This is grdnv
+         vol_ntwb_ha_nores = ifelse(is.na(vol_ntwb_ha_nores), 0, vol_ntwb_ha_nores),
          yt_source = ifelse(grepl('Managed:',CURRENT_YIELD), "Managed", 
                             ifelse(grepl('Aggregate',CURRENT_YIELD), "AGGREGATE", CURRENT_YIELD)),
-         volTSR = ifelse(yt_source %in% c("Managed","AGGREGATE"), netvol,       ### This is prednv
-                         ifelse(yt_source == "VDYP", PRJ_VOL_DWB, 0)),
+         yt_source_f = factor(yt_source, levels = c("Managed", "AGGREGATE", "VDYP", "Excluded"), ordered = T),
+         volTSR = ifelse(yt_source %in% c("Managed","AGGREGATE"), netvol,   
+                         ifelse(yt_source == "VDYP", PRJ_VOL_DWB, NA)),
          voldiffTSR = volTSR - vol_mer_ha,
-         yt_source_f = factor(yt_source, levels = c("Managed", "AGGREGATE", "VDYP", "Excluded"), ordered = T))  
+         grdnv = vol_ntwb_ha_nores,
+         prednv = volTSR,
+         tassnv = GMV,
+         #grdnv = ifelse(is.na(vol_ntwb_ha_nores), 0, vol_ntwb_ha_nores),
+         #prednv = ifelse(is.na(volTSR), 0, volTSR),
+         #tassnv = ifelse(is.na(GMV), 0, GMV),
+         voldiffTASS = tassnv - grdnv)  
+
+ysm_msyt_vdyp <- currentvol4 %>%
+  select(SITE_IDENTIFIER, CLSTR_ID, VISIT_NUMBER, FEATURE_ID, 
+         OPENING_ID, LAYER_ID, TASS_ver, xy,
+         MGMT_UNIT, TSA_DESC, BEC, BEC_SBZ, 
+         MEAS_YR, PROJ_AGE_ADJ, ref_age_adj, ref_age_cd, PRJ_TOTAL_AGE,
+         vol_wsv_ha, vol_mer_ha, vol_ntwb_ha,
+         vol_wsv_ha_nores, vol_mer_ha_nores,
+         vol_ntwb_ha_nores, PRJ_VOL_DWB, netvol, volTSR,
+         yt_source, yt_source_f, 
+         grdnv, prednv, tassnv, voldiffTSR, voldiffTASS)
 
 
 write.csv(ysm_msyt_vdyp, "//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/test/data/ysm_msyt_vdyp_volume.csv")
-
+write.csv(msyt_vol2, "//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/test/data/msyt_volproj.csv")
