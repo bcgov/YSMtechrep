@@ -1,4 +1,5 @@
 library(data.table)
+library(dplyr)
 
 Import_gsdata <- function(datafolder,
                           compilationdate,
@@ -31,11 +32,33 @@ Import_gsdata <- function(datafolder,
   sample_data <- faib_sample_byvisit %>% 
     left_join(faib_header, by = c("SITE_IDENTIFIER", "SAMPLE_ESTABLISHMENT_TYPE")) %>%
     mutate(BEClabel = paste0(BEC_ZONE, BEC_SBZ, 
-                             ifelse(!is.na(BEC_VAR), BEC_VAR, ''))) 
+                             ifelse(!is.na(BEC_VAR), BEC_VAR, '')),
+           #proj_id = strsplit(SAMPLE_SITE_NAME, "_", fixed = TRUE)[[1]][1],
+           proj_id = sub("_.*", "", SAMPLE_SITE_NAME)) 
   
   # Filter YSM sample
   sample_data <- sample_data %>%
-    filter(SAMPLE_SITE_PURPOSE_TYPE_CODE != "N", YSM_MAIN_FM == "Y")
+    # *remove nvaf sample, which is a repeated sample of the same plot in same year;
+    filter(SAMPLE_SITE_PURPOSE_TYPE_CODE != "N", YSM_MAIN_FM == "Y") %>%
+    # *remove B-sample types located on same site_identifier as L-sample type;
+    filter(!(SAMPLE_SITE_PURPOSE_TYPE_CODE == 'B' & proj_id == 'KOL1')) %>%
+    # *test example ismc plots entered in 2019;
+    #filter(as.numeric(gsub("([0-9]+).*$", "\\1", proj_id)) != 2019) %>%
+    # *not interested in sample visits that originated as NFI samples in 2000 - 2003, 
+    # as this was not part of the original population criteria;
+    # *and measurement periods for both ysm and mature assessments;
+    filter(!(SAMPLE_SITE_PURPOSE_TYPE_CODE %in% c('F') &
+                MEAS_YR %in% c(2000, 2001, 2002, 2003) &
+               proj_id %in% c('CMI1', 'CMI2', 'CMI3', 'CMI4', 'CMI5', 'CMI6'))) %>%
+    # *not interested in remeasured nfi samples but still prior to start of ysm program;
+    filter(!(SITE_IDENTIFIER == 1451976 & VISIT_NUMBER == 2)) %>%
+    filter(!(SITE_IDENTIFIER == 1500241 & VISIT_NUMBER == 1)) %>%
+    filter(!(SITE_IDENTIFIER == 1417566 & VISIT_NUMBER == 2)) %>%
+    filter(!(SITE_IDENTIFIER == 1348756 & VISIT_NUMBER == 2)) %>%
+    filter(!(SITE_IDENTIFIER == 1355611 & VISIT_NUMBER == 2)) %>%
+    # *duplicate measurement to be deleted in ismc;
+    filter(!(SITE_IDENTIFIER == 1424441 & VISIT_NUMBER == 1)) 
+    
   
   # All CLSTR_ID in sample_data
   clstr_ids <- unique(sample_data$CLSTR_ID)

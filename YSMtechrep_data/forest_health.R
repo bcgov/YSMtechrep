@@ -4,8 +4,8 @@ library(tidyverse)
 library(openxlsx)
 
 # Import sample and tree data
-sample_data <- fread("//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/test/data/sample_data_comp20240213.csv") 
-tree_data <- fread("//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/test/data/tree_data_comp20240213.csv") 
+sample_data <- fread("//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/test/data2/sample_data_comp20240213.csv") 
+tree_data <- fread("//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/test/data2/tree_data_comp20240213.csv") 
 
 # Import ismc damage agent to severity class lookup table;
 lookup_sev <-readRDS("//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/Compilation/ismc/Archive_nonPSP_20240213/compilation_nonPSP_raw/ISMC_PROD_20240213_11am_TreeDamageOccurrences.rds")
@@ -35,7 +35,8 @@ FH_dat <- tree_data %>%
          ### DAM_AGNA should be counted
          DAM_AGNA = ifelse(DAM_AGNA == '', 'O', DAM_AGNA),
          ba_ha = BA_TREE * PHF_TREE,
-         vol_ha = VOL_WSV * PHF_TREE)
+         vol_ha = VOL_WSV * PHF_TREE) %>%
+  left_join(sample_data %>% select(CLSTR_ID, MEAS_YR), by = "CLSTR_ID")
 
 update_dam_loss <- function(dam_agnt, loss) {
   case_when(
@@ -59,12 +60,20 @@ FH_dat <- FH_dat %>%
                       update_dam_loss(DAM_AGNA, LOSS5_IN), DAM_AGNE)
   )
 
-### If the DAM_AGNA is U and there are other loss indicator exists
+# *ignore minor incidence of UF and UCR (ie,. where severity=N, as recorded in 2021 and later measurements);
 FH_dat <- FH_dat %>%
-  mutate(DAM_AGNA = ifelse(DAM_AGNA == 'U' & !is.na(DAM_AGNB) & grepl('U', DAM_AGNB), DAM_AGNB, DAM_AGNA))
+  mutate(DAM_AGNA = ifelse(DAM_AGNA %in% c('UF', 'UCR') & SEV_A == "N", "O", DAM_AGNA),
+         DAM_AGNB = ifelse(DAM_AGNB %in% c('UF', 'UCR') & SEV_B == "N", "O", DAM_AGNB),
+         DAM_AGNC = ifelse(DAM_AGNC %in% c('UF', 'UCR') & SEV_C == "N", "O", DAM_AGNC),
+         DAM_AGND = ifelse(DAM_AGND %in% c('UF', 'UCR') & SEV_D == "N", "O", DAM_AGND),
+         DAM_AGNE = ifelse(DAM_AGNE %in% c('UF', 'UCR') & SEV_E == "N", "O", DAM_AGNE))
 
-FH_dat <- FH_dat %>%
-  mutate(DAM_AGNB = ifelse(DAM_AGNA == DAM_AGNB & grepl('U', DAM_AGNA, fixed = TRUE), 'U', DAM_AGNB))
+#### If the DAM_AGNA is U and there are other loss indicator exists
+#FH_dat <- FH_dat %>%
+#  mutate(DAM_AGNA = ifelse(DAM_AGNA == 'U' & !is.na(DAM_AGNB) & grepl('U', DAM_AGNB), DAM_AGNB, DAM_AGNA))
+#
+#FH_dat <- FH_dat %>%
+#  mutate(DAM_AGNB = ifelse(DAM_AGNA == DAM_AGNB & grepl('U', DAM_AGNA, fixed = TRUE), 'U', DAM_AGNB))
 
 FH_dat <- FH_dat %>%
   mutate(SEVPERC_A = as.numeric(gsub("[^\\d]+", "", SEV_A, perl = T)),
@@ -94,7 +103,7 @@ FH_dat <- FH_dat %>%
          DAM_AGNE = update_undefined_dam(DAM_AGND, DAM_AGNE))
 
 FH_dat1 <- melt(setDT(FH_dat),
-                id.vars = c('SITE_IDENTIFIER', 'CLSTR_ID', 'VISIT_NUMBER', 'PLOT', 
+                id.vars = c('SITE_IDENTIFIER', 'CLSTR_ID', 'VISIT_NUMBER', 'PLOT', 'MEAS_YR', 'MEAS_INTENSE',
                             'TREE_NO', 'RESIDUAL', 'TH_TREE', 'DBH', 'HEIGHT', 'SPECIES', 
                             'LV_D', 'S_F', 'COMP_CHG', 'PHF_TREE', 
                             'VOL_WSV', 'VOL_MER', 'VOL_NTWB', 'AGE_BH', 'AGE_TOT', 
@@ -127,6 +136,9 @@ FH_dat1 <- FH_dat1 %>%
     AGN %in% c('ISP') & SPC_GRP1 %in% c('BL') ~ '',
     TRUE ~ AGN))
 
+FH_dat1 <- FH_dat1 %>%
+  mutate(AGN = ifelse(DAM_NUM == 1 & AGN == "", "O", AGN))
+
 ### If a tree has multiple records of same damage agent with different severity, leave the most severity one only
 FH_dat1_1 <- FH_dat1 %>%
   filter(!is.na(AGN), AGN != '') %>%
@@ -135,7 +147,16 @@ FH_dat1_1 <- FH_dat1 %>%
          selected = ifelse(SEVPERC == max(SEVPERC), "Yes", "No"),
          selected = ifelse(is.na(selected), "Yes", selected))
 
-### If duplicated damage agent for a same tree has no severity information, 
+### If duplicated damage agent for a same tree has no severity information, leave only one
+FH_dat1_1_1 <- FH_dat1_1 %>%
+  group_by(CLSTR_ID, PLOT, TREE_NO, AGN) %>%
+  mutate(SEVPERC_new = ifelse(DAM_NUM == 1 & selected == "No", max(SEVPERC), SEVPERC),
+         selected = ifelse(SEVPERC_new == max(SEVPERC_new), "Yes", "No"),
+         selected = ifelse(is.na(selected), "Yes", selected)) %>%
+  filter(selected == "Yes") %>%
+  arrange(CLSTR_ID, PLOT, TREE_NO, AGN, DAM_NUM, desc(dups), desc(selected)) %>%
+  group_by(CLSTR_ID, PLOT, TREE_NO, AGN, dups, selected) %>%
+  slice(1)
 
 # *start categorizing severity;
 lookup_sev1 <- lookup_sev %>%
@@ -158,7 +179,7 @@ lookup_sev2 <- lookup_sev1 %>%
 ### Hard coded
 lookup_sev3 <- lookup_sev2[!(lookup_sev2$dam_3letter %in% c('NW', 'NWS', "NWT") & lookup_sev2$allowed == "1-100"),]
 
-FH_dat1_2 <- FH_dat1_1 %>%
+FH_dat1_2 <- FH_dat1_1_1 %>%
   left_join(lookup_sev3, by = c("AGN" = "dam_3letter"))
 
 FH_dat1_2 <- FH_dat1_2 %>%
@@ -208,7 +229,8 @@ FH_dat2 <- FH_dat2 %>%
                                           'NY', 'TC','DSC') ~ 1,
                                AGN == 'NB' & !(SPC_GRP1 %in% c('FD','LW')) ~ 1,
                                AGN %in% c('DF','DFE','DFS') & SEVPERC >= 80 ~ 1,
-                               AGN %in% c('DB', 'DM', 'DMH', 'DMP', 'DSA', 'DSE','DSG','DSS') ~ 2,
+                               AGN %in% c('DB', 'DM', 'DMH', 'DMP', 'DSA', 'DSE') ~ 2,
+                               AGN %in% c('DSG','DSS') & MEAS_YR < 2017 ~ 2,
                                AGN %in% c('IAB', 'IDW', 'IDB', 'IDE', 'IDH', 'IDI', 'IDT') &
                                  SEVPERC >= 80 ~ 2,
                                AGN %in% c('IWP', 'IWS') & grepl('N', SEV) == FALSE ~ 2,
@@ -268,7 +290,7 @@ FH_dat3 <- FH_dat3 %>%
   mutate(AGN = ifelse(AGN == '', 'O', AGN))
 
 Tree_FH_data <- FH_dat3 %>%
-  select(SITE_IDENTIFIER, CLSTR_ID, VISIT_NUMBER, PLOT, TREE_NO, RESIDUAL,
+  select(SITE_IDENTIFIER, CLSTR_ID, VISIT_NUMBER, PLOT, TREE_NO, RESIDUAL, MEAS_YR, MEAS_INTENSE,
          TH_TREE, DBH, HEIGHT, SPECIES, SPC_GRP1, LV_D, S_F, COMP_CHG, 
          PHF_TREE, VOL_WSV, VOL_MER, VOL_NTWB, AGE_BH, AGE_TOT,
          SI_TREE, SUIT_TR, SUIT_HT, SUIT_SI,
@@ -279,5 +301,5 @@ Tree_FH_data <- FH_dat3 %>%
          dam_class, corr_sev, dam_severity)
 
 
-write.csv(Tree_FH_data, "//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/test/data/Tree_FH_data.csv")
+write.csv(Tree_FH_data, "//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/test/data2/Tree_FH_data.csv")
 
