@@ -14,7 +14,7 @@ decidspc <- c('A','AC','ACT','ACB','AT',
               'W','WB','WP','WT','ZH','XH','XC')
 
 # Import YSM sample data
-sample_data <- fread("//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/test/data/sample_data_comp20240213.csv")
+sample_data <- fread("//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/test/data2/sample_data_comp20240213.csv")
 
 # Import TIPSY projection
 MSYT_reference <- fread(paste0(external_path3, "/MSYT_reference.csv"))
@@ -29,7 +29,7 @@ VDYP <- fread(paste0(external_path2,
                      "/spatial_overlay/ISMC_VRI_Overlay/VDYP7/compiled_ISMC_inputs/VDYP7_OUTPUT_YLDTBL.csv"))
 
 # Import YSM tree data
-tree_data <- fread("//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/test/data/tree_data_comp20240213.csv") 
+tree_data <- fread("//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/test/data2/tree_data_comp20240213.csv") 
 
 # Import TASS output
 tass_output <- readRDS("//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/Data/TASS_output_YSM_240723_final_all.rds")
@@ -84,13 +84,10 @@ ysm_trees3 <- ysm_trees2 %>%
             vol_ntwb_ha_nores = sum(vol_ntwb_ha_nores, na.rm = T))
 
 ## First, get list of MSYT FEATURE_ID and associate it with SITE_IDENTIFIER
-msyt <- MSYT_reference %>%
-  left_join(sample_data %>% select(SITE_IDENTIFIER, FEATURE_ID, CLSTR_ID, 
-                                   MGMT_UNIT, MEAS_YR, PROJ_AGE_ADJ), 
-            by = c("FEATURE_ID"), suffix = c("", "_YSM"))
-
-msyt <- msyt %>%
-  filter(!is.na(SITE_IDENTIFIER))
+msyt <- sample_data %>% select(SITE_IDENTIFIER, FEATURE_ID, CLSTR_ID, 
+                                MGMT_UNIT, MEAS_YR, PROJ_AGE_ADJ) %>%
+  left_join(MSYT_reference, 
+            by = c("FEATURE_ID"), suffix = c("_YSM", ""))
 
 msyt <- msyt %>%
   rowwise() %>%
@@ -156,15 +153,15 @@ vdyp1 <- VDYP %>%
 # Finally, TASS volume
 tass_nores <- tass_output %>%
   filter(SPECIES == "ALL", RESID %in% c("N", NA), rust == "N") %>%
-  arrange(SITE_IDENTIFIER, VISIT_NUMBER, Age, desc(xy), desc(TASS_ver)) %>%
-  group_by(SITE_IDENTIFIER, VISIT_NUMBER, Age) %>%
+  arrange(SITE_IDENTIFIER, VISIT_NUMBER, Year, desc(xy), desc(TASS_ver)) %>%
+  group_by(SITE_IDENTIFIER, VISIT_NUMBER, Year) %>%
   slice(1)
 
 tass_nores1 <- tass_nores %>%
   left_join(sample_data %>% select(CLSTR_ID, PROJ_AGE_ADJ), 
             by = c("CLSTR_ID")) %>%
   ungroup() %>%
-  mutate(age_join = PROJ_AGE_ADJ - Age)
+  mutate(age_join = PROJ_AGE_ADJ - Year)
 
 tass_nores2 <- tass_nores1 %>%
   group_by(CLSTR_ID) %>%
@@ -178,13 +175,14 @@ currentvol <- sample_data %>%
 
 # Merge TASS - YSM
 currentvol1 <- currentvol %>%
-  left_join(tass_nores2, by = c("SITE_IDENTIFIER", "CLSTR_ID", "VISIT_NUMBER", "PROJ_AGE_ADJ")) 
+  left_join(tass_nores2 %>% select(-SITE_IDENTIFIER, -VISIT_NUMBER, -PROJ_AGE_ADJ),
+            by = c("CLSTR_ID")) 
 
 # Merge MSYT - YSM
 # 1. TIPSY: Join with sample data 
 currentvol2 <- currentvol1 %>%
-  left_join(msyt1 %>% select(-MEAS_YR, -MGMT_UNIT, -PROJ_AGE_ADJ), 
-            by = c("SITE_IDENTIFIER", "CLSTR_ID", "FEATURE_ID")) 
+  left_join(msyt1 %>% select(-SITE_IDENTIFIER, -MEAS_YR, -MGMT_UNIT, -PROJ_AGE_ADJ), 
+            by = c("CLSTR_ID", "FEATURE_ID")) 
 
 ## Merge VDYP - ysm
 currentvol3 <- currentvol2 %>%
@@ -196,35 +194,37 @@ currentvol4 <- currentvol3 %>%
   mutate(#PRJ_VOL_DWB = ifelse(is.na(PRJ_VOL_DWB), 0, PRJ_VOL_DWB),
     vol_wsv_ha = ifelse(is.na(vol_wsv_ha), 0, vol_mer_ha),
     vol_wsv_ha_nores = ifelse(is.na(vol_wsv_ha_nores), 0, vol_mer_ha),
-         vol_mer_ha = ifelse(is.na(vol_mer_ha), 0, vol_mer_ha),
-         vol_mer_ha_nores = ifelse(is.na(vol_mer_ha_nores), 0, vol_mer_ha),
-         vol_ntwb_ha = ifelse(is.na(vol_ntwb_ha), 0, vol_ntwb_ha),
-         vol_ntwb_ha_nores = ifelse(is.na(vol_ntwb_ha_nores), 0, vol_ntwb_ha_nores),
-         yt_source = ifelse(grepl('Managed:',CURRENT_YIELD), "Managed", 
-                            ifelse(grepl('Aggregate',CURRENT_YIELD), "AGGREGATE", CURRENT_YIELD)),
-         yt_source_f = factor(yt_source, levels = c("Managed", "AGGREGATE", "VDYP", "Excluded"), ordered = T),
-         volTSR = ifelse(yt_source %in% c("Managed","AGGREGATE"), netvol,   
-                         ifelse(yt_source == "VDYP", PRJ_VOL_DWB, NA)),
-         voldiffTSR = volTSR - vol_mer_ha,
-         grdnv = vol_ntwb_ha_nores,
-         prednv = volTSR,
-         tassnv = GMV,
-         #grdnv = ifelse(is.na(vol_ntwb_ha_nores), 0, vol_ntwb_ha_nores),
-         #prednv = ifelse(is.na(volTSR), 0, volTSR),
-         #tassnv = ifelse(is.na(GMV), 0, GMV),
-         voldiffTASS = tassnv - grdnv)  
+    vol_mer_ha = ifelse(is.na(vol_mer_ha), 0, vol_mer_ha),
+    vol_mer_ha_nores = ifelse(is.na(vol_mer_ha_nores), 0, vol_mer_ha),
+    vol_ntwb_ha = ifelse(is.na(vol_ntwb_ha), 0, vol_ntwb_ha),
+    vol_ntwb_ha_nores = ifelse(is.na(vol_ntwb_ha_nores), 0, vol_ntwb_ha_nores),
+    yt_source = ifelse(grepl('Managed:',CURRENT_YIELD), "Managed", 
+                       ifelse(grepl('Aggregate',CURRENT_YIELD), "AGGREGATE", CURRENT_YIELD)),
+    ### If not available in MSYT but is in VDYP runs
+    yt_source = ifelse(is.na(yt_source) & !is.na(PRJ_VOL_DWB), "VDYP", yt_source),
+    yt_source_f = factor(yt_source, levels = c("Managed", "AGGREGATE", "VDYP", "Excluded"), ordered = T),
+    volTSR = ifelse(yt_source %in% c("Managed","AGGREGATE"), netvol,   
+                    ifelse(yt_source == "VDYP", PRJ_VOL_DWB, NA)),
+    #grdnv = vol_ntwb_ha_nores,
+    #prednv = volTSR,
+    #tassnv = GMV,
+    grdnv = ifelse(is.na(vol_ntwb_ha_nores), 0, vol_ntwb_ha_nores),
+    prednv = ifelse(is.na(volTSR), 0, volTSR),
+    tassnv = ifelse(is.na(GMV), 0, GMV),
+    voldiffTSR = prednv - grdnv,
+    voldiffTASS = tassnv - grdnv)  
 
 ysm_msyt_vdyp <- currentvol4 %>%
-  select(SITE_IDENTIFIER, CLSTR_ID, VISIT_NUMBER, FEATURE_ID, 
-         OPENING_ID, LAYER_ID, TASS_ver, xy,
+  select(SITE_IDENTIFIER, CLSTR_ID, VISIT_NUMBER, FEATURE_ID, FEATURE_ID_vegcomp,
+         OPENING_ID, LAYER_ID, TASS_ver, xy, 
          MGMT_UNIT, TSA_DESC, BEC, BEC_SBZ, 
-         MEAS_YR, PROJ_AGE_ADJ, ref_age_adj, ref_age_cd, PRJ_TOTAL_AGE,
+         MEAS_YR, PROJ_AGE_ADJ, ref_age_adj, ref_age_cd, PRJ_TOTAL_AGE, TASS_age = Age,
          vol_wsv_ha, vol_mer_ha, vol_ntwb_ha,
          vol_wsv_ha_nores, vol_mer_ha_nores,
-         vol_ntwb_ha_nores, PRJ_VOL_DWB, netvol, volTSR,
-         yt_source, yt_source_f, 
+         vol_ntwb_ha_nores, PRJ_VOL_DWB, netvol, volTSR, GMV,
+         CURRENT_YIELD, yt_source, yt_source_f, 
          grdnv, prednv, tassnv, voldiffTSR, voldiffTASS)
 
 
-write.csv(ysm_msyt_vdyp, "//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/test/data/ysm_msyt_vdyp_volume.csv")
-write.csv(msyt_vol2, "//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/test/data/msyt_volproj.csv")
+write.csv(ysm_msyt_vdyp, "//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/test/data2/ysm_msyt_vdyp_volume.csv")
+write.csv(msyt_vol2, "//sfp.idir.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/YSMreport/test/data2/msyt_volproj.csv")
