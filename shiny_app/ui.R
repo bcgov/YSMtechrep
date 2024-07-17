@@ -7,7 +7,7 @@ ui <- dashboardPage(
                                     font-family: 'BCSans', 'Noto Sans', Verdana, Arial, sans-serif;"),
                   # BC gov logo
                   tags$li(a(href = 'https://gov.bc.ca',
-                            img(src = 'logo-banner.png',
+                            img(src = 'www/logo-banner.png',
                                 title = "Home", height = "65px"),
                             style = "padding-top:10px; padding-bottom:10px; 
                             background-color: #036; margin-right: auto;"),
@@ -21,7 +21,7 @@ ui <- dashboardPage(
   fluidPage(    
     
     # BC gov custom css
-    includeCSS("bcgov2.css"),
+    includeCSS("www/bcgov2.css"),
     
     # Overwrite shinydashboard color
     tags$head(tags$style(HTML('
