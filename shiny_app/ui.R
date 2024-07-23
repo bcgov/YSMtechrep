@@ -2,16 +2,17 @@
 # Use a fluid Bootstrap layout
 ui <- dashboardPage(
   
-  dashboardHeader(title = span("YSM Technical Report", 
-                                    style = "color: white; font-weight: bold;
-                                    font-family: 'BCSans', 'Noto Sans', Verdana, Arial, sans-serif;"),
-                  # BC gov logo
+  dashboardHeader(title = div('YSM Technical Report', style = "color: white; font-weight: bold; font-size: 24px;
+                              font-family: 'BCSans', 'Noto Sans', Verdana, Arial, sans-serif;
+                              padding-top:10px;"),
+                  
                   tags$li(a(href = 'https://gov.bc.ca',
-                            img(src = 'www/logo-banner.png',
-                                title = "Home", height = "65px"),
-                            style = "padding-top:10px; padding-bottom:10px; 
-                            background-color: #036; margin-right: auto;"),
-                          class = "dropdown")),
+                            img(src = 'logo-banner.png',
+                                title = "Home", height = "41px"),
+                            style = "padding-top:10px; padding-bottom:10px;
+                            background-color: #036; margin-right: 10px;"),
+                          class = "dropdown")
+                  ),
   
   dashboardSidebar(disable = TRUE),
   
