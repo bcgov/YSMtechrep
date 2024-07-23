@@ -89,7 +89,8 @@ output$vol_bias <- renderPlot({
   p <- ggplot() +
     geom_hline(yintercept = 0, col = "darkgray") +
     geom_point(data = Fig13_dat,
-               aes(x=ref_age_adj, y=voldiffTSR, col = yt_source_f, shape = yt_source_f), size= 3) +
+               aes(x=ref_age_adj, y=voldiffTSR, col = yt_source_f, shape = yt_source_f), 
+               size= 3,, show.legend = TRUE) +
     scale_colour_manual(name = NULL, values=c("Managed" = "red","AGGREGATE"="deepskyblue" ,
                                               "VDYP" =  "green", "Excluded" = "darkgray"),
                         labels = c("TSR TIPSY Opening Specific", "TSR TIPSY Aggregate",
