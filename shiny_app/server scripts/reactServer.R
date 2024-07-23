@@ -802,9 +802,13 @@ test1 <- reactive({
   
   Fig15_dat <- Fig15_dat()
   
-  test1<-t.test(Fig15_dat$prednv_pai - Fig15_dat$grdnv_pai)
+  if(nrow(Fig15_dat) > 0 & length(Fig15_dat$prednv_pai - Fig15_dat$grdnv_pai) > 1){
+    test1<-t.test(Fig15_dat$prednv_pai - Fig15_dat$grdnv_pai)
+    test1result <- test1$estimate
+  }
+  else test1result <- NA
   
-  return(test1$estimate)
+  return(test1result)
   
 })
 
@@ -815,8 +819,12 @@ test2 <- reactive({
   
   Fig15_dat <- Fig15_dat()
   
-  test2<-t.test(Fig15_dat$tass_pai - Fig15_dat$grdnv_pai)
+  if(nrow(Fig15_dat) > 0 & length(Fig15_dat$tass_pai - Fig15_dat$grdnv_pai) > 1){
+    test2<-t.test(Fig15_dat$tass_pai - Fig15_dat$grdnv_pai)
+    test2result <- test2$estimate
+  }
+  else test2result <- NA
   
-  return(test2$estimate)
+  return(test2result)
   
 })
