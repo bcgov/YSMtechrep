@@ -436,7 +436,7 @@ total_remeas_plot <- reactive({
   total_remeas_plot <- sample_data %>% 
     filter(SITE_IDENTIFIER %in% site_id()) %>%
     group_by(SITE_IDENTIFIER) %>%
-    filter(VISIT_NUMBER == max(VISIT_NUMBER)) %>%
+    filter(VISIT_NUMBER == max(VISIT_NUMBER), VISIT_NUMBER != 1) %>%
     ungroup() %>%
     summarize(nreplot = length(unique(SITE_IDENTIFIER))) %>%
     pull(nreplot)
