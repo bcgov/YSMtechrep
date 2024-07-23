@@ -237,13 +237,19 @@ output$bec_dist <- renderPlot({
       #theme_bw() + 
       #scale_x_discrete(breaks = NULL) + 
       theme(
+        axis.line = element_line(colour="darkgray"), 
         panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank(),
         panel.grid.minor.y = element_blank(),
-        rect = element_blank()
+        rect = element_blank(),
+        axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)
       ) +
-      scale_y_continuous(breaks = function(x)
-        seq(floor(min(x)), ceiling(max(x))),
+      scale_y_continuous(
+        expand = c(0, 0),
+        #breaks= pretty_breaks(),
+        breaks = function(x) unique(floor(pretty(seq(min(x), (max(x) + 1) * 1.1)))),
+        #breaks = function(x) seq(floor(min(x)), ceiling(max(x))),
+        #labels = comma,
         limits = c(0, max(table(figdata$BEClabel))+0.5))+
       labs(x = "", y = "# of YSM samples",
            title = "YSM Sample Distribution by BEC subzone/variant") 
