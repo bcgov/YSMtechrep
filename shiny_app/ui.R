@@ -1,18 +1,21 @@
-## UI
+###############################################
+#
+# UI for the Shiny app
+#
+##############################################
+
 # Source files with UI code for each tab --------------
 #walk(list.files("ui scripts", full.names = TRUE), ~ source(.x))
 
+# define the UI structure -------------------------------
 # Use a fluid Bootstrap layout
 ui <- dashboardPage(
   
-  dashboardHeader(title = div('YSM Technical Report', #windowTitle = 'YSM Technical Report',
-  style = "color: white; font-weight: bold; font-size: 24px;
+  title = "YSM Technical Report", # Browser title
+  
+  dashboardHeader(title = div('YSM Technical Report', style = "color: white; font-weight: bold; font-size: 24px;
                               font-family: 'BCSans', 'Noto Sans', Verdana, Arial, sans-serif;
                               padding-top:10px;"),
-                  
-                  #windowTitle = 'YSM Technical Report',
-                  #windowTitle = HTML("<title>YSM Technical Report</title> 
-                  #                   <link rel='icon' type='image/gif/png' href='logo.jpg'>"),
                   
                   # BC logo
                   tags$li(a(href = 'https://gov.bc.ca',
