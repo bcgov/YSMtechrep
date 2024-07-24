@@ -192,6 +192,7 @@ output$age_flex1 <- renderUI({
     align(align = "center", part = "header") 
   
   age_table <- age_table %>% add_header_lines(values = c("TSR vs. YSM Age")) %>%
+    bold(part = 'header', bold = TRUE) %>%
     autofit()
   
   #t1 = gen_grob(age_table %>%
@@ -220,7 +221,10 @@ output$age_flex2 <- renderUI({
     set_header_labels(values = c("p-val", "Diff", "L95", "U95"), lengths = colwidths) %>%
     align(align = "center", part = "header") 
   
-  agediff_table <- agediff_table %>% add_header_lines(values = c("Age diff (m3/ha/yr)")) %>%
+  agediff_table <- agediff_table %>% 
+    #add_header_lines(values = c("Age diff (m3/ha/yr)")) %>%
+    add_header_lines(values = as_paragraph('Age diff (m',as_sup('3'),'/ha/yr)')) %>%
+    bold(part = 'header', bold = TRUE) %>%
     autofit()
   
   
@@ -375,7 +379,11 @@ output$tsr_pai_flex1 <- renderUI({
     set_header_labels(values = c("attr.", "# obs", "Yrs", "PAI"), lengths = colwidths) %>%
     align(align = "center", part = "header") 
   
-  tsr_pai_table1 <- tsr_pai_table1 %>% add_header_lines(values = c("YSM vs. TSR MSYTs")) %>%
+  tsr_pai_table1 <- tsr_pai_table1 %>% 
+    add_header_lines(values = c("YSM vs. TSR MSYTs")) %>%
+    bold(part = 'header', bold = TRUE) %>%
+    set_caption(as_paragraph(
+      as_b(as_chunk("Test 1: Compare YSM actual growth vs. TSR yield table projections")))) %>%
     autofit()
   
   return(tsr_pai_table1 %>%
@@ -412,6 +420,7 @@ output$tsr_pai_flex2 <- renderUI({
   
   tsr_pai_table2 <- tsr_pai_table2 %>% 
     add_header_lines(values = as_paragraph('TSR-YSM diff(m',as_sup('3'),'/ha/yr)')) %>%
+    bold(part = 'header', bold = TRUE) %>%
     autofit()
   
   return(tsr_pai_table2 %>%
@@ -436,7 +445,11 @@ output$tass_pai_flex1 <- renderUI({
     set_header_labels(values = c("attr.", "# obs", "Yrs", "PAI"), lengths = colwidths) %>%
     align(align = "center", part = "header") 
   
-  tass_pai_table1 <- tass_pai_table1 %>% add_header_lines(values = c("YSM vs. TASS projections")) %>%
+  tass_pai_table1 <- tass_pai_table1 %>% 
+    add_header_lines(values = c("YSM vs. TASS projections")) %>%
+    bold(part = 'header', bold = TRUE) %>%
+    set_caption(as_paragraph(
+      as_b(as_chunk("Test 2: Compare YSM actual growth vs. TASS YSM tree list projections")))) %>%
     autofit()
   
   return(tass_pai_table1 %>%
@@ -470,6 +483,7 @@ output$tass_pai_flex2 <- renderUI({
   
   tass_pai_table2 <- tass_pai_table2 %>% 
     add_header_lines(values = as_paragraph('TASS-YSM diff(m',as_sup('3'),'/ha/yr)')) %>%
+    bold(part = 'header', bold = TRUE) %>%
     autofit()
   
   return(tass_pai_table2 %>%

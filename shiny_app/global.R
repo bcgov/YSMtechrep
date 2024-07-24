@@ -21,6 +21,7 @@ library(shinydashboard)
 library(data.table)
 library(ggplot2)
 library(dplyr)
+options(dplyr.summarize.inform = FALSE)
 library(sf)
 library(leaflet)
 library(DT)
@@ -78,7 +79,6 @@ bec_list <- sort(unique(sample_data %>% group_by(BEC_ZONE) %>% filter(n() >= 10)
 theme_set(theme_bw(15))
 #theme_set(theme_bw(15) + theme(panel.grid.major = element_line(colour = "gray")))
 
-
 # colour palettes for plots
 
 # common parameters for plots
@@ -87,18 +87,13 @@ theme_set(theme_bw(15))
 
 
 # 6. sourcing functions created for app (see functions folder) -------------------------------
-#list.files("functions") %>% 
-#  map(~ source(paste0("functions/", .)))
-css_hide_errors <- function() {
-  css_add("
-.shiny-output-error {visibility: hidden;}
-.shiny-output-error:before {visibility: hidden;}
-")
-}
 
-css_add <- function(x) {
-  shiny::tags$head(shiny::tags$style(shiny::HTML(x)))
-}
+#css_hide_errors <- function() {
+#  css_add("
+#.shiny-output-error {visibility: hidden;}
+#.shiny-output-error:before {visibility: hidden;}
+#")
+#}
 
 waiter_html <- function(x){
   tagList(waiter::spin_chasing_dots(),

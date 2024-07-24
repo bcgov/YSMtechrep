@@ -5,8 +5,7 @@
 ###############################################.
 #Subsetting by domain 
 
-
-output$ysm_tables <- renderPlot({
+output$ysm_tables1 <- renderUI({
   
   temp <- sample_data %>%
     filter(CLSTR_ID %in% clstr_id()) %>%
@@ -24,8 +23,15 @@ output$ysm_tables <- renderPlot({
     labels = c("SAMPLE_ESTABLISHMENT_TYPE" = "Sample Type", 
                "value" = "Grid (km)",
                "n" = "Total")) %>%
+    bold(part = 'header', bold = TRUE) %>%
     autofit()
   
+  return(t1 %>%
+           htmltools_value())
+})
+
+
+output$ysm_tables2 <- renderUI({
   
   t2 <- proc_freq(ysm_msyt_vdyp_volume %>%
                     filter(CLSTR_ID %in% clstr_id()) %>%
@@ -46,8 +52,16 @@ output$ysm_tables <- renderPlot({
     add_header_lines(values = "TSR Yield Table Assignment \nCurrent Regime", top = T) %>%
     delete_rows(i = 2, part = "header") %>%
     merge_at(i = 1, j = 1:3, part = "header") %>%
+    bold(part = 'header', bold = TRUE) %>%
     autofit()
   
+  return(t2 %>%
+           htmltools_value())
+  
+})
+
+
+output$ysm_tables3 <- renderUI({
   
   t3 <- proc_freq(ysm_msyt_vdyp_volume  %>%
                     filter(CLSTR_ID %in% clstr_id()) %>%
@@ -63,8 +77,16 @@ output$ysm_tables <- renderPlot({
     add_header_lines(values = "YSM Plot Occupancy \nof trees >=4cm DBH", top = T) %>%
     delete_rows(i = 2, part = "header") %>%
     merge_at(i = 1, j = 1:3, part = "header") %>%
+    bold(part = 'header', bold = TRUE) %>%
     autofit()
   
+  return(t3 %>%
+           htmltools_value())
+  
+})
+
+
+output$ysm_tables4 <- renderUI({
   
   t4 <- proc_freq(ysm_msyt_vdyp_volume  %>%
                     filter(CLSTR_ID %in% clstr_id()) %>%
@@ -80,8 +102,16 @@ output$ysm_tables <- renderPlot({
     add_header_lines(values = "Availability of stem mapped YSM \nSamples used in TASS Projections", top = T) %>%
     delete_rows(i = 2, part = "header") %>%
     merge_at(i = 1, j = 1:3, part = "header") %>%
+    bold(part = 'header', bold = TRUE) %>%
     autofit()
   
+  return(t4 %>%
+           htmltools_value())
+  
+})
+
+
+output$ysm_tables5 <- renderUI({
   
   t5 <- proc_freq(ysm_msyt_vdyp_volume  %>%
                     filter(CLSTR_ID %in% clstr_id())  %>%
@@ -97,17 +127,11 @@ output$ysm_tables <- renderPlot({
     add_header_lines(values = "TASS Version used \nfor YSM Projections", top = T) %>%
     delete_rows(i = 2, part = "header") %>%
     merge_at(i = 1, j = 1:3, part = "header") %>%
+    bold(part = 'header', bold = TRUE) %>%
     autofit()
   
-  t1 = gen_grob(t1)
-  t2 = gen_grob(t2)
-  t3 = gen_grob(t3)
-  t4 = gen_grob(t4)
-  t5 = gen_grob(t5)
-  
-  p <- grid.arrange(t1, t2, t3, t4, t5, ncol = 2)
-  
-  p
+  return(t5 %>%
+           htmltools_value())
   
 })
 

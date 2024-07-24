@@ -212,7 +212,8 @@ output$curr_fh_inci <- renderPlot({
                        limits = c(0, max(round(FH_dat_final[FH_dat_final$AGN!="O" & FH_dat_final$LV_D == "L",]$u95_stems+0.05,1)))) + 
     facet_grid(. ~ reorder(dam_class, -incid_stems_allplot, min), scales="free_x", space="free_x") +
     labs(x = "", y = "Incidence (%)",
-         title = "Current Incidence (% of total live stems/ha of up to 5 damage agents per tree)") +
+         title = "Current Incidence",  
+         subtitle = "(% of total live stems/ha of up to 5 damage agents per tree)") +
     #theme_bw() + 
     theme(
       axis.line = element_line(colour="darkgray"), 
@@ -362,7 +363,8 @@ output$change_dam <- renderPlot({
                          minor_breaks = seq(0, ceiling(max(fig10_dat_final[fig10_dat_final$AGN!="O",]$incid_stems)*20) / 20, by = 0.01)) + 
       facet_grid(. ~ reorder(dam_class, -incid_stems, min), scales="free_x", space="free_x") +
       labs(x = "", y = "Incidence (%)",
-           title = "Change in primary damage agent incidence (% of trees alive at the beginning of the period)") +
+           title = "Change in primary damage agent incidence",
+           subtitle = "(% of trees alive at the beginning of the period)") +
       #theme_bw() + 
       theme(
         axis.line = element_line(colour="darkgray"), 
