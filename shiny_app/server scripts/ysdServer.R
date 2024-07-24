@@ -63,12 +63,12 @@
 
 output$young_stand_description <- renderUI({
   
-  HTML("Stand summaries (all species combined) are compiled and summarized for 
+  HTML("<p>Stand summaries (all species combined) are compiled and summarized for 
        all samples in the target population at the time of the latest measurement. 
        Compilations are for all standing trees >=4cm DBH, except net merchantable 
        volume (i.e., PL >= 12.5cm DBH, & all other species >=17.5cm DBH, 
        excluding 30cm stump height, 10cm top diameter, & decay). 
-       Species code names are listed on <b> General Notes </b> tab."
+       Species code names are listed on <b> General Notes </b> tab.<p/>"
   )
   
 })

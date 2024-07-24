@@ -7,7 +7,7 @@
 
 output$site_index_pspl <- renderUI({
   
-  HTML("Site index (SI) is an estimate of a stand's potential productivity by species. 
+  HTML("<p>Site index (SI) is an estimate of a stand's potential productivity by species. 
 Predicted SI is from the Provincial site productivity layer (PSPL v7.0) that uses 
 either ecological mapping plus SIBEC tables or SI biophysical model where no 
 ecological mapping is available. YSM ground SI is from up to four site trees 
@@ -18,7 +18,7 @@ practical equivalence (ROPE) assesses for practical SI differences, defined
 here as 5% ROPE (ie., ratio limits of 0.95 to 1.05). A practical difference (Y) is 
 when the ROM confidence interval (CI) is entirely outside the ROPE, no 
 practical difference (N) is when the ROM CI is entirely within the ROPE; all 
-other situations are inconclusive (I).")
+other situations are inconclusive (I).</p>")
   
 })
 
@@ -150,14 +150,14 @@ output$si_pspl_flex <- renderUI({
 
 output$trend_si <- renderUI({
   
-  HTML("The average site index vs. breast height age from all valid site trees 
+  HTML("<p>The average site index vs. breast height age from all valid site trees 
        is plotted for each species and sample measurement (graph below; joined 
        dots are for repeated measurements). Subsequent measurements may not 
        always include the same site trees (due to changes in site tree suitability, 
        or height by DBH crossovers), site index and breast height age may also 
        change over time. The most reliable site index estimate for a given 
        species and YSM plot is the measurement closest to breast height age 50. 
-       The number above each line denotes the number of plots used to average the site index.")
+       The number above each line denotes the number of plots used to average the site index.</p>")
   
 })
 

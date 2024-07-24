@@ -26,11 +26,11 @@ output$quant_coc <- renderUI({
   Fig15_dat <- Fig15_dat()
   round(mean(Fig15_dat$year_dff),0)
   
-  HTML( paste0("Growth and mortality of the re-measured YSM ground samples
+  HTML( paste0("<p>Growth and mortality of the re-measured YSM ground samples
 (n=", "<b>", total_remeas_plot(), "</b>", ") are summarized into components of change for
 all tagged trees over an average re-measurement period of ", "<b>", 
                round(mean(Fig15_dat$year_dff),0), "</b>", " years (fig below). 
-               The components of change include: </br>"),
+               The components of change include: </p>"),
         "</br><ul><li><b><i>Survivor</i></b> Trees that are alive at both measurements </li>",
         "<li><b><i>Mortality</i></b> Trees that died between measurements </li>",
         "<li><b><i>Ingrowth</i></b> New trees that grow into the minimum tagging limit </li>",
@@ -101,7 +101,7 @@ output$coc_chart <- renderPlot({
 
 output$health_inci <- renderUI({
   
-  HTML("All tagged trees are assessed for up to five forest health damage agents
+  HTML("<p>All tagged trees are assessed for up to five forest health damage agents
 per tree. The mean incidence and 95% confidence intervals by damage
 agent (expressed as a percent of total live stems/ha of all damage
 agents recorded per tree) are computed at the latest measurement. Note
@@ -113,7 +113,7 @@ longer recorded; therefore, earlier recorded incidences of forks and
 crooks prior to 2021 were likely over-estimated. In addition fork and
 crook severity is now further classified into minor (<50%) vs. major
 (&ge;50%) diameter offsets. A full list of recorded damage agents is under
-General Notes.")
+General Notes.</p>")
   
 })
 
@@ -236,13 +236,13 @@ output$comp_coc <- renderUI({
   
   Fig15_dat <- Fig15_dat()
   
-  HTML(paste0("Change in forest health incidence of the (n=","<b>",
+  HTML(paste0("<p>Change in forest health incidence of the (n=","<b>",
   total_remeas_plot(),"</b>",") re-measured YSM samples are compared across 
   the last measurement period averaging ", "<b>", 
   round(mean(Fig15_dat$year_dff),0), "</b>", " years. Incidence across both 
   measurements is relative to the primary damage agent (first recorded and 
   most significant) on the same trees that were alive at the beginning of the 
-  period (graph below)."))
+  period (graph below).</p>"))
   
 })
 
@@ -390,12 +390,12 @@ output$change_dam <- renderPlot({
 
 output$fh_trees <- renderUI({
   
-  HTML("All trees that were alive at the beginning of the period, have either
+  HTML("<p>All trees that were alive at the beginning of the period, have either
 survived or died between measurements. The table on the right summarizes
 the components of change (# of survivor & mortality) for those trees affected by 
 primary damage agents with highest percent incidence. In addition, the 
 probability of trees getting infected by a given damage agent and subsequently 
-dying from it, is also calculated.")
+dying from it, is also calculated.</p>")
   
 })
 
@@ -568,7 +568,7 @@ output$future_fh <- renderUI({
   year100_inc<- year100_inc()
   year100_comb<- year100_comb()
   
-  HTML(paste0("Forest health impacts are currently modeled in TASS using the forest
+  HTML(paste0("<p>Forest health impacts are currently modeled in TASS using the forest
 health modules GRIM & CRIME that quantify volume impacts of a specific
 group of stem rusts (DSC, DSG, DSS). YSM sample measurements collected
 since 2017 include the necessary tree detail information to run these
@@ -587,11 +587,11 @@ individually modeled YSM TASS projection up to rotation age. These interim
 forest health factors resulted in an additional 8% volume impact on YSM 
 TASS projections by age 100. The GRIM/CRIME forest health modules 
 (affecting DSC,DSG,DSS) resulted in a further 0.2 % volume impact on YSM 
-TASS projections by age 100.", "</br>", "These interim forest health factors 
+TASS projections by age 100.", "</p>", "<p>These interim forest health factors 
 resulted in an additional ","<b>", year100_comb, "</b>","% volume
-impact on YSM TASS projections by age 100. The GRIM/CRIME forest health
+impact on YSM TASS projections by age 100.</p> <p>The GRIM/CRIME forest health
 modules (affecting DSC,DSG,DSS) resulted in a further ", "<b>", year100_inc, "</b>",
-"% volume impact on YSM TASS projections by age 100."))
+"% volume impact on YSM TASS projections by age 100.</p>"))
   
 })
 

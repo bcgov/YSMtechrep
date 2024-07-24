@@ -138,7 +138,7 @@
 
 output$leading_sp <- renderUI({
   
-  HTML("Leading species (by basal area) is compared between YSM & VRI where the 
+  HTML("<p>Leading species (by basal area) is compared between YSM & VRI where the 
        <i>‘correct leading species classification rate’</i> is a percent of all YSM samples 
        with matching inventory leading species at latest measurement (table below). 
        A separate assessment of overall species composition is also compared 
@@ -146,7 +146,7 @@ output$leading_sp <- renderUI({
        Overall species composition overlap is a rough index, and expressed as 
        the ratio between the minimum in common relative to the maximum in common 
        that could have been. The planted & natural densities used in TSR inputs 
-       are combined as part of the overall species composition comparison.")
+       are combined as part of the overall species composition comparison.</p>")
 
 })
 

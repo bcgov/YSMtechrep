@@ -7,22 +7,22 @@
 
 output$tass_tsr <- renderUI({
   
-  HTML("To assess if young stands will meet future volume expectations, each YSM tree list is projected in TASS from its latest measurement date to 
+  HTML("<p>To assess if young stands will meet future volume expectations, each YSM tree list is projected in TASS from its latest measurement date to 
 rotation, and compared against each spatially matched TSR yield table. TASS3 is run for all YSM ground samples comprising at least 80% 
 (by basal area) of PL & SW combined, while TASS2 is run for all other YSM ground samples. No genetic gain estimates are applied, since 
-ground based SI estimates are used for all YSM TASS projections.</br>
+ground based SI estimates are used for all YSM TASS projections.</p>
 
-All YSM TASS projected volumes include the following adjustments: default Operational Adjustment Factors OAF1 (15%) and OAF2 (5%), 
+<p>All YSM TASS projected volumes include the following adjustments: default Operational Adjustment Factors OAF1 (15%) and OAF2 (5%), 
 stem rust (DSG, DCS, & DSS) impacts modeled in GRIM & CRIME from samples measured in 2017 or later, plus all remaining forest health 
 impacts applied as interim approximations (see previous section). Note that endemic losses from pests and disease are assumed to be part 
 of OAF2, so there can be some double-counting with the inclusion of the stem rust modules plus additional interim forest health impacts. 
 There may also be some double-counting of non-productive area and stocking gap losses already assumed to be a component of OAF1, as 
-these are also captured through the unbiased grid sample design of the YSM program. </br>
+these are also captured through the unbiased grid sample design of the YSM program. </p>
 
-The average of all YSM TASS projections (red lines) are compared against the average of all spatially matched TSR yield tables (blue line), 
+<p>The average of all YSM TASS projections (red lines) are compared against the average of all spatially matched TSR yield tables (blue line), 
 together with 95% confidence intervals (dashed lines). If the TSR projection overlaps within the 95% confidence interval of the average 
 YSM TASS projection, then it is reasonable to assume young stands may meet future timber supply expectations. If not, there may be a 
-need to revisit TSR input assumptions or TSR growth expectations.")
+need to revisit TSR input assumptions or TSR growth expectations.</p>")
   
 })
 
@@ -228,11 +228,11 @@ output$tass_tsr_test <- renderUI({
   TSRbias1 = ifelse(projectiontable$meanvoldiff[max_row] < 0, "Conservative", "Optimistic")
   TSRbias2 = ifelse(Significant == "No", "No", TSRbias1)
   
-  HTML( paste0("TSR MSYTs are evaluated against YSM TASS projections, using paired t-tests 
+  HTML( paste0("<p>TSR MSYTs are evaluated against YSM TASS projections, using paired t-tests 
 of the volume differences (TSR-YSM) projected from 60 & 100 years. 
 Highlighted fields (table below) indicate significant differences at alpha = 
 0.05. Overall percent differences are computed as (TSR-YSM)/YSM, and the 
-age at maximum percent volume difference is identified (table below).", "</br>", 
+age at maximum percent volume difference is identified (table below).", "</p>", 
                "</br><ul><li><b><i>Max % vol diff</i></b>",'&emsp;', maxvoldiff, "</li>",
                "<li><b><i>Age @max vol diff</i></b>",'&emsp;', ageatmaxvoldiff, "</li>",
                "<li><b><i>Significant?</b>(when n >= 10)</i>",'&emsp;', 

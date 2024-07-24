@@ -16,25 +16,25 @@ output$overview <- renderUI({
   gridsize <- gridsize[length(gridsize)]
   
   HTML(
-    paste0("Young Stand Monitoring (YSM) programs have been established 
+    paste0("<p>Young Stand Monitoring (YSM) programs have been established 
 across a number of management units in BC. This handout provides a 
 high-level technical summary of results compiled by FAIB for the YSM program in ",
-           "<b>", title(),"</b>", ".", '<br/>','<br/>',
-           "The target population for TSA-based monitoring programs is defined as
+           "<b>", title(),"</b>", ".", '</p>',
+           "<p>The target population for TSA-based monitoring programs is defined as
 15-50 year old Crown forested stands in the Vegetation Resources
 Inventory (VRI) Vegcomp rank 1 layer. TFL-based monitoring programs may
-use other criteria (eg., harvest history).", '<br/>','<br/>',
-           "Ground samples (dots on map, below) are established on a ", 
+use other criteria (eg., harvest history).", '</p>',
+           "<p>Ground samples (dots on map, below) are established on a ", 
            "<b>",gridsize,"</b>"," grid, with trees tagged in 0.04ha permanent plots with a planned
-five-year re-measurement cycle.", '<br/>','<br/>',
-           "Some key YSM objectives are to: describe the characteristics and
+five-year re-measurement cycle.", '</p>',
+           "<p>Some key YSM objectives are to: describe the characteristics and
 structure of young stands, report on forest health, assess the accuracy
 of predicted attributes and spatial coverages, and compare against
 growth models to help evaluate if young stands will meet future timber
-supply expectations.", '<br/>','<br/>',
-           "The TSA map (right) includes the source of site index found in the 
+supply expectations.", '</p>',
+           "<p>The TSA map (right) includes the source of site index found in the 
 latest Provincial Site Productivity Layer (PSPL) : either TEM/PEM & 
-SIBEC, or Biophysical Site Index Model.
+SIBEC, or Biophysical Site Index Model.</p>
 ")
   )
   
@@ -140,53 +140,53 @@ output$key_finding <- renderUI({
               "<ol><li>The leading species from YSM ground samples is compared to the 
     interpreted leading species in the Vegetation Resources Inventory forest 
     inventory coverage (VRI). The leading species percent agreement is: ", 
-    "<b><font color='#FF0000'>" ,correct_ls(), "</b> (% agreement)</font></li>",
+    "<b><font color='#FF0000'>" ,correct_ls(), "</b> (% agreement)</font></li>","</br>",
     
     "<li>Species composition from YSM ground samples is compared against 
     TSR inputs (ie., regeneration assumptions used in modeling existing stands 
     in Timber Supply Review [TSR]). The overall species composition overlap is: ", 
-    "<b><font color='#FF0000'>", round(percoverlap()*100, 0), "</b> (% overlap)</font></li>",
+    "<b><font color='#FF0000'>", round(percoverlap()*100, 0), "</b> (% overlap)</font></li>","</br>",
     
     "<li>The Provincial Site Productivity Layer (PSPL), one of the TSR 
     inputs used for modeling existing managed stands, is assessed for bias 
     from YSM ground based site index data. If significant, site index bias 
     (in percent) is listed by species, where a positive percent is an 
     under-estimate in the PSPL, and a negative percent is an over-estimate: ", 
-    "<b><font color='#FF0000'>", si_bias(), "</b> </font></li>",
+    "<b><font color='#FF0000'>", si_bias(), "</b> </font></li>","</br>",
     
     "<li>YSM sample measurements include conifer and deciduous tree species. 
     The deciduous proportion in the YSM samples (% of total volume) is: ",
-    "<b><font color='#FF0000'>", decid_vol(), "</b> (% of m<sup>3</sup>/ha)</font></li>",
+    "<b><font color='#FF0000'>", decid_vol(), "</b> (% of m<sup>3</sup>/ha)</font></li>","</br>",
     
     "<li>YSM sample measurements include separate tracking of both managed 
     vs. residual cohorts. The residual proportion in the YSM samples 
     (% of total volume) is: ", "<b><font color='#FF0000'>",
-    round(fig6_sum(), 0), "</b> (% of m<sup>3</sup>/ha)</font></li>",
+    round(fig6_sum(), 0), "</b> (% of m<sup>3</sup>/ha)</font></li>","</br>",
     
     "<li>The periodic annual increment (PAI) of TSR yield tables are compared 
     against re-measured YSM samples over the same remeasurement period, to test 
     if TSR projections are significantly different from YSM growth rates: ",
     "<b><font color='#FF0000'> TSR is ", 
     ifelse(is.na(test1()), "-", ifelse(test1() > 0, "over", "under")), 
- "estimating actual growth by ", round(abs(test1()), 1), " m<sup>3</sup>/ha/yr.</b></font></li>",
+ "estimating actual growth by ", round(abs(test1()), 1), " m<sup>3</sup>/ha/yr.</b></font></li>","</br>",
  
     "<li>The PAI of YSM TASS projections are compared against re-measured 
     YSM samples over the same remeasurement period, to test if TASS projections 
     are significantly different from YSM growth rates: ",
  "<b><font color='#FF0000'> TASS is ", 
  ifelse(is.na(test2()), "-", ifelse(test2() > 0, "over", "under")), 
- "estimating actual growth by ", round(abs(test2()), 1), " m<sup>3</sup>/ha/yr.</b></font></li>",
+ "estimating actual growth by ", round(abs(test2()), 1), " m<sup>3</sup>/ha/yr.</b></font></li>","</br>",
  
     "<li>For YSM measurements since 2017, the impact from stem rusts can be 
     directly modeled in TASS using GRIM / CRIME. The volume impact of TASS YSM 
     projections by age 100 (in addition to default OAFs) is: ", 
- "<b><font color='#FF0000'> ", year100_inc(), "</b> (% of m<sup>3</sup>/ha)</font></li>",
+ "<b><font color='#FF0000'> ", year100_inc(), "</b> (% of m<sup>3</sup>/ha)</font></li>","</br>",
  
     "<li>To address forest health risks from all other damage agents, an 
     interim simplistic approach is applied to estimate future impacts of all 
     known forest health agents, and results in an impact by age 100 (in addition 
     to default OAFs) of: ", "<b><font color='#FF0000'> ",
- year100_comb(),"</b> (% of m<sup>3</sup>/ha)</font></li>",
+ year100_comb(),"</b> (% of m<sup>3</sup>/ha)</font></li>","</br>",
  
     "<li>TSR yield tables are compared against YSM TASS projections, to test 
     if TSR assumptions will meet future expectations of young stands by rotation 

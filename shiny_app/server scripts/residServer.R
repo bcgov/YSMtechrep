@@ -6,12 +6,12 @@
 #Subsetting by domain 
 output$residual <- renderUI({
   
-  HTML("Young stands may include older residual trees which have important 
+  HTML("<p>Young stands may include older residual trees which have important 
        ecological, management, and growth implications. Residual trees are 
        identified in the field using standard measurement protocols. 
        Depending on the analysis, it may be necessary to separate the residual 
        from post-harvest-regenerated trees in young stands. The contribution of 
-       the residual cohort in the measured YSM samples is reported (chart below).")
+       the residual cohort in the measured YSM samples is reported (chart below).</p>")
   
 })
 

@@ -7,9 +7,9 @@
 
 output$comp_curr_vol <- renderUI({
   
-  HTML("Field measured YSM volumes are compared to predicted volumes developed 
+  HTML("<p>Field measured YSM volumes are compared to predicted volumes developed 
   for FAIB’s TSR analysis. FAIB’s TSR yield table development process has three 
-  types of yield curves developed for stands less than 50 years of age:</br></br>
+  types of yield curves developed for stands less than 50 years of age:</p></br>
   
   <ol><li><u>TSR TIPSY Opening Specific</u> – where the VRI feature links to a RESULTS 
   opening record that contains the minimum required yield table inputs. 
@@ -24,14 +24,14 @@ output$comp_curr_vol <- renderUI({
   opening record. These features are projected in VDYP ver 7 using VRI inventory 
   rank1 attributes.</li></ol>
   </br>
-  TSR predicted volumes are compared to YSM volumes using the TSR input age 
+  <p>TSR predicted volumes are compared to YSM volumes using the TSR input age 
        adjusted to the year of ground sampling. The left graph plots YSM actual 
        volume (points are joined where re-measurements are available), plus the 
        average of all spatially intersected TSR predicted yield tables (solid blue line). 
        The right graph illustrates the total bias (predicted minus actual volume) 
        at each individual YSM sample location, at the latest measurement. 
        TSR predicted volumes underestimate current YSM volume when the bias is 
-       negative, and overestimate current YSM volume when positive.")
+       negative, and overestimate current YSM volume when positive.</p>")
   
 })
 
@@ -160,7 +160,7 @@ output$vol_bias <- renderPlot({
 
 output$age_comp <- renderUI({
   
-  HTML( paste0("TSR uses the RESULTS age (for managed stands) or VRI age (for unmanaged
+  HTML( paste0("<p>TSR uses the RESULTS age (for managed stands) or VRI age (for unmanaged
 stands) as the starting age in timber supply forecasts. This reference
 age (adjusted to the year of ground sampling) is critical as it is used
 to compare the TSR predicted volume at the reference age against the
@@ -170,9 +170,9 @@ ages (highlighted when significant at ", "&alpha;=0.05,", " second chart). Note
 that YSM sample tree ages may include a combination of both managed and
 (sometimes) older residual cohorts depending on the sample tree data
 collection criteria; this may increase the average YSM ground age
-compared to the TSR reference age."," </br> Results below show that the TSR
+compared to the TSR reference age."," </p> <p>Results below show that the TSR
 reference age is ", "<b>", ifelse(age_p() < 0.05, "different", "not different"), 
-               "</b>", " from YSM ground age."))
+               "</b>", " from YSM ground age.</p>"))
   
 })
 
@@ -247,7 +247,7 @@ output$age_diff <- renderPlot({
   
   
   p <- ggplot(d, aes(x = x, y = y)) + 
-    geom_hline(yintercept = 0, linetype = 2, size =1.2, col = "darkgray") +
+    geom_hline(yintercept = 0, linetype = 2, linewidth =1.2, col = "darkgray") +
     geom_line(linewidth = 1.2, col = "steelblue") +
     geom_text(aes(label = round(y,1)), col = "steelblue", 
               position = position_dodge(.9),  vjust = -1, size = 5) +
@@ -336,7 +336,7 @@ output$age_diff <- renderPlot({
 
 output$pai_comp <- renderUI({
   
-  HTML( paste0("Periodic annual increment (PAI) in units of m<sup>3</sup>/ha/yr, is computed from
+  HTML( paste0("<p>Periodic annual increment (PAI) in units of m<sup>3</sup>/ha/yr, is computed from
 all re-measured YSM ground samples, and compared against predicted PAI
 from TSR yield tables and from YSM TASS projections, separately over the
 same re-measurement period. Paired T-tests check for significant
@@ -345,15 +345,15 @@ differences in PAI (highlighted when significant at ",
 " middle chart). The first test helps evaluate if the TSR growth assumptions from
 bare ground are in line with actual YSM growth rates. The second test
 provides an accuracy assessment of TASS projections that start from an
-existing tree list, compared to actual YSM growth rates.</br> ",
+existing tree list, compared to actual YSM growth rates.</p>",
                
-               "Results of test 1 (TSR yield tables vs. YSM) show TSR is ", "<b>",
+               "<p>Results of test 1 (TSR yield tables vs. YSM) show TSR is ", "<b>",
  ifelse(is.na(test1()), "-", ifelse(test1() > 0, "over", "under")), "</b>",
- "-estimating actual growth by ", "<b>", round(abs(test1()), 1), "</b>"," m<sup>3</sup>/ha/yr.</br> ",
+ "-estimating actual growth by ", "<b>", round(abs(test1()), 1), "</b>"," m<sup>3</sup>/ha/yr.</p> ",
 
-"Results of test 2 (TASS tree list projection vs. YSM) show TASS is ", "<b>",
+"<p>Results of test 2 (TASS tree list projection vs. YSM) show TASS is ", "<b>",
  ifelse(is.na(test2()), "-", ifelse(test2() > 0, "over", "under")), "</b>",
- "-estimating actual growth by ", "<b>", round(abs(test2()), 1), "</b>", " m<sup>3</sup>/ha/yr.</br>"))
+ "-estimating actual growth by ", "<b>", round(abs(test2()), 1), "</b>", " m<sup>3</sup>/ha/yr.</p>"))
   
 })
 
