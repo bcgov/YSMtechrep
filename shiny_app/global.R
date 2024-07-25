@@ -32,7 +32,7 @@ library(tibble)
 library(tidyverse)
 library(scales)
 library(gridExtra)
-#library(waiter)
+library(waiter)
 
 
 
@@ -78,7 +78,7 @@ bec_list <- sort(unique(sample_data %>% group_by(BEC_ZONE) %>% filter(n() >= 10)
 
 # 4. chart themes  ----------------------------------------------------------------
 
-theme_set(theme_bw(15))
+theme_set(theme_bw(15, base_family = 'Arial'))
 #theme_set(theme_bw(15) + theme(panel.grid.major = element_line(colour = "gray")))
 
 # colour palettes for plots

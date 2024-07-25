@@ -33,6 +33,8 @@ ui <- dashboardPage(
     
   fluidPage(    
     
+    waiter::use_waiter(),
+    
     # BC gov custom css
     includeCSS("www/bcgov2.css"),
     
