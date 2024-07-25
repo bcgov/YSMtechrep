@@ -144,10 +144,9 @@ output$stand_summary_flex <- renderUI({
 
 output$live_sp <- renderPlot({
   
-  if (!is.null(clstr_id())){
-    
+  #if (!is.null(clstr_id())){
+  
     summary_data <- summary_data()
-    #spcs_dat <- spcs_dat()
     
     spc_ba <- summary_data %>%
       group_by(SPC_GRP1) %>%
@@ -183,13 +182,16 @@ output$live_sp <- renderPlot({
     spc_summary <- spc_summary %>% 
       arrange(BY, order)
     
-    p <- spc_summary |>
-      group_by(BY, SPC_GRP2) |>
-      mutate(total = sum(PERC)) |>
-      ungroup() |>
-      select(SPC_GRP2, BY, total) |>
-      distinct() |> #important for only graphing single element 
-      ggplot(aes(x = reorder(SPC_GRP2, ifelse(BY=="BA",-total, 0)), y = total, fill = factor(BY))) +
+    spc_summary1 <- spc_summary %>%
+      group_by(BY, SPC_GRP2) %>%
+      mutate(total = sum(PERC)) %>%
+      ungroup() %>%
+      select(SPC_GRP2, BY, total) %>%
+      distinct() %>% #important for only graphing single element 
+      data.frame()
+      
+   p <- spc_summary1 %>% 
+      ggplot(aes(x = reorder(SPC_GRP2, ifelse(BY=="BA", -total, 0)), y = total, fill = factor(BY))) +
       geom_bar(position = position_dodge2(preserve = "single"), stat = "identity", width = 0.7) +
       labs(x = "", y = "% of Total", title = "Live Species Composition") + 
       scale_fill_manual(values = c("steelblue", "#B4464B"), name = NULL, labels = c("by BA", "by # stems")) +
@@ -203,8 +205,10 @@ output$live_sp <- renderPlot({
         rect = element_blank()
       ) 
     
-    p 
-}
+   p
+   #ggplotly(p, tooltip = "y") 
+    #plot_ly(p) 
+#}
   
   #else{
   #  
@@ -254,7 +258,7 @@ output$bec_dist <- renderPlot({
       labs(x = "", y = "# of YSM samples",
            title = "YSM Sample Distribution by BEC subzone/variant") 
     
-    p 
+    p
   }
   
 })

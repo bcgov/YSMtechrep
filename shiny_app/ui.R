@@ -265,6 +265,7 @@ ui <- dashboardPage(
     "General Notes",
     tabPanel(title = "Total number of YSM samples",
              h3("Total number of YSM samples by:"),
+             br(),
              fluidRow(align = 'center',
                column(6,
                       uiOutput("ysm_tables1")),

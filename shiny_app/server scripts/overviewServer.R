@@ -9,11 +9,11 @@ output$overview <- renderUI({
   
   gridsize <- sample_data %>% 
     filter(SITE_IDENTIFIER %in% site_id()) %>% 
-    select(GRID_SIZE) %>% 
-    distinct() %>% 
-    pull()
+    count(GRID_SIZE) %>%
+    slice(which.max(n)) %>%
+    pull(GRID_SIZE)
   
-  gridsize <- gridsize[length(gridsize)]
+  gridsize <- gridsize[1]
   
   HTML(
     paste0("<p>Young Stand Monitoring (YSM) programs have been established 
@@ -46,8 +46,13 @@ output$plotgraph <- renderLeaflet({
   if(!is.null(site_id())){
     
     location <- sample_data %>% 
-      filter(SITE_IDENTIFIER %in% site_id())  %>% 
-      select(SITE_IDENTIFIER, BC_ALBERS_X, BC_ALBERS_Y) %>% 
+      filter(SITE_IDENTIFIER %in% site_id()) %>% 
+      group_by(SITE_IDENTIFIER) %>% 
+      mutate(visit_num = length(VISIT_NUMBER),
+             visit_year = paste0(MEAS_YR, collapse  = ',')) %>%
+      select(SITE_IDENTIFIER, SAMPLE_ESTABLISHMENT_TYPE, visit_num, visit_year, #BEClabel,
+             TSA_DESC, BEC_ZONE, BEC_SBZ, BEC_VAR, GRID_SIZE,
+             BC_ALBERS_X, BC_ALBERS_Y) %>% 
       distinct()
     
     location <- st_as_sf(x = location,                         
@@ -80,6 +85,10 @@ output$plotgraph <- renderLeaflet({
       addProviderTiles("Esri.WorldImagery", group = "Satellite view") %>%
       addProviderTiles("Esri.WorldTerrain", group = "Terrain only") %>%
       addProviderTiles("Esri.WorldTopoMap", group = "Base map") %>%
+      setMaxBounds(lng1 = -142,
+                   lat1 = 46, 
+                   lng2 = -112,
+                   lat2 =  62) %>%
       fitBounds(lng1 = lng1, lat1 = lat1, lng2 = lng2, lat2 = lat2) %>%
       addLayersControl(
         baseGroups = c("Base map", "Terrain only", "Satellite view"),
@@ -88,7 +97,16 @@ output$plotgraph <- renderLeaflet({
       addPolygons(data = tsa_sub, stroke = TRUE, color = "#3c8dbc", weight = 2,
                   opacity = 0.9, fill = TRUE, fillOpacity = 0.2) %>%
       addCircleMarkers(data = location,
-                       radius = 5, stroke = FALSE, fillOpacity = 1)   
+                       radius = 5, stroke = FALSE, fillOpacity = 1,
+                       popup = paste(sep = "<br/>",
+                                     paste(paste("<b>Sample ID</b> - ", location$SITE_IDENTIFIER, "<br/>"),
+                                           paste("<b>Sample Type</b> - ", location$SAMPLE_ESTABLISHMENT_TYPE, "<br/>"),
+                                           paste("<b>BEC zone</b> - ", location$BEC_ZONE, "<br/>"), 
+                                           paste("<b>BEC subzone</b> - ", location$BEC_SBZ, "<br/>"),
+                                           paste("<b>BEC variant</b> - ", location$BEC_VAR, "<br/>"), 
+                                           paste("<b># of measures</b> - ", location$visit_num, "<br/>"),
+                                           paste("<b>Visited year</b> - ",location$visit_year, "<br/>")))
+                       )   
   }
 }
 
@@ -124,6 +142,16 @@ output$flex <- renderUI({
 
 
 output$key_finding <- renderUI({
+  
+  PAI_tsr = ifelse(is.na(test1()), "PAI is not available.",
+                   paste0("TSR is ", ifelse(test1() > 0, "over", "under"), 
+                          "estimating actual growth by ", 
+                          round(abs(test1()), 1), " m<sup>3</sup>/ha/yr.")) 
+  
+  PAI_tass = ifelse(is.na(test2()), "PAI is not available.",
+                   paste0("TASS is ", ifelse(test2() > 0, "over", "under"), 
+                          "estimating actual growth by ", 
+                          round(abs(test2()), 1), " m<sup>3</sup>/ha/yr.")) 
   
   projectiontable <- projectiontable()
   max_row = which.max(abs(projectiontable$meanvoldiff/projectiontable$meanvol_tass*100))
@@ -166,16 +194,12 @@ output$key_finding <- renderUI({
     "<li>The periodic annual increment (PAI) of TSR yield tables are compared 
     against re-measured YSM samples over the same remeasurement period, to test 
     if TSR projections are significantly different from YSM growth rates: ",
-    "<b><font color='#FF0000'> TSR is ", 
-    ifelse(is.na(test1()), "-", ifelse(test1() > 0, "over", "under")), 
- "estimating actual growth by ", round(abs(test1()), 1), " m<sup>3</sup>/ha/yr.</b></font></li>","</br>",
+    "<b><font color='#FF0000'> ", PAI_tsr, "</b></font></li>","</br>",
  
     "<li>The PAI of YSM TASS projections are compared against re-measured 
     YSM samples over the same remeasurement period, to test if TASS projections 
     are significantly different from YSM growth rates: ",
- "<b><font color='#FF0000'> TASS is ", 
- ifelse(is.na(test2()), "-", ifelse(test2() > 0, "over", "under")), 
- "estimating actual growth by ", round(abs(test2()), 1), " m<sup>3</sup>/ha/yr.</b></font></li>","</br>",
+ "<b><font color='#FF0000'> ", PAI_tass, "</b></font></li>","</br>",
  
     "<li>For YSM measurements since 2017, the impact from stem rusts can be 
     directly modeled in TASS using GRIM / CRIME. The volume impact of TASS YSM 
