@@ -179,6 +179,11 @@ output$leading_sp_flex <- renderUI({
       align(align = "left", part = "header") %>%
       autofit()
     
+    LD_table <- bg(LD_table, #i = 1:(LD_table$body$content$nrow-1),
+                   #j = (1:((LD_table$body$content$ncol-1)/2))*2, 
+                   j = (1:(LD_table$body$content$ncol/2))*2, 
+                   bg = "lightgray", part = "body")
+    
     return(LD_table %>%
              htmltools_value())      
   }

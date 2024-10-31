@@ -2,6 +2,8 @@
 # Use a fluid Bootstrap layout
 ui <- dashboardPage(
   
+  title = "YSM Technical Report", # Browser title
+  
   dashboardHeader(title = div('YSM Technical Report', style = "color: white; font-weight: bold; font-size: 24px;
                               font-family: 'BCSans', 'Noto Sans', Verdana, Arial, sans-serif;
                               padding-top:10px;"),
@@ -20,6 +22,8 @@ ui <- dashboardPage(
     
     
   fluidPage(    
+    
+    waiter::use_waiter(),
     
     # BC gov custom css
     includeCSS("www/bcgov2.css"),
@@ -52,6 +56,14 @@ ui <- dashboardPage(
              height: 60px; 
              background-color: #036;}*/
       '))),
+    
+    box(title ="Note: This site is currently under development.", 
+        solidHeader = T, collapsible = T,status = "warning", width = NULL, collapsed=TRUE,
+        #p(strong("*Note that this site is currently under development."),style = "color:red"),
+        p("
+Published versions of the YSM Technical reports can be found at:
+https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resources/forest-inventory/ground-sample-inventories/provincial-monitoring/reports",
+          style = "color:red")),
     
   box(title = "Select the area of interest", #background = "light-blue", 
       solidHeader = TRUE, status = "primary", width = NULL,
@@ -155,24 +167,35 @@ ui <- dashboardPage(
              h3("Test to Compare TSR Total Age vs. YSM Ground Sample Age"),
              uiOutput("age_comp"),
              br(),
-             uiOutput("age_flex1"),
+             fluidRow(
+               column(6,
+                      uiOutput("age_flex1")),
+               column(6,
+                      uiOutput("age_flex2"))
+             ),
              br(),
-             uiOutput("age_flex2"),
+             fluidRow(
+               column(12, align = "center", 
+                      plotOutput("age_diff", height = "200px", width = "400px")),
+             ),
              br(),
-             plotOutput("age_diff", height = "200px", width = "400px"),
-             br(),
-    ),         
+    ),      
     tabPanel(title = "Periodic Annual Increment",
              h3("Test to Compare Modeled vs. YSM Re-measured Periodic Annual Increment"),
              uiOutput("pai_comp"),
              br(),
-             uiOutput("tsr_pai_flex1"),
-             br(),
-             uiOutput("tsr_pai_flex2"),
-             br(),
-             uiOutput("tass_pai_flex1"),
-             br(),
-             uiOutput("tass_pai_flex2"),
+             fluidRow(
+               column(6,
+                      uiOutput("tsr_pai_flex1"),
+                      br(),
+                      uiOutput("tsr_pai_flex2"),
+                      br()),
+               column(6,
+                      uiOutput("tass_pai_flex1"),
+                      br(),
+                      uiOutput("tass_pai_flex2"),
+                      br())
+             ),
              br(),
              plotOutput("pai_diff", height = "200px"),
              br(),
@@ -208,7 +231,7 @@ ui <- dashboardPage(
              h3("Approximating Future Forest Health Risks"),
              uiOutput("future_fh"),
              br(),
-             plotOutput("dam_immed", height = "300px"),
+             plotOutput("dam_immed", height = "300px", width = "800px"),
              br(),
              #plotOutput("dam_incr")
     ), 
@@ -220,9 +243,12 @@ ui <- dashboardPage(
              br(),
              plotOutput("tass_tsr_netvol"),
              br(),
-             uiOutput("tasstable_flex"),
-             br(),
-             uiOutput("culmtable_flex"),
+             fluidRow(
+               column(6,
+                      uiOutput("tasstable_flex")),
+               column(6,
+                      uiOutput("culmtable_flex"))
+             ),
              br(),
     ),
     tabPanel(title = "YSM TASS projections vs. TSR Predicted Yield Tables",
@@ -234,9 +260,31 @@ ui <- dashboardPage(
     ),
     
     "General Notes",
+    #tabPanel(title = "Total number of YSM samples",
+    #         h3("Total number of YSM samples by:"),
+    #         plotOutput("ysm_tables"),
+    #),
     tabPanel(title = "Total number of YSM samples",
              h3("Total number of YSM samples by:"),
-             plotOutput("ysm_tables"),
+             br(),
+             fluidRow(align = 'center',
+                      column(6,
+                             uiOutput("ysm_tables1")),
+                      column(6,
+                             uiOutput("ysm_tables2")),
+             ),
+             br(),
+             fluidRow(align = 'center',
+                      column(6,
+                             uiOutput("ysm_tables3")),
+                      column(6,
+                             uiOutput("ysm_tables4"))
+             ),
+             fluidRow(align = 'center',
+                      column(6,
+                             uiOutput("ysm_tables5"))
+             ),
+             #plotOutput("ysm_tables"),
     ),
     tabPanel(title = "Tree Species and Damage Agents",
              uiOutput('sp_dam_header'),
