@@ -165,15 +165,19 @@ output$trend_si <- renderUI({
 
 output$si_trend <- renderPlot({
   
+  si_dat <- si_dat()
+  
   fig7_dat <- SI_data %>%
-    filter(CLSTR_ID %in% clstr_id_all()) %>%
-    filter(!is.na(SI_M_TLSO), !is.na(AGEB_TLSO), !(SPECIES %in% decidspc)) 
+    filter(CLSTR_ID %in% clstr_id_all(), SPECIES %in% si_dat$SPECIES) %>%
+    mutate(meas_no = ifelse(CLSTR_ID %in% clstr_id(), 2, 1)) %>%
+    filter(!is.na(meansi), !is.na(meanage)) 
   
   fig7_dat <- fig7_dat %>%
-    group_by(SPECIES, VISIT_NUMBER) %>%
-    summarize(mean_agebh = mean(AGEB_TLSO, na.rm = T),
-              mean_si = mean(SI_M_TLSO, na.rm = T),
-              nobs = n())
+    group_by(SPECIES, meas_no) %>%
+    summarize(mean_agebh = mean(meanage, na.rm = T),
+              mean_si = mean(meansi, na.rm = T),
+              nobs = n()) %>%
+    ungroup() 
   
   fig7_lab <- fig7_dat %>% 
     group_by(SPECIES) %>%

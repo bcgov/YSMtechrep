@@ -17,10 +17,17 @@ site_id <- reactive({
   req(input$SelectCategory, input$SelectVar)
   input$genearate
   
-  site_id <- sample_data %>% 
-    filter(TFL == "") %>% 
-    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-    pull(SITE_IDENTIFIER)
+  if (input$SelectCategory == "TSA_DESC"){
+    site_id <- sample_data %>% 
+      filter(TSA_filter == "Y") %>% 
+      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+      pull(SITE_IDENTIFIER)
+  } else if (input$SelectCategory == "BECsub"){
+    site_id <- sample_data %>% 
+      filter(BEC_filter == "Y") %>% 
+      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+      pull(SITE_IDENTIFIER)
+  }
   
   return(site_id)
   
@@ -31,12 +38,20 @@ clstr_id <- reactive({
   req(input$SelectCategory, input$SelectVar)
   input$genearate
   
-  clstr_id <- sample_data %>% 
-    filter(TFL == "") %>% 
-    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-    filter(LAST_MSMT == "Y") %>%
-    pull(CLSTR_ID)
-  
+  if (input$SelectCategory == "TSA_DESC"){
+    clstr_id <- sample_data %>% 
+      filter(TSA_filter == "Y") %>% 
+      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+      filter(LAST_MSMT == "Y") %>%
+      pull(CLSTR_ID)
+  } else if (input$SelectCategory == "BECsub"){
+    clstr_id <- sample_data %>% 
+      filter(BEC_filter == "Y") %>% 
+      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+      filter(LAST_MSMT == "Y") %>%
+      pull(CLSTR_ID)
+  }
+
   return(clstr_id)
   
 })
@@ -46,10 +61,17 @@ clstr_id_all <- reactive({
   req(input$SelectCategory, input$SelectVar)
   input$genearate
   
-  clstr_id_all <- sample_data %>% 
-    filter(TFL == "") %>% 
-    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-    pull(CLSTR_ID)
+  if (input$SelectCategory == "TSA_DESC"){
+    clstr_id_all <- sample_data %>% 
+      filter(TSA_filter == "Y") %>% 
+      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+      pull(CLSTR_ID)
+  } else if (input$SelectCategory == "BECsub"){
+    clstr_id_all <- sample_data %>% 
+      filter(BEC_filter == "Y") %>% 
+      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+      pull(CLSTR_ID)
+  }
   
   return(clstr_id_all)
   
@@ -61,14 +83,25 @@ clstr_id_last2 <- reactive({
   req(input$SelectCategory, input$SelectVar)
   input$genearate
   
-  clstr_id_last2 <- sample_data %>% 
-    filter(TFL == "") %>% 
-    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-    group_by(SITE_IDENTIFIER) %>%
-    filter(n() > 1) %>% 
-    arrange(VISIT_NUMBER) %>% 
-    slice_tail(n = 2) %>%
-    pull(CLSTR_ID)
+  if (input$SelectCategory == "TSA_DESC"){
+    clstr_id_last2 <- sample_data %>% 
+      filter(TSA_filter == "Y") %>% 
+      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+      group_by(SITE_IDENTIFIER) %>%
+      filter(n() > 1) %>% 
+      arrange(VISIT_NUMBER) %>% 
+      slice_tail(n = 2) %>%
+      pull(CLSTR_ID)
+  } else if (input$SelectCategory == "BECsub"){
+    clstr_id_last2 <- sample_data %>% 
+      filter(BEC_filter == "Y") %>% 
+      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+      group_by(SITE_IDENTIFIER) %>%
+      filter(n() > 1) %>% 
+      arrange(VISIT_NUMBER) %>% 
+      slice_tail(n = 2) %>%
+      pull(CLSTR_ID)
+  }
   
   return(clstr_id_last2)
   
@@ -76,7 +109,6 @@ clstr_id_last2 <- reactive({
 
 
 # Subset data using the features
-
 summary_data <- reactive({
   
   req(input$SelectCategory, input$SelectVar)
@@ -152,6 +184,7 @@ LD_dat <- reactive({
     mutate(SPC_GRP1 = substr(SPECIES,1,2),
            SPC_GRP1 = ifelse(SPECIES %in% decidspc, 'Decid', SPC_GRP1),
            SPC_GRP1 = ifelse(SPC_GRP1 =="", 'Nonstock', SPC_GRP1),
+           SPC_GRP1 = ifelse(is.na(SP_PCT_BA_LS), 'Nonstock', SPC_GRP1),
            SPC_GRP_VRI = substr(SPECIES_CD_1,1,2),
            SPC_GRP_VRI = ifelse(SPECIES_CD_1 %in% decidspc, 'Decid', SPC_GRP_VRI)) 
   
@@ -189,40 +222,38 @@ Fig11_dat <- reactive({
     filter(!is.na(SITE_IDENTIFIER))
   
   ### Compute number plot measurements by MGMT_UNIT
-  ysm_spc2 <- ysm_spc1 %>%
+  ysm_spc2_1 <- ysm_spc1 %>%
+    filter(!(SPECIES %in% c("", NA))) %>%
     mutate(n_ci = length(unique(CLSTR_ID)),
            SPC_GRP1 = ifelse(SPECIES %in% decidspc, 'DE', SPECIES))
   
   ### Compute mean stems per ha by species
-  ysm_spc3 <- ysm_spc2 %>%
+  # Ground samples
+  ysm_spc3_1 <- ysm_spc2_1 %>%
     group_by(SPC_GRP1) %>%
-    reframe(mean_STEMS_HA = sum(STEMS_HA_LS, na.rm = T)/n_ci) %>%
+    reframe(mean_BA_PC = sum(SP_PCT_BA_LS, na.rm = T)/n_ci) %>%
     distinct()
   
-  ysm_spc4 <- ysm_spc3 %>%
-    mutate(tot_STEMS_HA = sum(mean_STEMS_HA, na.rm = T),
-           spcperc = mean_STEMS_HA/tot_STEMS_HA)
-  
-  ysm_spc6 <- ysm_spc4 %>%
-    arrange(desc(spcperc)) %>%
+  ysm_spc6 <- ysm_spc3_1 %>%
+    arrange(desc(mean_BA_PC)) %>%
     mutate(order = row_number(),
            SPC_GRP2 = ifelse(order <= 7, SPC_GRP1, 'Other'),
            SPC_GRP2 = ifelse(SPC_GRP2 == 'DE', 'Decid', SPC_GRP2))
   
-  regen_natural <- regen_data %>%
-    filter(CLSTR_ID %in% clstr_id(), regen_src == "N", SPECIES_recode != "") %>%
+ # MSYT and VDYP inputs
+  regen1 <- regen_data %>%
+    filter(CLSTR_ID %in% clstr_id()) %>%
+    filter(!(SPECIES %in% c("", NA))) %>%
     mutate(n_si = length(unique(CLSTR_ID)),
            n_ft = length(unique(FEATURE_ID)))
   
-  regen_natural <- regen_natural %>%
+  regen2 <- regen1 %>%
     group_by(SPC_GRP1) %>%
-    reframe(mean_DENSITY = sum(DENSITY, na.rm = T)/n_ft) %>%
+    reframe(mean_PC = sum(SPECIES_PCT, na.rm = T)/n_ft) %>%
     distinct()
   
-  regen_natural <- regen_natural %>%
-    mutate(tot_DENSITY = sum(mean_DENSITY, na.rm = T),
-           spcperc = mean_DENSITY/tot_DENSITY) %>%
-    arrange(desc(spcperc)) %>%
+  regen3 <- regen2 %>%
+    arrange(desc(mean_PC)) %>%
     mutate(order = row_number(),
            SPC_GRP2 = ifelse(order <= 7, SPC_GRP1, 'Other'),
            SPC_GRP2 = ifelse(SPC_GRP2 == 'DE', 'Decid', SPC_GRP2))
@@ -230,13 +261,14 @@ Fig11_dat <- reactive({
   ### Data for figure
   ysm_spc_dat <- ysm_spc6 %>% 
     mutate(source="YSM") %>%
+    select(SPC_GRP1, spcperc = mean_BA_PC, order, SPC_GRP2, source)
+  
+  regen_dat <- regen3 %>%
+    mutate(source="TSR_INPUT",
+           spcperc = mean_PC*100) %>%
     select(SPC_GRP1, spcperc, order, SPC_GRP2, source)
   
-  regen_natural <- regen_natural %>%
-    mutate(source="TSR_INPUT") %>%
-    select(SPC_GRP1, spcperc, order, SPC_GRP2, source)
-  
-  Fig11_dat <- rbind(ysm_spc_dat, regen_natural) 
+  Fig11_dat <- rbind(ysm_spc_dat, regen_dat) 
   
   return(Fig11_dat)
   
@@ -249,16 +281,18 @@ percoverlap <- reactive({
   
   Fig11_dat <- Fig11_dat()
   
-  percoverlap <- Fig11_dat %>%
-    #filter(MGMT_UNIT %in% mgmt_unit) %>%
+  spccoverlap <- Fig11_dat %>%
     select(-order) %>%
     pivot_wider(names_from = source,
                 names_sep = ".",
                 values_from = c(spcperc)) %>%
-    mutate(diff = abs(YSM - TSR_INPUT)) %>%
-    summarize(perc_sum = sum(diff, na.rm = T)) %>%
-    mutate(perc_over = 1- perc_sum) %>%
-    pull(perc_over)
+    rowwise() %>%
+    mutate(diff = abs(YSM - TSR_INPUT),
+           overlap = min(YSM, TSR_INPUT)) %>%
+    summarize(diff_sum = sum(diff, na.rm = T),
+              over_sum = sum(overlap, na.rm = T))
+  
+  percoverlap <- sum(spccoverlap$over_sum, na.rm = T) - sum(spccoverlap$diff_sum, na.rm = T) 
   
   return(percoverlap)
   
@@ -325,28 +359,28 @@ si_dat <- reactive({
   req(input$SelectCategory, input$SelectVar)
   input$genearate
   
-  si_dat <- SI_data %>%
-    filter(CLSTR_ID %in% clstr_id_all(), !is.na(ratio)) %>%
+  si_dat_1 <- SI_data %>%
+    filter(CLSTR_ID %in% clstr_id(), !is.na(ratio)) %>%
     group_by(SITE_IDENTIFIER, SPECIES) %>%
     slice(which.min(yrs_from_50))
   
-  si_dat1 <- si_dat %>%
+  si_dat1 <- si_dat_1 %>%
     group_by(SPECIES) %>%
     summarise(n = n(),
-              age_avg = mean(AGEB_TLSO),
-              grd_avg = mean(SI_M_TLSO),
-              prd_avg = mean(pspl_si))
+              age_avg = mean(meanage, na.rm = T),
+              grd_avg = mean(meansi, na.rm = T),
+              prd_avg = mean(pspl_si, na.rm = T))
   
   si_dat1 <- si_dat1 %>%
     ungroup() %>%
     mutate(ROM = grd_avg/prd_avg)
   
-  si_dat2 <- si_dat %>%
+  si_dat2 <- si_dat_1 %>%
     left_join(si_dat1, , by = "SPECIES")
   
   # *compute additional attribute to compute variance;
   si_dat2 <- si_dat2 %>%
-    mutate(diffs_sqrd = (SI_M_TLSO - (ROM * pspl_si))**2)
+    mutate(diffs_sqrd = (meansi - (ROM * pspl_si))**2)
   
   # *sum diffs squared;
   si_dat3 <- si_dat2 %>%
@@ -399,7 +433,10 @@ si_dat <- reactive({
            sig_rope = ifelse(n >= 10, sig_rope, "-")) %>%
     arrange(SPECIES)
   
-  return(si_dat5)
+  si_dat6 <- si_dat5 %>%
+    filter(n >1)
+  
+  return(si_dat6)
   
 })
 
@@ -427,19 +464,34 @@ si_bias <- reactive({
 })
 
 
+remeas_plot <- reactive({
+  
+  req(input$SelectCategory, input$SelectVar)
+  input$genearate
+  
+remeas_plot <- sample_data %>% 
+  filter(SITE_IDENTIFIER %in% site_id()) %>%
+  group_by(SITE_IDENTIFIER) %>%
+  arrange(VISIT_NUMBER) %>%
+  mutate(meas_no = row_number()) %>%
+  filter(meas_no == max(meas_no), meas_no != 1) %>%
+  ungroup() %>%
+  #summarize(nreplot = length(unique(SITE_IDENTIFIER))) %>%
+  pull(CLSTR_ID)
+
+return(remeas_plot)
+
+})
+
 
 total_remeas_plot <- reactive({
   
   req(input$SelectCategory, input$SelectVar)
   input$genearate
   
-  total_remeas_plot <- sample_data %>% 
-    filter(SITE_IDENTIFIER %in% site_id()) %>%
-    group_by(SITE_IDENTIFIER) %>%
-    filter(VISIT_NUMBER == max(VISIT_NUMBER), VISIT_NUMBER != 1) %>%
-    ungroup() %>%
-    summarize(nreplot = length(unique(SITE_IDENTIFIER))) %>%
-    pull(nreplot)
+  remeas_plot <- remeas_plot()
+  
+  total_remeas_plot <- length(remeas_plot)
   
   return(total_remeas_plot)
   
@@ -452,38 +504,50 @@ fig10_dat_final <- reactive({
   req(input$SelectCategory, input$SelectVar)
   input$genearate
   
-  # *only interested in remeasured samples;
-  FH_dat_coc <- tree_fh_data %>%
-    filter(CLSTR_ID %in% clstr_id_last2(), !is.na(PHF_TREE), S_F == "S") %>%
-    group_by(SITE_IDENTIFIER) %>%
-    mutate(new_visit_number = ifelse(VISIT_NUMBER == max(VISIT_NUMBER), 1, 2))
+  fig8_dat <- fig8_dat()
   
+  # *prep file to compare incidence over time for subset of remeasured samples;
+  # *get last two measurements for analysis;
+  FH_dat_coc <- fig8_dat %>%
+    # *only interested in remeasured samples, and only the last two measurements to compare change;
+    filter(CLSTR_ID %in% clstr_id_last2()) %>%
+    mutate(n_si = n_distinct(substr(clstr_id_last2(), 1, 7))) %>%
+    group_by(SITE_IDENTIFIER) %>%
+    # *rename first_last FP to P for reporting purposes, as this change analysis is based on the last two visits;
+    mutate(new_visit_number = ifelse(VISIT_NUMBER == min(VISIT_NUMBER), 'First', 'Last')) %>%
+    ungroup()
+  
+  # *when previous visit is also the first visit, no components of change.  
+  # *to make damage agent change comparison between the last two visits;
+  # *need to fill in components of change for first visit to "E" as a default (establishment);
   FH_dat_coc <- FH_dat_coc %>%
-    ungroup() %>% 
-    mutate(COMP_CHG_new = COMP_CHG,
-           COMP_CHG_new = ifelse(new_visit_number == 2 & LV_D == "D", "D", COMP_CHG_new),
-           COMP_CHG_new = ifelse(new_visit_number == 2 & LV_D == "L", "E", COMP_CHG_new)) %>%
+    rowwise() %>%
+    mutate(#COMP_CHG_new = COMP_CHG,
+      COMP_CHG_new = comp_chg_coc,
+      COMP_CHG_new = ifelse(new_visit_number == 'First' & LV_D == "D", "D", COMP_CHG_new),
+      COMP_CHG_new = ifelse(new_visit_number == 'First' & LV_D == "L", "E", COMP_CHG_new)) %>%
     data.table
   
   FH_dat_coc1 <- FH_dat_coc %>%
-    filter(!is.na(ba_ha)) %>%
-    ungroup() %>%
-    mutate(n = n_distinct(SITE_IDENTIFIER))
+    #mutate(n = n_distinct(SITE_IDENTIFIER)) %>%
+    filter(!is.na(BA_TREE), !is.na(phf_coc)) %>%
+    ungroup()
   
   # *compute incidence by visit and by live dead, then merge and average all samples per mu;
   # *compute totals for common denominator between measurements;
   FH_dat_coc2 <- FH_dat_coc1 %>%
     filter(DAM_NUM == 1)  %>%
-    group_by(n, SITE_IDENTIFIER, new_visit_number, COMP_CHG_new) %>%
-    summarize(tot_ba_comp = sum(ba_ha, na.rm = T),
-              tot_stems_comp = sum(PHF_TREE, na.rm = T),
+    group_by(n_si, SITE_IDENTIFIER, new_visit_number, COMP_CHG_new) %>%
+    summarize(tot_ba_comp = sum(phf_coc*BA_TREE, na.rm = T),
+              tot_stems_comp = sum(phf_coc, na.rm = T),
               n_tree = n())  %>%
-    #ungroup() %>%
+    ungroup() %>%
     data.table()
   
+  # *need to fill in missing records of each forest health pest by sample id , with zeros;
   if (nrow(FH_dat_coc2) > 1){
     FH_dat_coc2_1 <- FH_dat_coc2 %>%
-      dcast(n + SITE_IDENTIFIER + new_visit_number ~ COMP_CHG_new,
+      dcast(n_si + SITE_IDENTIFIER + new_visit_number ~ COMP_CHG_new,
             value.var = "tot_stems_comp", drop=FALSE, fill=0, sep = "_") %>%
       mutate(totsph_comdem = E + M + S)
   } else {
@@ -494,9 +558,9 @@ fig10_dat_final <- reactive({
   # *summarize totals by damage agent for each coc;
   FH_dat_coc3 <- FH_dat_coc1 %>%
     filter(DAM_NUM == 1)  %>%
-    group_by(n, SITE_IDENTIFIER, new_visit_number, AGN, COMP_CHG_new) %>%
-    summarize(tot_ba_dam_comp = sum(ba_ha, na.rm = T),
-              tot_stems_dam_comp = sum(PHF_TREE, na.rm = T),
+    group_by(n_si, SITE_IDENTIFIER, new_visit_number, AGN, COMP_CHG_new) %>%
+    summarize(tot_ba_dam_comp = sum(phf_coc*BA_TREE, na.rm = T),
+              tot_stems_dam_comp = sum(phf_coc, na.rm = T),
               n_tree = n())  %>%
     ungroup() %>%
     data.table()
@@ -505,19 +569,20 @@ fig10_dat_final <- reactive({
   # *of if they died during that period;
   if (nrow(FH_dat_coc3) > 1){
     FH_dat_coc3_1 <- FH_dat_coc3 %>%
-      dcast(n + SITE_IDENTIFIER + new_visit_number + AGN ~ COMP_CHG_new,
+      # *creates full join of all fh damage agents per sample;
+      dcast(n_si + SITE_IDENTIFIER + new_visit_number + AGN ~ COMP_CHG_new,
             value.var = "tot_stems_dam_comp", drop=FALSE, fill=0, sep = "_") %>%
       mutate(damsph_comdem = E + M + S)
     
     FH_dat_coc4 <- FH_dat_coc3_1 %>%
       left_join(FH_dat_coc2_1, 
-                by = c("n", "SITE_IDENTIFIER", "new_visit_number"),
+                by = c("n_si", "SITE_IDENTIFIER", "new_visit_number"),
                 suffix = c(".dam", ".comp"))
     
     FH_dat_coc5 <- FH_dat_coc4 %>%
       ungroup() %>%
-      group_by(n, new_visit_number, AGN) %>%
-      summarise_all(mean, .names = "mean_{.col}")
+      group_by(n_si, new_visit_number, AGN) %>%
+      summarise_all(mean, .names = "mean_{.col}") 
     
     FH_dat_coc5 <- FH_dat_coc5 %>%
       ungroup() %>%
@@ -573,11 +638,24 @@ risk_vol <- reactive({
            year80 = ifelse(mort_flag==2, volperc*0.0025*(80-meanyear), volperc),
            year100 = ifelse(mort_flag==2, volperc*0.0025*(100-meanyear), volperc))
   
-  
   return(risk_vol)
   
 })
 
+
+max_measyear <- reactive({
+  
+  req(input$SelectCategory, input$SelectVar)
+  input$genearate
+  
+  maxyear <- sample_data %>%
+    filter(CLSTR_ID %in% clstr_id_all()) %>%
+    summarize(maxyear = max(MEAS_YR)) %>%
+    pull(maxyear)
+  
+  return(maxyear)
+  
+})
 
 
 year100_immed <- reactive({
@@ -654,19 +732,48 @@ volproj <- reactive({
   year100_inc<- year100_inc()
   year100_comb<- year100_comb()
   
-  volproj <- tsr_tass_volproj %>%
+  volproj1 <- setDT(tsr_tass_volproj) %>%
     filter(CLSTR_ID %in% clstr_id()) %>%
-    mutate(GMV_adj1 = GMV_adj*(1- year100_immed/100)*
+    mutate(volTASS_adj = volTASS*(1- year100_immed/100)*
              (1-max(AGE - meanage, 0)*year100_inc/100*sum(risk_vol[risk_vol$mort_flag==2,]$volperc)),
-           n_si = length(unique(SITE_IDENTIFIER)))
+           n_si = length(unique(SITE_IDENTIFIER)),
+           n_ci = length(unique(CLSTR_ID)))
   
-  volproj1 <- volproj %>%
-    #filter(!is.na(rust)) %>%
-    group_by(rust, AGE) %>%
+  #volproj2 <-volproj1 %>%
+  #  group_by(AGE, rust) %>%
+  #  summarize(meanvol_tsr = mean(volTSR, na.rm = T),
+  #            sd_tsr = sd(volTSR , na.rm = T),
+  #            meanvol_tass = mean(volTASS_adj, na.rm = T),
+  #            sd_tass = sd(volTASS_adj , na.rm = T),
+  #            n = n()) %>%
+  #  ungroup() %>%
+  #  mutate(se_tsr = sd_tsr/sqrt(n),
+  #         se_tass = sd_tass/sqrt(n),
+  #         tstat = ifelse(n >1, qt(0.975, n-1), NA),
+  #         u95_tsr = meanvol_tsr + tstat*se_tsr,
+  #         l95_tsr = meanvol_tsr - tstat*se_tsr,
+  #         mai_tsr = meanvol_tsr/AGE,
+  #         u95_tass = meanvol_tass + tstat*se_tass,
+  #         l95_tass = meanvol_tass - tstat*se_tass,
+  #         mai_tass = meanvol_tass/AGE)
+  
+  return(volproj1)
+})
+
+
+stemrustimpact <- reactive({
+  
+  req(input$SelectCategory, input$SelectVar)
+  input$genearate
+  
+  volproj <- volproj()
+  
+  stemrustimpact <- volproj %>%
+    group_by(AGE, rust) %>%
     summarize(meanvol_tsr = mean(volTSR, na.rm = T),
               sd_tsr = sd(volTSR , na.rm = T),
-              meanvol_tass = mean(GMV_adj1, na.rm = T),
-              sd_tass = sd(GMV_adj1 , na.rm = T),
+              meanvol_tass = mean(volTASS_adj, na.rm = T),
+              sd_tass = sd(volTASS_adj , na.rm = T),
               n = n()) %>%
     ungroup() %>%
     mutate(se_tsr = sd_tsr/sqrt(n),
@@ -677,9 +784,13 @@ volproj <- reactive({
            mai_tsr = meanvol_tsr/AGE,
            u95_tass = meanvol_tass + tstat*se_tass,
            l95_tass = meanvol_tass - tstat*se_tass,
-           mai_tass = meanvol_tass/AGE)
+           mai_tass = meanvol_tass/AGE) %>%
+    filter(AGE %in% c(60, 70, 80, 90, 100)) %>%
+    pivot_wider(id_cols = AGE,
+                names_from = rust, values_from = meanvol_tass) %>%
+    mutate(rustimpact = paste0(round((N-Y)/N*100,1), "%")) 
   
-  return(volproj1)
+  return(stemrustimpact)
 })
 
 
@@ -696,10 +807,14 @@ projectiontable <- reactive({
   year100_comb<- year100_comb()
   
   projectiontable <- tsr_tass_volproj %>%
-    filter(CLSTR_ID %in% clstr_id(), AGE %in% c(60, 70, 80, 90, 100), rust == "Y") %>%
-    mutate(GMV_adj1 = GMV_adj*(1- year100_immed/100)*
+    filter(CLSTR_ID %in% clstr_id(), AGE %in% c(60, 70, 80, 90, 100)) %>%
+    mutate(GMV_adj1 = GMV_approx*(1- year100_immed/100)*
              (1-max(AGE - meanage, 0)*year100_inc/100*sum(risk_vol[risk_vol$mort_flag==2,]$volperc)),
            voldiff = volTSR - GMV_adj1) %>%
+    arrange(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, desc(xy), desc(rust)) %>%
+    group_by(SITE_IDENTIFIER, AGE) %>%
+    slice(1) %>%
+    ungroup() %>%
     group_by(AGE) %>%
     summarize(n_samples = n(),
               meanvol_tsr = round(mean(volTSR, na.rm = T), 0),
@@ -724,23 +839,23 @@ Fig14_dat <- reactive({
   
   Fig14_dat <- ysm_msyt_vdyp_volume %>%
     filter(CLSTR_ID %in% clstr_id()) %>%
-    mutate(agediff = PROJ_AGE_ADJ - ref_age_adj) 
+    select(CLSTR_ID, ref_age_adj) 
   
-  temp <- SI_data %>%
-    filter(CLSTR_ID %in% clstr_id()) %>%
-    group_by(CLSTR_ID)%>%
-    summarize(meanage = mean(AGET_TLSO, na.rm = T))
+  temp <- spcs_data %>%
+    filter(CLSTR_ID %in% clstr_id(), UTIL == 4) %>%
+    group_by(SITE_IDENTIFIER) %>%
+    arrange(desc(SP_PCT_BA_LS)) %>%
+    slice_head(n = 1)%>%
+    select(SITE_IDENTIFIER, CLSTR_ID, SPECIES)
   
-  Fig14_dat <- Fig14_dat %>%
-    left_join(temp, by = "CLSTR_ID")
+  Fig14_dat1 <- Fig14_dat %>%
+    left_join(temp, by = 'CLSTR_ID') %>%
+    left_join(siteage_data %>% select(CLSTR_ID, SPECIES, AGET_TLSO),
+              by = c('CLSTR_ID', 'SPECIES')) %>%
+    mutate(age_diff = ref_age_adj - AGET_TLSO) %>%
+    filter(complete.cases(age_diff))
   
-  Fig14_dat <- Fig14_dat %>%
-    ungroup() %>%
-    mutate(aget_diff = ref_age_adj - meanage) %>%
-    filter(!is.na(aget_diff)) %>%
-    select(CLSTR_ID, meanage, ref_age_adj, aget_diff)
-  
-  return(Fig14_dat)
+  return(Fig14_dat1)
   
 })
 
@@ -753,7 +868,7 @@ age_p <- reactive({
   
   Fig14_dat <- Fig14_dat()
   
-  age_p <- t.test(Fig14_dat$aget_diff)$p.value
+  age_p <- t.test(Fig14_dat$age_diff)$p.value
   
   return(age_p)
   
@@ -767,7 +882,10 @@ Fig15_dat <- reactive({
   input$genearate
   
   comp_dat <- ysm_msyt_vdyp_volume %>%
-    filter(SITE_IDENTIFIER %in% site_id()) 
+    filter(SITE_IDENTIFIER %in% site_id()) %>%
+    arrange(SITE_IDENTIFIER, VISIT_NUMBER) %>%
+    group_by(SITE_IDENTIFIER) %>%
+    filter(VISIT_NUMBER == min(VISIT_NUMBER) | VISIT_NUMBER == max(VISIT_NUMBER))
   
   comp_dat <- comp_dat %>%
     mutate(grdnv = ifelse(is.na(grdnv), 0, grdnv),
@@ -804,9 +922,10 @@ test1 <- reactive({
   
   if(nrow(Fig15_dat) > 0 & length(Fig15_dat$prednv_pai - Fig15_dat$grdnv_pai) > 1){
     test1<-t.test(Fig15_dat$prednv_pai - Fig15_dat$grdnv_pai)
-    test1result <- test1$estimate
-  }
-  else test1result <- NA
+    test1est <- test1$estimate
+    test1p <- test1$p.value
+    test1result <- c(test1est, test1p)
+  } else test1result <- NULL
   
   return(test1result)
   
@@ -821,10 +940,143 @@ test2 <- reactive({
   
   if(nrow(Fig15_dat) > 0 & length(Fig15_dat$tass_pai - Fig15_dat$grdnv_pai) > 1){
     test2<-t.test(Fig15_dat$tass_pai - Fig15_dat$grdnv_pai)
-    test2result <- test2$estimate
-  }
-  else test2result <- NA
+    test2est <- test2$estimate
+    test2p <- test2$p.value
+    test2result <- c(test2est, test2p)
+  } else test2result <- NULL
   
   return(test2result)
+  
+})
+
+test1_comment <- reactive({
+  
+  req(input$SelectCategory, input$SelectVar)
+  input$genearate
+  
+  test1 <- test1()
+  
+  if (!is.null(test1) & test1[2] < 0.05){
+    test1_comment <- paste0("TSR is ", "<b>",
+    ifelse(test1[1] > 0, "over", "under"), "</b>",
+    "-estimating actual growth by ", "<b>", round(abs(test1[1]), 1), "</b>"," m<sup>3</sup>/ha/yr.</br>")
+  } else if (!is.null(test1) & test1[2] >= 0.05){
+    test1_comment <- "no significant difference between TSR & YSM."
+  } else if (is.null(test1)){
+    test1_comment <- "-"
+  }
+  return(test1_comment)
+  
+})
+
+test2_comment <- reactive({
+  
+  req(input$SelectCategory, input$SelectVar)
+  input$genearate
+  
+  test2 <- test2()
+  
+  if (!is.null(test2) & test2[2] < 0.05){
+    test2_comment <- paste0("TASS is ", "<b>",
+                             ifelse(test2[1] > 0, "over", "under"), "</b>",
+                             "-estimating actual growth by ", "<b>", 
+                             round(abs(test2[1]), 1), "</b>"," m<sup>3</sup>/ha/yr.</br>")
+  } else if (!is.null(test2) & test2[2] >= 0.05){
+    test2_comment <- "no significant difference between TASS & YSM."
+  } else if (is.null(test2)){
+    test2_comment <- "-"
+  }
+  return(test2_comment)
+})
+
+
+fig8_dat <- reactive({
+  
+  fig8_dat <- tree_fh_data %>%
+    filter(CLSTR_ID %in% clstr_id_last2(), DAM_NUM==1) %>%
+    group_by(SITE_IDENTIFIER, PLOT, TREE_NO) %>%
+    arrange(VISIT_NUMBER) %>%
+    mutate(meas_no = row_number())  %>%
+    ungroup() %>%
+    mutate(tree_id = paste0(SITE_IDENTIFIER, "-", TREE_NO))
+  
+  fig8_dat$phf_coc <- fig8_dat$PHF_TREE
+  fig8_dat$resid_coc <- fig8_dat$RESIDUAL
+  fig8_dat$comp_chg_coc <- fig8_dat$COMP_CHG
+  fig8_dat$species_coc <- fig8_dat$SPECIES
+  
+  for (i in unique(fig8_dat$tree_id)){
+    
+    max_meas <- max(fig8_dat[fig8_dat$tree_id == i, ]$meas_no)
+    
+    if (max_meas > 1){
+      
+      for (j in 1:(max_meas-1)){
+        
+        a1 <- fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j, ]
+        a2 <- fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]
+        
+        # *for components of change analysis, need to constrain phf to first measure;
+        if (!is.na(a2$PHF_TREE) & a1$PHF_TREE != a2$PHF_TREE){
+          fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]$phf_coc <- a1$PHF_TREE
+        }
+        # *fill in residual classification if recorded at one measurement , but not the next;
+        # *assign as residual across both measurements;
+        if (a1$RESIDUAL != a2$RESIDUAL & (a1$RESIDUAL == "Y" | a2$RESIDUAL == "Y")){
+          fig8_dat[fig8_dat$tree_id == i, ]$resid_coc <- "Y"
+        }
+        
+        if (a1$LV_D == "L" & a2$LV_D == "L" & a2$S_F == "F"){
+          
+          fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]$comp_chg_coc <- "M"
+        }
+        
+        if (a2$SPECIES == "XC"){
+          
+          fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j, ]$species_coc <- a1$SPECIES
+        } else if (a1$SPECIES != a2$SPECIES) {
+          
+          fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j, ]$species_coc <- a2$SPECIES
+        }
+      }
+      # *components of change;
+      # *fallen live, assume this will become mortality;
+      if (a1$LV_D == "L" & a2$LV_D == "L" & a2$S_F == "F"){
+        fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]$comp_chg_coc <- "M"
+      }
+      # *mortality : trees that died between measurements;
+      if (a1$LV_D == "L" & a2$LV_D == "D"){
+        fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]$comp_chg_coc <- "M"
+      }
+      
+    }
+    else if (max_meas == 1){
+      
+      c <- fig8_dat[fig8_dat$tree_id == i, ]$meas_no
+      
+      if (c == 1){
+        
+        b <- fig8_dat[fig8_dat$tree_id == i, ]
+        # *live at first msmt, missing at second msmt, assign as mortality, and assume dead fallen;
+        if (b$LV_D == "L"){
+          
+          new_cid <- paste0(substr(b$CLSTR_ID, 1, 9), 2)
+          b$CLSTR_ID <- new_cid
+          b$VISIT_NUMBER <- 2
+          #b$MEAS_YR <- sample_data[sample_data$CLSTR_ID == new_cid, ]$MEAS_YR
+          b$LV_D <- "D"
+          b$S_F <- "F"
+          b$comp_chg_coc <- "M"
+          
+          #fig8_dat <- rbind(fig8_dat, b)  ## not appear on Rene's data
+        }
+      }
+      # *ingress trees;
+      else if (c == 2){
+        fig8_dat[fig8_dat$tree_id == i, ]$comp_chg_coc <- "I"
+      }
+    }
+  }
+  return(fig8_dat)
   
 })

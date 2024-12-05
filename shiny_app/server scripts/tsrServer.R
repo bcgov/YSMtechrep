@@ -43,7 +43,7 @@ output$age_vs_netmer <- renderPlot({
   
   ## Mean predicted volume (aggregated)
   agg_meanvol <- tsr_tass_volproj %>%
-    filter(CLSTR_ID %in% clstr_id_all(), yt_source == "Managed", rust == "Y",
+    filter(CLSTR_ID %in% clstr_id_all(), 
            AGE %in% c(10, 20, 30, 40, 50, 60)) %>% 
     group_by(AGE) %>%
     summarise(meanvol = mean(volTSR))
@@ -82,22 +82,22 @@ output$vol_bias <- renderPlot({
            prednv = ifelse(is.na(prednv), 0, prednv),
            tassnv = ifelse(is.na(tassnv), 0, tassnv),
            voldiffTASS = ifelse(is.na(voldiffTASS), 0, voldiffTASS),
-           voldiffTSR = ifelse(is.na(voldiffTSR), 0, voldiffTSR),
-           yt_source_f = factor(yt_source, levels = c("Managed", "AGGREGATE", "VDYP", "Excluded"), ordered = T)
+           voldiffTSR = ifelse(is.na(voldiffTSR), 0, voldiffTSR)
     )
   
   p <- ggplot() +
     geom_hline(yintercept = 0, col = "darkgray") +
     geom_point(data = Fig13_dat,
-               aes(x=ref_age_adj, y=voldiffTSR, col = yt_source_f, shape = yt_source_f), size= 3) +
+               aes(x=ref_age_adj, y=voldiffTSR, col = yt_source_f, shape = yt_source_f), 
+               size= 3,, show.legend = TRUE) +
     scale_colour_manual(name = NULL, values=c("Managed" = "red","AGGREGATE"="deepskyblue" ,
-                                              "VDYP" =  "green", "Excluded" = "darkgray"),
+                                              "VDYP" =  "green", "VDYP-fill_missed_tsr" = "darkmagenta"),
                         labels = c("TSR TIPSY Opening Specific", "TSR TIPSY Aggregate",
-                                   "TSR VDYP", "Excluded"), drop = FALSE) +
+                                   "TSR VDYP", "TSR missed : VDYP filled"), drop = FALSE) +
     scale_shape_manual(name = NULL, 
                        labels = c("TSR TIPSY Opening Specific", "TSR TIPSY Aggregate",
-                                  "TSR VDYP", "Excluded"),
-                       values = c("Managed" =16, "AGGREGATE" =15, "VDYP" = 17, "Excluded" = 4), drop = FALSE) +
+                                  "TSR VDYP", "TSR missed : VDYP filled"),
+                       values = c("Managed" =16, "AGGREGATE" =15, "VDYP" = 17, "VDYP-fill_missed_tsr" = 18), drop = FALSE) +
     scale_x_continuous(expand = c(0, 0), limits = c(0, 60))+ 
     #scale_y_continuous(expand = c(0.01, 0), limits = c(-0.01, NA))+ 
     labs(x = "Total Age (yrs)", y = "Predicted - Actual (m3/ha)",
@@ -108,6 +108,7 @@ output$vol_bias <- renderPlot({
       legend.position="top",
       #panel.grid.major.x = element_blank(),
       panel.grid.major.y = element_line(color = 'darkgray'), 
+      panel.grid.minor.y = element_line(color = 'darkgray'), 
       panel.grid.minor.x = element_blank(),
       rect = element_blank()
     ) 
@@ -184,13 +185,14 @@ output$age_flex1 <- renderUI({
   age_table <- data.frame(attr = c("TSR", "YSM"),
                           obs = rep(dim(Fig14_dat)[1],2),
                           mean = c(round(mean(Fig14_dat$ref_age_adj), 1),
-                                   round(mean(Fig14_dat$meanage), 1)))
+                                   round(mean(Fig14_dat$AGET_TLSO), 1)))
   
   age_table <- flextable(age_table) %>% 
     set_header_labels(values = c("attr.", "# obs", "Mean Age"), lengths = colwidths) %>%
     align(align = "center", part = "header") 
   
   age_table <- age_table %>% add_header_lines(values = c("TSR vs. YSM Age")) %>%
+    bold(part = 'header', bold = TRUE) %>%
     autofit()
   
   #t1 = gen_grob(age_table %>%
@@ -205,7 +207,7 @@ output$age_flex2 <- renderUI({
   Fig14_dat <- Fig14_dat()
   
   ### T test table
-  agediff_table <- broom::tidy(t.test(Fig14_dat$aget_diff), conf.int = TRUE)
+  agediff_table <- broom::tidy(t.test(Fig14_dat$age_diff), conf.int = TRUE)
   
   agediff_table <- agediff_table %>%
     select(p.value, estimate, conf.low, conf.high)  %>%
@@ -219,7 +221,11 @@ output$age_flex2 <- renderUI({
     set_header_labels(values = c("p-val", "Diff", "L95", "U95"), lengths = colwidths) %>%
     align(align = "center", part = "header") 
   
-  agediff_table <- agediff_table %>% add_header_lines(values = c("Age diff (m3/ha/yr)")) %>%
+  
+  agediff_table <- agediff_table %>% 
+    #add_header_lines(values = c("Age diff (m3/ha/yr)")) %>%
+    add_header_lines(values = as_paragraph('Age diff (m',as_sup('3'),'/ha/yr)')) %>%
+    bold(part = 'header', bold = TRUE) %>%
     autofit()
   
   
@@ -238,7 +244,7 @@ output$age_diff <- renderPlot({
   
   Fig14_dat <- Fig14_dat()
   
-  all_test<-t.test(Fig14_dat$aget_diff)
+  all_test<-t.test(Fig14_dat$age_diff)
   mean_CI<-(all_test$conf.int[2]+all_test$conf.int[1])/2
   d <- data.frame(x = rep(0, 3), 
                   y = c((all_test$conf.int[2] + all_test$conf.int[1]) / 2,all_test$conf.int[1],all_test$conf.int[2]),
@@ -335,6 +341,9 @@ output$age_diff <- renderPlot({
 
 output$pai_comp <- renderUI({
   
+  test1_comment <- test1_comment()
+  test2_comment <- test2_comment()
+  
   HTML( paste0("Periodic annual increment (PAI) in units of m<sup>3</sup>/ha/yr, is computed from
 all re-measured YSM ground samples, and compared against predicted PAI
 from TSR yield tables and from YSM TASS projections, separately over the
@@ -346,13 +355,9 @@ bare ground are in line with actual YSM growth rates. The second test
 provides an accuracy assessment of TASS projections that start from an
 existing tree list, compared to actual YSM growth rates.</br> ",
                
-               "Results of test 1 (TSR yield tables vs. YSM) show TSR is ", "<b>",
- ifelse(is.na(test1()), "-", ifelse(test1() > 0, "over", "under")), "</b>",
- "-estimating actual growth by ", "<b>", round(abs(test1()), 1), "</b>"," m<sup>3</sup>/ha/yr.</br> ",
+               "Results of test 1 (TSR yield tables vs. YSM) show ", test1_comment,"</br>",
 
-"Results of test 2 (TASS tree list projection vs. YSM) show TASS is ", "<b>",
- ifelse(is.na(test2()), "-", ifelse(test2() > 0, "over", "under")), "</b>",
- "-estimating actual growth by ", "<b>", round(abs(test2()), 1), "</b>", " m<sup>3</sup>/ha/yr.</br>"))
+"Results of test 2 (TASS tree list projection vs. YSM) show ", test2_comment, "</br>"))
   
 })
 
@@ -367,14 +372,18 @@ output$tsr_pai_flex1 <- renderUI({
   tsr_pai_table1 <- data.frame(attr = c("YSM", "TSR"),
                                obs = rep(dim(Fig15_dat)[1],2),
                                Yrs = c(round(mean(Fig15_dat$year_dff),0), round(mean(Fig15_dat$year_dff),0)),
-                               PAI = c(round(mean(Fig15_dat$grdnv_pai), 1),
-                                       round(mean(Fig15_dat$prednv_pai), 1)))
+                               PAI = c(round(mean(Fig15_dat$grdnv_pai), 2),
+                                       round(mean(Fig15_dat$prednv_pai), 2)))
   
   tsr_pai_table1 <- flextable(tsr_pai_table1) %>% 
     set_header_labels(values = c("attr.", "# obs", "Yrs", "PAI"), lengths = colwidths) %>%
     align(align = "center", part = "header") 
   
-  tsr_pai_table1 <- tsr_pai_table1 %>% add_header_lines(values = c("YSM vs. TSR MSYTs")) %>%
+  tsr_pai_table1 <- tsr_pai_table1 %>% 
+    add_header_lines(values = c("YSM vs. TSR MSYTs")) %>%
+    bold(part = 'header', bold = TRUE) %>%
+    set_caption(as_paragraph(
+      as_b(as_chunk("Test 1: Compare YSM actual growth vs. TSR yield table projections")))) %>%
     autofit()
   
   return(tsr_pai_table1 %>%
@@ -411,6 +420,7 @@ output$tsr_pai_flex2 <- renderUI({
   
   tsr_pai_table2 <- tsr_pai_table2 %>% 
     add_header_lines(values = as_paragraph('TSR-YSM diff(m',as_sup('3'),'/ha/yr)')) %>%
+    bold(part = 'header', bold = TRUE) %>%
     autofit()
   
   return(tsr_pai_table2 %>%
@@ -428,14 +438,18 @@ output$tass_pai_flex1 <- renderUI({
   tass_pai_table1 <- data.frame(attr = c("YSM", "TSR"),
                                 obs = rep(dim(Fig15_dat)[1],2),
                                 Yrs = c(round(mean(Fig15_dat$year_dff),0), round(mean(Fig15_dat$year_dff),0)),
-                                PAI = c(round(mean(Fig15_dat$grdnv_pai), 1),
-                                        round(mean(Fig15_dat$tass_pai), 1)))
+                                PAI = c(round(mean(Fig15_dat$grdnv_pai), 2),
+                                        round(mean(Fig15_dat$tass_pai), 2)))
   
   tass_pai_table1 <- flextable(tass_pai_table1) %>% 
     set_header_labels(values = c("attr.", "# obs", "Yrs", "PAI"), lengths = colwidths) %>%
     align(align = "center", part = "header") 
   
-  tass_pai_table1 <- tass_pai_table1 %>% add_header_lines(values = c("YSM vs. TASS projections")) %>%
+  tass_pai_table1 <- tass_pai_table1 %>% 
+    add_header_lines(values = c("YSM vs. TASS projections")) %>%
+    bold(part = 'header', bold = TRUE) %>%
+    set_caption(as_paragraph(
+      as_b(as_chunk("Test 2: Compare YSM actual growth vs. TASS YSM tree list projections")))) %>%
     autofit()
   
   return(tass_pai_table1 %>%
@@ -469,6 +483,7 @@ output$tass_pai_flex2 <- renderUI({
   
   tass_pai_table2 <- tass_pai_table2 %>% 
     add_header_lines(values = as_paragraph('TASS-YSM diff(m',as_sup('3'),'/ha/yr)')) %>%
+    bold(part = 'header', bold = TRUE) %>%
     autofit()
   
   return(tass_pai_table2 %>%

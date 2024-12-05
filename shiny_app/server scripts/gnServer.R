@@ -6,8 +6,115 @@
 #Subsetting by domain 
 
 
-output$ysm_tables <- renderPlot({
+#output$ysm_tables <- renderPlot({
+#  
+#  temp <- sample_data %>%
+#    filter(CLSTR_ID %in% clstr_id()) %>%
+#    select(SAMPLE_ESTABLISHMENT_TYPE, GRID_SIZE)
+#  
+#  temp1 <- melt(temp, id.vars=1)
+#  temp2 <-temp1 %>%
+#    group_by(SAMPLE_ESTABLISHMENT_TYPE, value) %>%
+#    summarize(n = n()) 
+#  
+#  t1 <- flextable(temp2)
+#  t1 <- labelizor(
+#    x = t1, 
+#    part = "header", 
+#    labels = c("SAMPLE_ESTABLISHMENT_TYPE" = "Sample Type", 
+#               "value" = "Grid (km)",
+#               "n" = "Total")) %>%
+#    autofit()
+#  
+#  
+#  t2 <- proc_freq(ysm_msyt_vdyp_volume %>%
+#                    filter(CLSTR_ID %in% clstr_id()) %>%
+#                    mutate(yt_source_f = factor(yt_source, 
+#                                                levels = c("TSR VDYP" = "VDYP", 
+#                                                           "TSR TIPSY Opening Specific" = "Managed" , 
+#                                                           "TSR TIPSY Aggregated" ="AGGREGATE",
+#                                                           "Excluded" = "Excluded"),
+#                                                labels = c("TSR VDYP", "TSR TIPSY Opening Specific", 
+#                                                           "TSR TIPSY Aggregated", "Excluded")))
+#                  , "yt_source_f",
+#                  #main = "# Ground Samples by Year (end of growing season)",
+#                  include.row_percent = F,
+#                  include.column_percent = F,
+#                  include.table_percent = F) 
+#  
+#  t2 <- t2 %>%
+#    add_header_lines(values = "TSR Yield Table Assignment \nCurrent Regime", top = T) %>%
+#    delete_rows(i = 2, part = "header") %>%
+#    merge_at(i = 1, j = 1:3, part = "header") %>%
+#    autofit()
+#  
+#  
+#  t3 <- proc_freq(ysm_msyt_vdyp_volume  %>%
+#                    filter(CLSTR_ID %in% clstr_id()) %>%
+#                    mutate(occupancy = factor(ifelse(vol_wsv_ha != 0, "Treed", "Empty"),
+#                                              levels = c("Treed", "Empty")))
+#                  , "occupancy",
+#                  #main = "# Ground Samples by Year (end of growing season)",
+#                  include.row_percent = F,
+#                  include.column_percent = F,
+#                  include.table_percent = F) 
+#  
+#  t3 <- t3 %>%
+#    add_header_lines(values = "YSM Plot Occupancy \nof trees >=4cm DBH", top = T) %>%
+#    delete_rows(i = 2, part = "header") %>%
+#    merge_at(i = 1, j = 1:3, part = "header") %>%
+#    autofit()
+#  
+#  
+#  t4 <- proc_freq(ysm_msyt_vdyp_volume  %>%
+#                    filter(CLSTR_ID %in% clstr_id()) %>%
+#                    mutate(xy_f = factor(xy, levels = c("Y", "N"),
+#                                         labels = c("Stem mapped plots", "Not stem mapped")))
+#                  , "xy_f",
+#                  #main = "# Ground Samples by Year (end of growing season)",
+#                  include.row_percent = F,
+#                  include.column_percent = F,
+#                  include.table_percent = F) 
+#  
+#  t4 <- t4 %>%
+#    add_header_lines(values = "Availability of stem mapped YSM \nSamples used in TASS Projections", top = T) %>%
+#    delete_rows(i = 2, part = "header") %>%
+#    merge_at(i = 1, j = 1:3, part = "header") %>%
+#    autofit()
+#  
+#  
+#  t5 <- proc_freq(ysm_msyt_vdyp_volume  %>%
+#                    filter(CLSTR_ID %in% clstr_id())  %>%
+#                    mutate(TASS_ver_f = factor(TASS_ver, levels = c(2, 3),
+#                                               labels = c("TASS ver. 2", "TASS ver. 3")))
+#                  , "TASS_ver_f",
+#                  #main = "# Ground Samples by Year (end of growing season)",
+#                  include.row_percent = F,
+#                  include.column_percent = F,
+#                  include.table_percent = F) 
+#  
+#  t5 <- t5 %>%
+#    add_header_lines(values = "TASS Version used \nfor YSM Projections", top = T) %>%
+#    delete_rows(i = 2, part = "header") %>%
+#    merge_at(i = 1, j = 1:3, part = "header") %>%
+#    autofit()
+#  
+#  t1 = gen_grob(t1)
+#  t2 = gen_grob(t2)
+#  t3 = gen_grob(t3)
+#  t4 = gen_grob(t4)
+#  t5 = gen_grob(t5)
+#  
+#  p <- grid.arrange(t1, t2, t3, t4, t5, ncol = 2)
+#  
+#  p
+#  
+#})
+
+
+output$ysm_tables1 <- renderUI({
   
+  if (input$SelectCategory == "TSA_DESC"){
   temp <- sample_data %>%
     filter(CLSTR_ID %in% clstr_id()) %>%
     select(SAMPLE_ESTABLISHMENT_TYPE, GRID_SIZE)
@@ -24,19 +131,30 @@ output$ysm_tables <- renderPlot({
     labels = c("SAMPLE_ESTABLISHMENT_TYPE" = "Sample Type", 
                "value" = "Grid (km)",
                "n" = "Total")) %>%
+    bold(part = 'header', bold = TRUE) %>%
     autofit()
   
+  } else {
+    
+    t1 <- proc_freq(sample_data %>%
+                      filter(CLSTR_ID %in% clstr_id()), 'MGMT_UNIT')
+    t1 <- labelizor(
+      x = t1, 
+      part = "header", 
+      labels = c("MGMT_UNIT" = "Management Unit (TSA & TFL)")) %>%
+      bold(part = 'header', bold = TRUE) %>%
+      autofit()
+    
+  }
+  return(t1 %>%
+           htmltools_value())
+})
+
+
+output$ysm_tables2 <- renderUI({
   
   t2 <- proc_freq(ysm_msyt_vdyp_volume %>%
-                    filter(CLSTR_ID %in% clstr_id()) %>%
-                    mutate(yt_source_f = factor(yt_source, 
-                                                levels = c("TSR VDYP" = "VDYP", 
-                                                           "TSR TIPSY Opening Specific" = "Managed" , 
-                                                           "TSR TIPSY Aggregated" ="AGGREGATE",
-                                                           "Excluded" = "Excluded"),
-                                                labels = c("TSR VDYP", "TSR TIPSY Opening Specific", 
-                                                           "TSR TIPSY Aggregated", "Excluded")))
-                  , "yt_source_f",
+                    filter(CLSTR_ID %in% clstr_id()), "yt_source_f",
                   #main = "# Ground Samples by Year (end of growing season)",
                   include.row_percent = F,
                   include.column_percent = F,
@@ -46,8 +164,16 @@ output$ysm_tables <- renderPlot({
     add_header_lines(values = "TSR Yield Table Assignment \nCurrent Regime", top = T) %>%
     delete_rows(i = 2, part = "header") %>%
     merge_at(i = 1, j = 1:3, part = "header") %>%
+    bold(part = 'header', bold = TRUE) %>%
     autofit()
   
+  return(t2 %>%
+           htmltools_value())
+  
+})
+
+
+output$ysm_tables3 <- renderUI({
   
   t3 <- proc_freq(ysm_msyt_vdyp_volume  %>%
                     filter(CLSTR_ID %in% clstr_id()) %>%
@@ -59,12 +185,30 @@ output$ysm_tables <- renderPlot({
                   include.column_percent = F,
                   include.table_percent = F) 
   
+  t3 <- proc_freq(LD_dat()  %>%
+                    #filter(CLSTR_ID %in% clstr_id()) %>%
+                    mutate(occupancy = factor(ifelse(SPC_GRP1 =="Nonstock", "Empty", "Treed"),
+                                              levels = c("Treed", "Empty")))
+                  , "occupancy",
+                  #main = "# Ground Samples by Year (end of growing season)",
+                  include.row_percent = F,
+                  include.column_percent = F,
+                  include.table_percent = F) 
+  
   t3 <- t3 %>%
     add_header_lines(values = "YSM Plot Occupancy \nof trees >=4cm DBH", top = T) %>%
     delete_rows(i = 2, part = "header") %>%
     merge_at(i = 1, j = 1:3, part = "header") %>%
+    bold(part = 'header', bold = TRUE) %>%
     autofit()
   
+  return(t3 %>%
+           htmltools_value())
+  
+})
+
+
+output$ysm_tables4 <- renderUI({
   
   t4 <- proc_freq(ysm_msyt_vdyp_volume  %>%
                     filter(CLSTR_ID %in% clstr_id()) %>%
@@ -80,8 +224,16 @@ output$ysm_tables <- renderPlot({
     add_header_lines(values = "Availability of stem mapped YSM \nSamples used in TASS Projections", top = T) %>%
     delete_rows(i = 2, part = "header") %>%
     merge_at(i = 1, j = 1:3, part = "header") %>%
+    bold(part = 'header', bold = TRUE) %>%
     autofit()
   
+  return(t4 %>%
+           htmltools_value())
+  
+})
+
+
+output$ysm_tables5 <- renderUI({
   
   t5 <- proc_freq(ysm_msyt_vdyp_volume  %>%
                     filter(CLSTR_ID %in% clstr_id())  %>%
@@ -97,19 +249,24 @@ output$ysm_tables <- renderPlot({
     add_header_lines(values = "TASS Version used \nfor YSM Projections", top = T) %>%
     delete_rows(i = 2, part = "header") %>%
     merge_at(i = 1, j = 1:3, part = "header") %>%
+    bold(part = 'header', bold = TRUE) %>%
     autofit()
   
-  t1 = gen_grob(t1)
-  t2 = gen_grob(t2)
-  t3 = gen_grob(t3)
-  t4 = gen_grob(t4)
-  t5 = gen_grob(t5)
-  
-  p <- grid.arrange(t1, t2, t3, t4, t5, ncol = 2)
-  
-  p
+  return(t5 %>%
+           htmltools_value())
   
 })
+
+
+
+
+output$sp_dam_header <- renderUI({
+  
+  HTML(paste0("<h3>Tree Species and Damage Agents Recorded from YSM Samples in ", title(),"</h3>"))
+  
+})
+
+
 
 
 
