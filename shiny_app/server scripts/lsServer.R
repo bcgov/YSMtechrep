@@ -158,7 +158,6 @@ output$leading_sp_flex <- renderUI({
     LD_dat <- LD_dat()
     
     LD_table <- proc_freq(LD_dat, "SPC_GRP_VRI", "SPC_GRP1",
-                          #main = "Leading species cross-table comparison (sum of the # of YSM plots)",
                           include.row_total = T,
                           include.row_percent = F,
                           include.column_total = T,
@@ -179,8 +178,7 @@ output$leading_sp_flex <- renderUI({
       align(align = "left", part = "header") %>%
       autofit()
     
-    LD_table <- bg(LD_table, #i = 1:(LD_table$body$content$nrow-1),
-                   #j = (1:((LD_table$body$content$ncol-1)/2))*2, 
+    LD_table <- bg(LD_table, 
                    j = (1:(LD_table$body$content$ncol/2))*2, 
                    bg = "lightgray", part = "body")
     
@@ -198,18 +196,15 @@ output$spc_comp <- renderPlot({
   
   p <- Fig11_dat %>%
     filter(spcperc >=0.001) %>%
-    ggplot(aes(x=SPC_GRP1, y=spcperc, fill=source)) + 
+    ggplot(aes(x=SPC_GRP1, y=spcperc/100, fill=source)) + 
     geom_bar(stat="identity", position = position_dodge2(preserve = "single"), width=0.7) +
     scale_fill_manual(values = c("#B4464B", "steelblue"), name = NULL, labels = c("TSR-INPUT", "YSM")) +
     scale_x_discrete(drop=FALSE) +
-    #scale_y_continuous(labels = scales::percent) +
-    scale_y_continuous(labels = scales::percent, expand = c(0, 0)) +
+    scale_y_continuous(labels = scales::label_percent(), expand = c(0, 0)) +
     labs(x = "Species", y = "% of total Stems/ha",
          title = "Overall Species Composition Comparison",
-         caption=paste0("Overall Species Composition Overlap = ", round(percoverlap*100, 0), "%")) +
-    #theme_bw() + 
+         caption=paste0("Overall Species Composition Overlap = ", round(percoverlap, 0), "%")) +
     theme(
-      #axis.line = element_line(colour="darkgray"), 
       panel.grid.major.y = element_line(color = 'darkgray'), 
       plot.caption = element_text(hjust=0, size=rel(1.2)),
       legend.position="top",

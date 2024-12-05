@@ -24,7 +24,6 @@
 output$quant_coc <- renderUI({
   
   Fig15_dat <- Fig15_dat()
-  round(mean(Fig15_dat$year_dff),0)
   
   HTML( paste0("Growth and mortality of the re-measured YSM ground samples
 (n=", "<b>", total_remeas_plot(), "</b>", ") are summarized into components of change for
@@ -42,25 +41,27 @@ all tagged trees over an average re-measurement period of ", "<b>",
 
 output$coc_chart <- renderPlot({
   
-  fig8_dat <- tree_fh_data %>%
-    filter(CLSTR_ID %in% clstr_id(), DAM_NUM==1, COMP_CHG != '') %>%
-    mutate(baha = BA_TREE*PHF_TREE)
+  fig8_dat <- fig8_dat()
+  remeas_plot <- remeas_plot()
+  total_remeas_plot <- total_remeas_plot()
   
-  fig8_dat <- fig8_dat %>%
-    group_by(COMP_CHG) %>%
-    summarize(BA = sum(baha, na.rm = T)/total_remeas_plot(),
-              stem = sum(PHF_TREE, na.rm = T)/total_remeas_plot()) %>%
+  fig8 <- fig8_dat %>%
+    filter(CLSTR_ID %in% remeas_plot) %>%
+    mutate(baha = BA_TREE*phf_coc) %>%
+    group_by(comp_chg_coc) %>%
+    summarize(BA = sum(baha, na.rm = T)/total_remeas_plot,
+              stem = sum(phf_coc, na.rm = T)/total_remeas_plot) %>%
     data.table
   
-  ratio = round(max(fig8_dat$BA)/max(fig8_dat$stem), 2)
+  ratio = round(max(fig8$BA)/max(fig8$stem), 2)
   
-  fig8_dat <- melt(fig8_dat, measure.vars = c( "stem","BA"),
-                   variable.name = "variable", value.name = "value")
+  fig8 <- melt(fig8, measure.vars = c( "stem","BA"),
+               variable.name = "variable", value.name = "value")
   
-  fig8_dat <- fig8_dat %>%
+  fig8 <- fig8 %>%
     mutate(value_adj = ifelse(variable == "BA", value/ratio, value))
   
-  p <- if (nrow(fig8_dat) > 1){ ggplot(fig8_dat, aes(x = COMP_CHG)) +
+  p <- if (nrow(fig8) > 1){ ggplot(fig8, aes(x = comp_chg_coc)) +
       geom_bar(aes(y = value_adj, fill = variable, group = variable),
                stat = "identity", position = position_dodge())  +
       labs(x = "", title = "Components of Change") + 
@@ -68,13 +69,15 @@ output$coc_chart <- renderPlot({
       #scale_fill_discrete(name = "", labels = c("Stems/ha", "BA/ha")) +
       scale_x_discrete("", labels = c("D" = "Dead", "I" = "Ingrowth", "M" = "Mortality", "S" = "Survivor")) +
       scale_y_continuous(name = "Stems (#/ha)", expand = c(0, 0), 
-                         limits = c(0,max(fig8_dat$value_adj)*1.1), 
+                         limits = c(0,max(fig8$value_adj)*1.1), 
                          sec.axis = sec_axis( trans=~.*ratio, 
                                               name=expression("Basal Area ("~m^{2}~"/ha)"))) +
-      geom_text(mapping = aes(label = round(value, 0), 
-                              x = COMP_CHG, y = value_adj+max(value_adj)*0.05, 
-                              group = variable), 
+      geom_text(mapping = aes(label = round(value, 1), 
+                              x = comp_chg_coc, y = value_adj+max(value_adj)*0.05, 
+                              group = variable,
+                              colour = variable), 
                 position = position_dodge(width = .9), show.legend  = FALSE) + 
+      scale_color_manual(values = c("steelblue", "#B4464B")) +
       #theme_bw() + 
       theme(
         axis.title.y = element_text(color="steelblue"),
@@ -123,7 +126,7 @@ output$curr_fh_inci <- renderPlot({
   # *compute incidence percent by agent by sample;
   ### Total stems/ha within a plot & average stems/ha of all plots
   FH_dat <- tree_fh_data  %>%
-    filter(CLSTR_ID %in% clstr_id(), S_F == "S") 
+    filter(CLSTR_ID %in% clstr_id(), S_F == "S", RESIDUAL != "Y") 
   
   FH_dat1 <- FH_dat  %>%
     filter(DAM_NUM == 1)  %>%
@@ -212,7 +215,8 @@ output$curr_fh_inci <- renderPlot({
                        limits = c(0, max(round(FH_dat_final[FH_dat_final$AGN!="O" & FH_dat_final$LV_D == "L",]$u95_stems+0.05,1)))) + 
     facet_grid(. ~ reorder(dam_class, -incid_stems_allplot, min), scales="free_x", space="free_x") +
     labs(x = "", y = "Incidence (%)",
-         title = "Current Incidence (% of total live stems/ha of up to 5 damage agents per tree)") +
+         title = "Current Incidence",  
+         subtitle = "(% of total live stems/ha of up to 5 damage agents per tree)") +
     #theme_bw() + 
     theme(
       axis.line = element_line(colour="darkgray"), 
@@ -406,11 +410,11 @@ output$fh_trees_flex <- renderUI({
   fig10_dat_final <- fig10_dat_final()
   
   if (nrow(fig10_dat_final) > 0){
-    tot_tree_alive <- round(unique(fig10_dat_final[fig10_dat_final$new_visit_number==2,]$totsph_comdem),0)
+    tot_tree_alive <- round(unique(fig10_dat_final[fig10_dat_final$new_visit_number=='Last',]$totsph_comdem),0)
     
     table6_dat <- fig10_dat_final %>%
       arrange(incid_stems) %>%
-      filter(new_visit_number == 1) %>%
+      filter(new_visit_number == 'Last') %>%
       slice_max(incid_stems, n =15) %>%
       mutate(total = "", 
              PDA = AGN,
@@ -424,12 +428,13 @@ output$fh_trees_flex <- renderUI({
       select(total, PDA, Inci, S, M, Tot, PM, Prob) %>%
       mutate(across(everything(), .fns = function(x) ifelse(x == 0, "", x)))
     
-    
     flextable3 <- flextable(table6_dat) 
     
     flextable3 <- add_header_row(flextable3, top = TRUE, colwidths = c(3,4,1),
                                  values = c("", "Affected trees alive at the start of the period", "")) %>%
-      align(align = "center", part = "all")
+      align(align = "center", part = "all") %>%
+      merge_v(j = c(1:3,8), part = "header") 
+    
     flextable3 <- labelizor(
       x = flextable3, 
       part = "header", 
@@ -442,7 +447,6 @@ output$fh_trees_flex <- renderUI({
                  "PM" = "Mortality\n (b/(a+b))\n (%)",
                  "Prob" = "Prob getting\n infected &\n then dying\n (%)")) %>%
       autofit()
-    
     
     flextable3 <- merge_v(flextable3, j = 1:2, part = "header") 
     
@@ -468,7 +472,6 @@ output$fh_trees_flex <- renderUI({
                  "X7" = "Mortality\n (b/(a+b))\n (%)",
                  "X8" = "Prob getting\n infected &\n then dying\n (%)")) %>%
       autofit()
-    
     
     flextable3 <- merge_v(flextable3, j = 1:2, part = "header") 
     
@@ -565,33 +568,41 @@ output$fh_trees_flex <- renderUI({
 output$future_fh <- renderUI({
   
   year100_immed <- year100_immed()
-  year100_inc<- year100_inc()
-  year100_comb<- year100_comb()
+  year100_inc <- year100_inc()
+  year100_comb <- year100_comb()
   
-  HTML(paste0("Forest health impacts are currently modeled in TASS using the forest
-health modules GRIM & CRIME that quantify volume impacts of a specific
-group of stem rusts (DSC, DSG, DSS). YSM sample measurements collected
-since 2017 include the necessary tree detail information to run these
-modules. However, to address forest health risks from all other damage
-agents (and for those sample measurements collected before 2017), an
-interim simplistic approach is applied to estimate future impacts of all
-known forest health agents. This involves creating two groups of damage
-agents: 1) those expected to result in immediate mortality vs. 2) those
-causing incremental mortality or growth loss through to rotation. For
-the first group, 90% of the current measured incidence is assumed to
-cause immediate mortality (left graph). For the second group, the impact
-is modeled as a product of the current measured incidence times a
-mortality rate of 2.5% volume loss per decade (right graph). Their
-combined impact is applied as an additional reduction factor to each
-individually modeled YSM TASS projection up to rotation age. These interim 
-forest health factors resulted in an additional 8% volume impact on YSM 
-TASS projections by age 100. The GRIM/CRIME forest health modules 
-(affecting DSC,DSG,DSS) resulted in a further 0.2 % volume impact on YSM 
-TASS projections by age 100.", "</br>", "These interim forest health factors 
-resulted in an additional ","<b>", year100_comb, "</b>","% volume
-impact on YSM TASS projections by age 100. The GRIM/CRIME forest health
-modules (affecting DSC,DSG,DSS) resulted in a further ", "<b>", year100_inc, "</b>",
-"% volume impact on YSM TASS projections by age 100."))
+  max_measyear <- max_measyear()
+  stemrustimpact <- stemrustimpact()
+  
+  phrase <- ifelse(max_measyear >= 2017, 
+         paste0("The GRIM/CRIME forest health modules (affecting DSC,DSG,DSS) resulted in a <b>",
+         stemrustimpact %>% tail(1) %>% pull(rustimpact), "</b> volume impact on YSM TASS 
+         projections by age <b>", stemrustimpact %>% tail(1) %>% pull(AGE), "</b>. In addition, 
+         the interim forest health factors resulted in a further ","<b>", year100_comb, 
+         "</b>","% volume impact on YSM TASS projections by age 100."),
+         paste0("The GRIM/CRIME forest health modules could not be included since the 
+         latest sample visit was completed prior to 2017.  Therefore, interim 
+         forest health factors also account for (DSC,DSG,DSS) stem rusts and 
+         resulted in an additional <b>", year100_comb, " %</b> volume impact on YSM 
+         TASS projections by age 100."))
+  
+  
+  HTML(paste0("<p>Forest health impacts are currently modeled in TASS using 
+  the forest health modules GRIM & CRIME that quantify volume impacts of 
+  a specific group of stem rusts (DSC, DSG, DSS). YSM sample measurements 
+  collected since 2017 include the necessary tree detail information to 
+  run these modules. However, to address forest health risks from all other 
+  damage agents (and for those sample measurements collected before 2017), 
+  an interim simplistic approach is applied to estimate future impacts of 
+  all known forest health agents. This involves creating two groups of 
+  damage agents: 1) those expected to result in immediate mortality vs. 
+  2) those causing incremental mortality or growth loss through to rotation. 
+  For the first group, 90% of the current measured incidence is assumed to 
+  cause immediate mortality (left graph). For the second group, the impact 
+  is modeled as a product of the current measured incidence times a mortality 
+  rate of 2.5% volume loss per decade (right graph).
+  Their combined impact is applied as an additional reduction factor to 
+  each YSM TASS projection up to rotation age.</p>", "<p>", phrase, "</p>"))
   
 })
 

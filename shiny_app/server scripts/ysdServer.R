@@ -134,6 +134,10 @@ output$stand_summary_flex <- renderUI({
                                      i = 5, j = 1, 
                                      value = as_paragraph('Net Merch Vol. (m',as_sup('3'),'/ha)'))
     
+    flextable2 <- bg(flextable2, 
+                     j = 7,
+                     bg = "lightgray", part = "all")
+    
     flextable2 <- autofit(flextable2)
     
     return(flextable2 %>%
@@ -147,7 +151,6 @@ output$live_sp <- renderPlot({
   if (!is.null(clstr_id())){
     
     summary_data <- summary_data()
-    #spcs_dat <- spcs_dat()
     
     spc_ba <- summary_data %>%
       group_by(SPC_GRP1) %>%
@@ -181,6 +184,7 @@ output$live_sp <- renderPlot({
     spc_summary <- rbind(spc_ba, spc_stem) 
     
     spc_summary <- spc_summary %>% 
+      filter(!(SPC_GRP1 == "" & PERC == 0)) %>% 
       arrange(BY, order)
     
     p <- spc_summary |>
@@ -188,13 +192,12 @@ output$live_sp <- renderPlot({
       mutate(total = sum(PERC)) |>
       ungroup() |>
       select(SPC_GRP2, BY, total) |>
-      distinct() |> #important for only graphing single element 
+      distinct() |> 
       ggplot(aes(x = reorder(SPC_GRP2, ifelse(BY=="BA",-total, 0)), y = total, fill = factor(BY))) +
       geom_bar(position = position_dodge2(preserve = "single"), stat = "identity", width = 0.7) +
       labs(x = "", y = "% of Total", title = "Live Species Composition") + 
       scale_fill_manual(values = c("steelblue", "#B4464B"), name = NULL, labels = c("by BA", "by # stems")) +
       scale_y_continuous(expand = c(0, 0),limits = c(0, round(max(spc_summary$PERC, na.rm = T),-1)+5)) +
-      #theme_bw() + 
       theme(
         axis.line = element_line(colour="darkgray"), 
         panel.grid.major.y = element_line(color = 'darkgray'), 
@@ -233,18 +236,15 @@ output$bec_dist <- renderPlot({
     
     p <- ggplot(figdata, aes(x=fct_infreq(factor(BEClabel)))) +
       geom_bar(stat="count", width=0.5, fill="steelblue") + 
-      #scale_x_discrete(breaks = NULL) +
-      #theme_bw() + 
-      #scale_x_discrete(breaks = NULL) + 
       theme(
         panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank(),
-        panel.grid.minor.y = element_blank(),
+        panel.grid.major.y = element_line(colour="darkgray"),
         rect = element_blank()
       ) +
-      scale_y_continuous(breaks = function(x)
-        seq(floor(min(x)), ceiling(max(x))),
-        limits = c(0, max(table(figdata$BEClabel))+0.5))+
+      scale_x_discrete(guide = guide_axis(angle = -45)) +
+      scale_y_continuous(expand = c(0, 0), 
+                         label = ~ scales::comma(.x, accuracy = 1)) +
       labs(x = "", y = "# of YSM samples",
            title = "YSM Sample Distribution by BEC subzone/variant") 
     
@@ -286,17 +286,16 @@ output$stock_table <- renderPlot({
              DBH_CLASS_relevel = cut(DBH_CLASS, breaks = c(seq(-1, 59, 5), Inf), 
                                      labels = c(seq(0, 55, 5), "60+")))
     
-    p <- ggplot(fig5_dat, aes(x = factor(DBH_CLASS_relevel), y = PERC_TOT_VOL_HA_SPC, fill = SPC_GRP2)) + 
+    p <- ggplot(fig5_dat, aes(x = DBH_CLASS_relevel, y = PERC_TOT_VOL_HA_SPC, fill = SPC_GRP2)) + 
       geom_bar(stat = "identity") + 
       scale_fill_brewer(name = "", palette = "Set2") +
       scale_x_discrete(drop=FALSE) +
       scale_y_continuous(labels = scales::percent) +
       labs(x = "DBH class (cm)", y = "% of total vol/ha",
            title = "Stock Table - live trees") +
-      #theme_bw() + 
       theme(
         #axis.line = element_line(colour="darkgray"), 
-        #panel.grid.major.y = element_line(color = 'darkgray'), 
+        panel.grid.major.y = element_line(color = 'darkgray'), 
         panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank(),
         rect = element_blank()

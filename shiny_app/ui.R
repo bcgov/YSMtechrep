@@ -4,17 +4,27 @@ ui <- dashboardPage(
   
   title = "YSM Technical Report", # Browser title
   
-  dashboardHeader(title = div('YSM Technical Report', style = "color: white; font-weight: bold; font-size: 24px;
-                              font-family: 'BCSans', 'Noto Sans', Verdana, Arial, sans-serif;
-                              padding-top:10px;"),
-                  
+  dashboardHeader(
                   tags$li(a(href = 'https://gov.bc.ca',
                             img(src = 'logo-banner.png',
                                 title = "Home", height = "41px"),
                             style = "padding-top:10px; padding-bottom:10px;
                             background-color: #036; margin-right: 10px;"),
-                          class = "dropdown")
-                  ),
+                          class = "dropdown"),
+                  title = div('YSM Technical Report', style = "color: white; font-weight: bold; font-size: 24px;
+                              font-family: 'BCSans', 'Noto Sans', Verdana, Arial, sans-serif;
+                              padding-top:10px;")
+    #titleWidth='100%',
+    #title = span(
+    #  tags$img(src="logo-banner.png", title = "Home", height = "41px"), 
+    #  column(12, class="title-box", 
+    #         tags$h1(class="primary-title", style="color: white; font-weight: bold; font-size: 24px;
+    #                          font-family: 'BCSans', 'Noto Sans', Verdana, Arial, sans-serif;
+    #                          padding-top:10px;", 'YSM Technical Report')
+    #         #tags$h2(class="primary-subtitle", style='margin-top:10px;', 'EXPERT ELICITATION FOR ADAPTIVE MANAGEMENT')
+    #  )
+    #              )
+    ),
   
   dashboardSidebar(disable = TRUE),
   
@@ -70,7 +80,7 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
       
   column(3, radioButtons(inputId = "SelectCategory", label = "Strata",
                         choices = c("By TSA" = "TSA_DESC", 
-                                    "By BEC" = "BEC_ZONE"))
+                                    "By BEC" = "BECsub"))
                 
          ), # radiobutton column
   

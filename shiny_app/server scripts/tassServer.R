@@ -121,9 +121,32 @@ output$tass_tsr_netvol <- renderPlot({
   volproj <- volproj()
   meanage <- meanage()
   
-  p <- volproj %>%
+  volproj1 <- volproj %>%
+    arrange(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, desc(xy), desc(rust)) %>%
+    group_by(SITE_IDENTIFIER, AGE) %>%
+    slice(1) %>%
     ungroup() %>%
-    filter(rust == "Y") %>%
+    #filter(!is.na(rust)) %>%
+    group_by(AGE) %>%
+    summarize(meanvol_tsr = mean(volTSR, na.rm = T),
+              sd_tsr = sd(volTSR , na.rm = T),
+              meanvol_tass = mean(volTASS_adj, na.rm = T),
+              sd_tass = sd(volTASS_adj , na.rm = T),
+              n = n()) %>%
+    ungroup() %>%
+    mutate(se_tsr = sd_tsr/sqrt(n),
+           se_tass = sd_tass/sqrt(n),
+           tstat = ifelse(n >1, qt(0.975, n-1), NA),
+           u95_tsr = meanvol_tsr + tstat*se_tsr,
+           l95_tsr = meanvol_tsr - tstat*se_tsr,
+           mai_tsr = meanvol_tsr/AGE,
+           u95_tass = meanvol_tass + tstat*se_tass,
+           l95_tass = meanvol_tass - tstat*se_tass,
+           mai_tass = meanvol_tass/AGE)
+  
+  p <- volproj1 %>%
+    ungroup() %>%
+    #filter(rust == "Y") %>%
     mutate(l95_tsr = ifelse(l95_tsr < -10, NA, l95_tsr),
            u95_tsr = ifelse(l95_tsr < -10, NA, u95_tsr),
            l95_tass = ifelse(l95_tass < -10, NA, l95_tass),
@@ -166,16 +189,11 @@ output$tass_tsr_netvol <- renderPlot({
 })
 
 
-
 output$tasstable_flex <- renderUI({
   
-  volproj <- volproj()
+  stemrustimpact <- stemrustimpact()
   
-  tasstable <- volproj %>%
-    filter(AGE %in% c(60, 70, 80, 90, 100)) %>%
-    pivot_wider(id_cols = AGE,
-                names_from = rust, values_from = meanvol_tass) %>%
-    mutate(rustimpact = paste0(round((N-Y)/N*100,1), "%")) %>%
+  tasstable <- stemrustimpact %>%
     select(AGE, rustimpact) %>%
     flextable %>%
     align(align = "right", part = "body") %>%
@@ -194,9 +212,32 @@ output$culmtable_flex <- renderUI({
   
   volproj <- volproj()
   
+  volproj1 <- volproj %>%
+    arrange(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, desc(xy), desc(rust)) %>%
+    group_by(SITE_IDENTIFIER, AGE) %>%
+    slice(1) %>%
+    ungroup() %>%
+    #filter(!is.na(rust)) %>%
+    group_by(AGE) %>%
+    summarize(meanvol_tsr = mean(volTSR, na.rm = T),
+              sd_tsr = sd(volTSR , na.rm = T),
+              meanvol_tass = mean(volTASS_adj, na.rm = T),
+              sd_tass = sd(volTASS_adj , na.rm = T),
+              n = n()) %>%
+    ungroup() %>%
+    mutate(se_tsr = sd_tsr/sqrt(n),
+           se_tass = sd_tass/sqrt(n),
+           tstat = ifelse(n >1, qt(0.975, n-1), NA),
+           u95_tsr = meanvol_tsr + tstat*se_tsr,
+           l95_tsr = meanvol_tsr - tstat*se_tsr,
+           mai_tsr = meanvol_tsr/AGE,
+           u95_tass = meanvol_tass + tstat*se_tass,
+           l95_tass = meanvol_tass - tstat*se_tass,
+           mai_tass = meanvol_tass/AGE)
+  
   culmtable <- rbind(
-    volproj %>% filter(rust == "Y") %>% slice(which.max(mai_tass)) %>% select(AGE, mai = mai_tass),
-    volproj %>% filter(rust == "Y") %>% slice(which.max(mai_tsr)) %>% select(AGE, mai = mai_tsr))
+    volproj1 %>% slice(which.max(mai_tass)) %>% select(AGE, mai = mai_tass),
+    volproj1 %>% slice(which.max(mai_tsr)) %>% select(AGE, mai = mai_tsr))
   
   culmtable$Proj <- c("YSM (TASS proj)", "TSR")
   
@@ -219,26 +260,29 @@ output$culmtable_flex <- renderUI({
 output$tass_tsr_test <- renderUI({
   
   projectiontable <- projectiontable()
+  prjtab_70 <- projectiontable %>% filter(AGE >=70)
   
-  max_row = which.max(abs(projectiontable$meanvoldiff/projectiontable$meanvol_tass*100))
+  max_row = which.max(abs(prjtab_70$meanvoldiff/prjtab_70$meanvol_tass*100))
   
-  maxvoldiff = projectiontable$percvoldiff[max_row]
-  ageatmaxvoldiff = projectiontable$AGE[max_row]
-  Significant = ifelse(projectiontable$pval[max_row] <0.05, "Yes", "No")
-  TSRbias1 = ifelse(projectiontable$meanvoldiff[max_row] < 0, "Conservative", "Optimistic")
+  maxvoldiff = prjtab_70$percvoldiff[max_row]
+  ageatmaxvoldiff = prjtab_70$AGE[max_row]
+  Significant = ifelse(prjtab_70$pval[max_row] <0.05, "Yes", "No")
+  TSRbias1 = ifelse(prjtab_70$meanvoldiff[max_row] < 0, "Conservative", "Optimistic")
   TSRbias2 = ifelse(Significant == "No", "No", TSRbias1)
   
   HTML( paste0("TSR MSYTs are evaluated against YSM TASS projections, using paired t-tests 
 of the volume differences (TSR-YSM) projected from 60 & 100 years. 
 Highlighted fields (table below) indicate significant differences at alpha = 
 0.05. Overall percent differences are computed as (TSR-YSM)/YSM, and the 
-age at maximum percent volume difference is identified (table below).", "</br>", 
-               "</br><ul><li><b><i>Max % vol diff</i></b>",'&emsp;', maxvoldiff, "</li>",
+age at maximum percent volume difference is identified (table below).", 
+               "</br>", "</br>", 
+               "<hX><b>Assessment of TSR bias between 70-90 years</b></hX></br>",
+               "<ul><li><b><i>Max % vol diff</i></b>",'&emsp;', maxvoldiff, "</li>",
                "<li><b><i>Age @max vol diff</i></b>",'&emsp;', ageatmaxvoldiff, "</li>",
                "<li><b><i>Significant?</b>(when n >= 10)</i>",'&emsp;', 
                ifelse(Significant == "Yes", "<font color='#FF0000'>", ""), 
                Significant, ifelse(Significant == "Yes", "</font>", ""), "</li>",
-               "<li><b><i>TSR bias?</i></b>", '&emsp;', TSRbias2, "</li></br>"))
+               "<li><b><i>TSR bias?</i></b>", '&emsp;', TSRbias2, "</li></br></li></ul>"))
                
 })
 

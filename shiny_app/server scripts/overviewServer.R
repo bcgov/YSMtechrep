@@ -9,11 +9,20 @@ output$overview <- renderUI({
   
   gridsize <- sample_data %>% 
     filter(SITE_IDENTIFIER %in% site_id()) %>% 
-    select(GRID_SIZE) %>% 
-    distinct() %>% 
-    pull()
+    select(GRID_SIZE) 
   
-  gridsize <- gridsize[length(gridsize)]
+  gridsize <- names(table(gridsize)[which.max(table(gridsize))])
+  
+  
+  mgmt <- sample_data %>% 
+    filter(SITE_IDENTIFIER %in% site_id()) %>% 
+    distinct(MGMT_UNIT) 
+  mgmts <- paste(mgmt$MGMT_UNIT, collapse = "; ")
+  
+  additionlaphrase <- ifelse(input$SelectCategory == "BECsub",
+                             paste0("Sampled mangement units intersecting with the ",
+                                    title(), " subzone include: ", mgmts, "."), 
+                             "")
   
   HTML(
     paste0("Young Stand Monitoring (YSM) programs have been established 
@@ -34,8 +43,7 @@ growth models to help evaluate if young stands will meet future timber
 supply expectations.", '<br/>','<br/>',
            "The TSA map (right) includes the source of site index found in the 
 latest Provincial Site Productivity Layer (PSPL) : either TEM/PEM & 
-SIBEC, or Biophysical Site Index Model.
-")
+SIBEC, or Biophysical Site Index Model.",'<br/>','<br/>', additionlaphrase)
   )
   
 })
@@ -51,7 +59,7 @@ output$plotgraph <- renderLeaflet({
       group_by(SITE_IDENTIFIER) %>% 
       mutate(visit_num = length(VISIT_NUMBER),
              visit_year = paste0(MEAS_YR, collapse  = ',')) %>%
-      select(SITE_IDENTIFIER, SAMPLE_ESTABLISHMENT_TYPE, visit_num, visit_year, #BEClabel,
+      select(SITE_IDENTIFIER, SAMPLE_ESTABLISHMENT_TYPE, visit_num, visit_year, BECsub,
              TSA_DESC, BEC_ZONE, BEC_SBZ, BEC_VAR, GRID_SIZE,
              BC_ALBERS_X, BC_ALBERS_Y) %>% 
       distinct()
@@ -64,20 +72,27 @@ output$plotgraph <- renderLeaflet({
     
     if(input$SelectCategory == "TSA_DESC"){
       
-      tsa_sub <- tsa_sp %>%
+      aoimap <- tsa_sp %>%
         filter(TSA_NUMBER %in% substr(unique(sample_data[sample_data$SITE_IDENTIFIER %in% site_id(),]$MGMT_UNIT), 4, 5))
       
-      lng1 = as.numeric(st_bbox(tsa_sub)[1])
-      lat1 = as.numeric(st_bbox(tsa_sub)[2])
-      lng2 = as.numeric(st_bbox(tsa_sub)[3])
-      lat2 = as.numeric(st_bbox(tsa_sub)[4])
+      lng1 = as.numeric(st_bbox(aoimap)[1])
+      lat1 = as.numeric(st_bbox(aoimap)[2])
+      lng2 = as.numeric(st_bbox(aoimap)[3])
+      lat2 = as.numeric(st_bbox(aoimap)[4])
       
     } else {
-      tsa_sub <- tsa_sp
-      lng1 = -139.06
-      lat1 = 48.30
-      lng2 = -114.03
-      lat2 = 60.00
+      #lng1 = -139.06
+      #lat1 = 48.30
+      #lng2 = -114.03
+      #lat2 = 60.00
+      
+      aoimap <- becmap %>%
+        filter(BECsub %in% sample_data[sample_data$SITE_IDENTIFIER %in% site_id(),]$BECsub)
+      
+      lng1 = as.numeric(st_bbox(aoimap)[1])
+      lat1 = as.numeric(st_bbox(aoimap)[2])
+      lng2 = as.numeric(st_bbox(aoimap)[3])
+      lat2 = as.numeric(st_bbox(aoimap)[4])
     }
     
     
@@ -95,7 +110,7 @@ output$plotgraph <- renderLeaflet({
         baseGroups = c("Base map", "Terrain only", "Satellite view"),
         options = layersControlOptions(collapsed = FALSE),
       ) %>%
-      addPolygons(data = tsa_sub, stroke = TRUE, color = "#3c8dbc", weight = 2,
+      addPolygons(data = aoimap, stroke = TRUE, color = "#3c8dbc", weight = 2,
                   opacity = 0.9, fill = TRUE, fillOpacity = 0.2) %>%
       addCircleMarkers(data = location,
                        radius = 5, stroke = FALSE, fillOpacity = 1,
@@ -121,9 +136,11 @@ output$flex <- renderUI({
     
     table1_dat <- sample_data %>%
       filter(SITE_IDENTIFIER %in% site_id()) %>%
-      mutate(meas_yr_adj = ifelse(month(MEAS_DT) >= 7, MEAS_YR, MEAS_YR - 1))
+      group_by(SITE_IDENTIFIER) %>%
+      arrange(VISIT_NUMBER) %>%
+      mutate(visit_number_new = row_number())
     
-    flextable1 <- proc_freq(table1_dat, "VISIT_NUMBER", "meas_yr_adj",
+    flextable1 <- proc_freq(table1_dat, "visit_number_new", "MEAS_YR",
                             include.row_total = F,
                             include.row_percent = F,
                             include.column_percent = F,
@@ -132,8 +149,8 @@ output$flex <- renderUI({
     flextable1 <- labelizor(
       x = flextable1, 
       part = "header", 
-      labels = c("VISIT_NUMBER" = "Meas #", 
-                 "meas_yr_adj" = "# Ground Samples by Year\n (end of growing season)")) %>%
+      labels = c("visit_number_new" = "Meas", 
+                 "MEAS_YR" = "# Ground Samples by Year\n (end of growing season)")) %>%
       autofit()
     
     return(flextable1 %>%
@@ -153,6 +170,8 @@ output$key_finding <- renderUI({
   Significant = ifelse(projectiontable$pval[max_row] <0.05, "Yes", "No")
   TSRbias1 = ifelse(projectiontable$meanvoldiff[max_row] < 0, "Conservative", "Optimistic")
   TSRbias2 = ifelse(Significant == "No", "No", TSRbias1)
+  test1_comment <- test1_comment()
+  test2_comment <- test2_comment()
   
   HTML(paste0("<h3>Summary of Key Findings for Existing Young Stands in ",
               title(), " related to Timber Supply</h3>","</br>",
@@ -165,7 +184,7 @@ output$key_finding <- renderUI({
     "<li>Species composition from YSM ground samples is compared against 
     TSR inputs (ie., regeneration assumptions used in modeling existing stands 
     in Timber Supply Review [TSR]). The overall species composition overlap is: ", 
-    "<b><font color='#FF0000'>", round(percoverlap()*100, 0), "</b> (% overlap)</font></li>",
+    "<b><font color='#FF0000'>", round(percoverlap(), 0), "</b> (% overlap)</font></li>",
     
     "<li>The Provincial Site Productivity Layer (PSPL), one of the TSR 
     inputs used for modeling existing managed stands, is assessed for bias 
@@ -186,16 +205,12 @@ output$key_finding <- renderUI({
     "<li>The periodic annual increment (PAI) of TSR yield tables are compared 
     against re-measured YSM samples over the same remeasurement period, to test 
     if TSR projections are significantly different from YSM growth rates: ",
-    "<b><font color='#FF0000'> TSR is ", 
-    ifelse(is.na(test1()), "-", ifelse(test1() > 0, "over", "under")), 
- "estimating actual growth by ", round(abs(test1()), 1), " m<sup>3</sup>/ha/yr.</b></font></li>",
+    "<b><font color='#FF0000'> ", test1_comment,"</b></font></li>",
  
     "<li>The PAI of YSM TASS projections are compared against re-measured 
     YSM samples over the same remeasurement period, to test if TASS projections 
     are significantly different from YSM growth rates: ",
- "<b><font color='#FF0000'> TASS is ", 
- ifelse(is.na(test2()), "-", ifelse(test2() > 0, "over", "under")), 
- "estimating actual growth by ", round(abs(test2()), 1), " m<sup>3</sup>/ha/yr.</b></font></li>",
+ "<b><font color='#FF0000'>", test2_comment, "</b></font></li>",
  
     "<li>For YSM measurements since 2017, the impact from stem rusts can be 
     directly modeled in TASS using GRIM / CRIME. The volume impact of TASS YSM 

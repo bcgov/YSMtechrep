@@ -78,7 +78,7 @@ output$residual_ysm <- renderPlot({
   p <- ggplot(fig6_dat, 
                  aes(x = DBH_CLASS_relevel, y = PERC_TOT_VOL_HA, 
                      fill =RESIDUAL_relevel, color = RESIDUAL_relevel)) + 
-    geom_bar(stat = "identity", position = position_stack(reverse = T)) + 
+    geom_bar(stat = "identity", position = position_stack(reverse = T), width=0.7) + 
     scale_x_discrete(drop=FALSE) +
     scale_fill_manual(values = c("steelblue", "#B4464B"), drop=FALSE) +
     scale_color_manual(values = c("steelblue", "#B4464B"), drop=FALSE) +
