@@ -5,76 +5,28 @@
 ###############################################.
 #Subsetting by domain 
   
-#summary_data <- reactive({
-#  
-#  req(input$SelectCategory, input$SelectVar)
-#  input$genearate
-#  
-#  summary_data<-spcs_data %>% 
-#    filter(CLSTR_ID %in% clstr_id(), UTIL == 4) %>%
-#    mutate(SPC_GRP1 = substr(SPECIES,1,2)) %>%
-#    mutate(SPC_GRP1 = ifelse(SPECIES %in% decidspc, 'DE', SPC_GRP1))%>%  
-#    mutate(BA_HA_L = BA_HA_LS + BA_HA_LF,
-#           BA_HA_D = BA_HA_DS + BA_HA_DF,
-#           STEMS_HA_L = STEMS_HA_LS + STEMS_HA_LF,
-#           STEMS_HA_D = STEMS_HA_DS + STEMS_HA_DF,
-#           VHA_WSV_L = VHA_WSV_LS + VHA_WSV_LF,
-#           VHA_WSV_D = VHA_WSV_DS + VHA_WSV_DF,
-#           n = length(unique(SITE_IDENTIFIER))) %>% 
-#    select(SITE_IDENTIFIER, CLSTR_ID, SPECIES, SPC_GRP1, 
-#           BA_HA_L, BA_HA_D, STEMS_HA_L, STEMS_HA_D, 
-#           VHA_WSV_L, VHA_WSV_D, n, 
-#           QMD_LS, QMD_DS)
-#  
-#  summary_mer<-spcs_data %>% 
-#    filter(CLSTR_ID %in% clstr_id(), UTIL == ifelse(SPECIES =="PL", 12.5, 17.5)) %>% 
-#    select(SITE_IDENTIFIER, CLSTR_ID, UTIL, SPECIES, 
-#           VHA_MER_LS, VHA_MER_LF, VHA_MER_DS, VHA_MER_DF) %>% 
-#    mutate(VHA_MER_L = VHA_MER_LS + VHA_MER_LF,
-#           VHA_MER_D = VHA_MER_DS + VHA_MER_DF) 
-#  
-#  summary_data <- summary_data %>%
-#    left_join(summary_mer, by = c('SITE_IDENTIFIER', 'CLSTR_ID', "SPECIES"))
-#  
-#  summary_data <- summary_data %>%
-#    left_join(SI_data, by = c('SITE_IDENTIFIER', 'CLSTR_ID', "SPECIES"))
-#  
-#  return(summary_data)
-#  
-#})
-#
-#
-#decid_vol <- reactive({
-#  
-#  summary_data <- summary_data()
-#  
-#  decid_vol <- summary_data %>%
-#    mutate(spc_dec_con = ifelse(SPC_GRP1 == "DE", "decid", "con")) %>%
-#    group_by(spc_dec_con) %>%
-#    summarize(VHA_WSV_L = sum(VHA_WSV_L, na.rm = T)) %>%
-#    ungroup() %>%
-#    mutate(vol = round(VHA_WSV_L/sum(VHA_WSV_L, na.rm = T)*100,0)) %>%
-#    filter(spc_dec_con == "decid") %>%
-#    pull(vol)
-#  
-#  return(decid_vol)
-#})
+ysd <- reactive({
+  req(input$SelectCategory, input$SelectVar)
+  
+  ysd <-  HTML(paste0("Stand summaries (all species combined) are compiled and summarized for 
+       all samples in the target population at the time of the latest measurement. 
+       Compilations are for all standing trees >= 4cm DBH, except net merchantable 
+       volume (i.e., PL >= 12.5cm DBH, & all other species >= 17.5cm DBH, 
+       excluding 30cm stump height, 10cm top diameter, & decay). 
+       Species code names are listed on <b> General Notes</b>."))
+  
+  return(ysd)
+})
 
 
 output$young_stand_description <- renderUI({
   
-  HTML("Stand summaries (all species combined) are compiled and summarized for 
-       all samples in the target population at the time of the latest measurement. 
-       Compilations are for all standing trees >=4cm DBH, except net merchantable 
-       volume (i.e., PL >= 12.5cm DBH, & all other species >=17.5cm DBH, 
-       excluding 30cm stump height, 10cm top diameter, & decay). 
-       Species code names are listed on <b> General Notes </b> tab."
-  )
+  ysd()
   
 })
 
-output$stand_summary_flex <- renderUI({
-  
+summaryflex <- reactive({
+  req(input$SelectCategory, input$SelectVar)
   if(!is.null(clstr_id())){
     
     summary_data <- summary_data()
@@ -140,14 +92,18 @@ output$stand_summary_flex <- renderUI({
     
     flextable2 <- autofit(flextable2)
     
-    return(flextable2 %>%
-             htmltools_value())      
-  }
+    return(flextable2)
+    }      
 })
 
 
-output$live_sp <- renderPlot({
-  
+output$stand_summary_flex <- renderUI({
+  htmltools_value(summaryflex())
+})
+
+
+livespplot <- reactive({
+  req(input$SelectCategory, input$SelectVar)
   if (!is.null(clstr_id())){
     
     summary_data <- summary_data()
@@ -187,7 +143,7 @@ output$live_sp <- renderPlot({
       filter(!(SPC_GRP1 == "" & PERC == 0)) %>% 
       arrange(BY, order)
     
-    p <- spc_summary |>
+    livespplot <- spc_summary |>
       group_by(BY, SPC_GRP2) |>
       mutate(total = sum(PERC)) |>
       ungroup() |>
@@ -206,56 +162,52 @@ output$live_sp <- renderPlot({
         rect = element_blank()
       ) 
     
-    p 
-}
+  }
   
-  #else{
-  #  
-  #  
-  #  p <- plot_ly(dummyData, x = dummyData$tot_stand_age,
-  #               y = dummyData$wsvha_liv,
-  #               type = "scatter",
-  #               mode = "markers") %>%
-  #    layout(  autosize=TRUE, dragmode = 'lasso', xaxis = (list(range = c(2013, 2023), title = "Year", automargin = TRUE)),
-  #             legend = list(orientation = 'h',  y = 100), margin = list(r = 20, b = 50, t = 50, pad = 4),
-  #             yaxis = (list(range = c(0, 100),title = "Mean BA (m2/ha)")))%>%
-  #    config(displayModeBar = F)
-  #  
-  #  # ggplotly(p) %>%
-  #  p} 
+  return(livespplot)
+})
+
+
+output$live_sp <- renderPlot({
+  
+  livespplot()
   
   })
 
-
-output$bec_dist <- renderPlot({
-  
+becplot <- reactive({
+  req(input$SelectCategory, input$SelectVar)
   if (!is.null(clstr_id())){
     
     figdata <- sample_data %>%
       filter(CLSTR_ID %in% clstr_id())
     
     p <- ggplot(figdata, aes(x=fct_infreq(factor(BEClabel)))) +
-      geom_bar(stat="count", width=0.5, fill="steelblue") + 
+      geom_bar(stat="count", width=0.5, fill="steelblue") +
+      scale_x_discrete(guide = guide_axis(angle = -45)) +
+      scale_y_continuous(expand = c(0, 0), 
+                         label = ~ scales::comma(.x, accuracy = 1)) +
+      labs(x = "", y = "# of YSM samples",
+           title = "YSM Sample Distribution by BEC subzone/variant")  + 
       theme(
         panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank(),
         panel.grid.major.y = element_line(colour="darkgray"),
         rect = element_blank()
-      ) +
-      scale_x_discrete(guide = guide_axis(angle = -45)) +
-      scale_y_continuous(expand = c(0, 0), 
-                         label = ~ scales::comma(.x, accuracy = 1)) +
-      labs(x = "", y = "# of YSM samples",
-           title = "YSM Sample Distribution by BEC subzone/variant") 
+      )
     
-    p 
   }
-  
+  return(p)
 })
 
 
-output$stock_table <- renderPlot({
+output$bec_dist <- renderPlot({
   
+  becplot()
+  
+})
+
+stockplot <- reactive({
+  req(input$SelectCategory, input$SelectVar)
   if (!is.null(clstr_id())){
     
     fig5_dat <- tree_fh_data %>%
@@ -290,7 +242,7 @@ output$stock_table <- renderPlot({
       geom_bar(stat = "identity") + 
       scale_fill_brewer(name = "", palette = "Set2") +
       scale_x_discrete(drop=FALSE) +
-      scale_y_continuous(labels = scales::percent) +
+      scale_y_continuous(expand = c(0, 0), labels = scales::percent) +
       labs(x = "DBH class (cm)", y = "% of total vol/ha",
            title = "Stock Table - live trees") +
       theme(
@@ -301,7 +253,13 @@ output$stock_table <- renderPlot({
         rect = element_blank()
       ) 
     
-    p 
   }
+  return(p)
+})
+
+
+output$stock_table <- renderPlot({
+  
+  stockplot()
   
 })

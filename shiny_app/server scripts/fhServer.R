@@ -3,44 +3,34 @@
 ###############################################.
 ## Indicator definitions ----
 ###############################################.
-#Subsetting by domain 
-#total_remeas_plot <- reactive({
-#  
-#  req(input$SelectCategory, input$SelectVar)
-#  input$genearate
-#  
-#  total_remeas_plot <- sample_data %>% 
-#    filter(SITE_IDENTIFIER %in% site_id()) %>%
-#    group_by(SITE_IDENTIFIER) %>%
-#    filter(VISIT_NUMBER == max(VISIT_NUMBER)) %>%
-#    ungroup() %>%
-#    summarize(nreplot = length(unique(SITE_IDENTIFIER))) %>%
-#    pull(nreplot)
-#  
-#  return(total_remeas_plot)
-#  
-#})
 
-output$quant_coc <- renderUI({
-  
+coctext <- reactive({
+  req(input$SelectCategory, input$SelectVar)
   Fig15_dat <- Fig15_dat()
   
-  HTML( paste0("Growth and mortality of the re-measured YSM ground samples
-(n=", "<b>", total_remeas_plot(), "</b>", ") are summarized into components of change for
-all tagged trees over an average re-measurement period of ", "<b>", 
-               round(mean(Fig15_dat$year_dff),0), "</b>", " years (fig below). 
-               The components of change include: </br>"),
-        "</br><ul><li><b><i>Survivor</i></b> Trees that are alive at both measurements </li>",
-        "<li><b><i>Mortality</i></b> Trees that died between measurements </li>",
-        "<li><b><i>Ingrowth</i></b> New trees that grow into the minimum tagging limit </li>",
-        "<li><b><i>Dead</i></b> Trees that are dead standing at both measurements </li></br>")
-  
+  coctext <- HTML(paste0("<p>Growth and mortality of the n=", "<b>", total_remeas_plot(), 
+               "</b>", " re-measured YSM ground samples are summarized into components of change for
+all tagged trees, separately for each measurement period. </p>", 
+               "<p>The components of change across only the last two measurements are shown 
+  (figure below), representing an average of ", round(mean(Fig15_dat$year_dff),0),
+               " years. The components of change include:</p>",
+               "</br><ul><li><b><i>Survivor</i></b> Trees that are alive at both measurements </li>",
+               "<li><b><i>Mortality</i></b> Trees that died between measurements </li>",
+               "<li><b><i>Ingrowth</i></b> New trees that grow into the minimum tagging limit </li>",
+               "<li><b><i>Dead</i></b> Trees that are dead standing at both measurements </li></br>"))
+  return(coctext)
 })
 
 
 
-output$coc_chart <- renderPlot({
+output$quant_coc <- renderUI({
   
+  coctext()
+  
+})
+
+cocplot <- reactive({
+  req(input$SelectCategory, input$SelectVar)
   fig8_dat <- fig8_dat()
   remeas_plot <- remeas_plot()
   total_remeas_plot <- total_remeas_plot()
@@ -83,7 +73,7 @@ output$coc_chart <- renderPlot({
         axis.title.y = element_text(color="steelblue"),
         axis.title.y.right = element_text(colour = "#B4464B"),
         legend.box.background = element_rect(fill = "white", color = NA),
-        legend.position = c(0.10, 0.85),
+        legend.position = c(0.15, 0.85),
         legend.title = element_blank(),
         axis.line = element_line(colour="darkgray"), 
         panel.grid.major.y = element_line(color = 'darkgray'), 
@@ -98,13 +88,19 @@ output$coc_chart <- renderPlot({
       xlab(NULL)
   }
   
-  p
+  return(p)
 })
 
 
-output$health_inci <- renderUI({
+output$coc_chart <- renderPlot({
   
-  HTML("All tagged trees are assessed for up to five forest health damage agents
+  cocplot()
+})
+
+
+curfhtext <- reactive({
+  req(input$SelectCategory, input$SelectVar)
+  curfhtext <- HTML("All tagged trees are assessed for up to five forest health damage agents
 per tree. The mean incidence and 95% confidence intervals by damage
 agent (expressed as a percent of total live stems/ha of all damage
 agents recorded per tree) are computed at the latest measurement. Note
@@ -115,14 +111,21 @@ diameter (expected to have negligible/no impact on stem form) are no
 longer recorded; therefore, earlier recorded incidences of forks and
 crooks prior to 2021 were likely over-estimated. In addition fork and
 crook severity is now further classified into minor (<50%) vs. major
-(&ge;50%) diameter offsets. A full list of recorded damage agents is under
+(>=50%) diameter offsets. A full list of recorded damage agents is under
 General Notes.")
+  return(curfhtext)
+})
+
+
+output$health_inci <- renderUI({
+  
+  curfhtext()
   
 })
 
 
-output$curr_fh_inci <- renderPlot({
-  
+curfhplot <- reactive({
+  req(input$SelectCategory, input$SelectVar)
   # *compute incidence percent by agent by sample;
   ### Total stems/ha within a plot & average stems/ha of all plots
   FH_dat <- tree_fh_data  %>%
@@ -140,7 +143,8 @@ output$curr_fh_inci <- renderPlot({
            avg_stems_allplot = sum(tot_stems_plot)/n,
            avg_vol_allplot = sum(tot_vol_plot)/n)
   
-  #*totals based on un expanded tree list (ie., sum of percent incidence can be over 100 since multiple damage agents per tree);
+  #*totals based on un expanded tree list (ie., sum of percent incidence can be 
+  #*over 100 since multiple damage agents per tree);
   ### Total stems/ha of a damage agent in a plot
   FH_dat2 <- FH_dat %>%
     group_by(CLSTR_ID, n, LV_D, AGN) %>%
@@ -212,7 +216,8 @@ output$curr_fh_inci <- renderPlot({
     scale_x_discrete(drop = FALSE) +
     scale_fill_brewer(name = NULL, palette = "Set2") +
     scale_y_continuous(labels = scales::percent, expand = c(0, 0),
-                       limits = c(0, max(round(FH_dat_final[FH_dat_final$AGN!="O" & FH_dat_final$LV_D == "L",]$u95_stems+0.05,1)))) + 
+                       limits = c(0, max(round(FH_dat_final[FH_dat_final$AGN!="O" & 
+                                                              FH_dat_final$LV_D == "L",]$u95_stems+0.05,1)))) + 
     facet_grid(. ~ reorder(dam_class, -incid_stems_allplot, min), scales="free_x", space="free_x") +
     labs(x = "", y = "Incidence (%)",
          title = "Current Incidence",  
@@ -231,127 +236,41 @@ output$curr_fh_inci <- renderPlot({
       plot.caption = element_text(hjust=0, size=rel(1.2))
     )  
   
-  p
+  return(p)
 })
 
+
+
+output$curr_fh_inci <- renderPlot({
+  
+  curfhplot()
+})
+
+
+fhcoctext1 <- reactive({
+  req(input$SelectCategory, input$SelectVar)
+  Fig15_dat <- Fig15_dat()
+  
+  fhcoctext1 <- HTML(paste0("Change in forest health incidence of the (n=","<b>",
+              total_remeas_plot(),"</b>",") re-measured YSM samples are compared across 
+  the last measurement period averaging ", "<b>", 
+              round(mean(Fig15_dat$year_dff),0), "</b>", " years. Incidence across both 
+  measurements is relative to the primary damage agent (first recorded and 
+  most significant) on the same trees that were alive at the beginning of the 
+  period (graph below)."))
+  return(fhcoctext1)
+})
 
 
 output$comp_coc <- renderUI({
   
-  Fig15_dat <- Fig15_dat()
-  
-  HTML(paste0("Change in forest health incidence of the (n=","<b>",
-  total_remeas_plot(),"</b>",") re-measured YSM samples are compared across 
-  the last measurement period averaging ", "<b>", 
-  round(mean(Fig15_dat$year_dff),0), "</b>", " years. Incidence across both 
-  measurements is relative to the primary damage agent (first recorded and 
-  most significant) on the same trees that were alive at the beginning of the 
-  period (graph below)."))
+  fhcoctext1()
   
 })
 
 
-
-#fig10_dat_final <- reactive({
-#  
-#  req(input$SelectCategory, input$SelectVar)
-#  input$genearate
-#  
-#  # *only interested in remeasured samples;
-#  FH_dat_coc <- tree_fh_data %>%
-#    filter(CLSTR_ID %in% clstr_id_last2(), !is.na(PHF_TREE), S_F == "S") %>%
-#    group_by(SITE_IDENTIFIER) %>%
-#    mutate(new_visit_number = ifelse(VISIT_NUMBER == max(VISIT_NUMBER), 1, 2))
-#  
-#  FH_dat_coc <- FH_dat_coc %>%
-#    ungroup() %>% 
-#    mutate(COMP_CHG_new = COMP_CHG,
-#           COMP_CHG_new = ifelse(new_visit_number == 2 & LV_D == "D", "D", COMP_CHG_new),
-#           COMP_CHG_new = ifelse(new_visit_number == 2 & LV_D == "L", "E", COMP_CHG_new)) %>%
-#    data.table
-#  
-#  FH_dat_coc1 <- FH_dat_coc %>%
-#    filter(!is.na(ba_ha)) %>%
-#    ungroup() %>%
-#    mutate(n = n_distinct(SITE_IDENTIFIER))
-#  
-#  # *compute incidence by visit and by live dead, then merge and average all samples per mu;
-#  # *compute totals for common denominator between measurements;
-#  FH_dat_coc2 <- FH_dat_coc1 %>%
-#    filter(DAM_NUM == 1)  %>%
-#    group_by(n, SITE_IDENTIFIER, new_visit_number, COMP_CHG_new) %>%
-#    summarize(tot_ba_comp = sum(ba_ha, na.rm = T),
-#              tot_stems_comp = sum(PHF_TREE, na.rm = T),
-#              n_tree = n())  %>%
-#    #ungroup() %>%
-#    data.table()
-#  
-#  if (nrow(FH_dat_coc2) > 1){
-#    FH_dat_coc2_1 <- FH_dat_coc2 %>%
-#      dcast(n + SITE_IDENTIFIER + new_visit_number ~ COMP_CHG_new,
-#            value.var = "tot_stems_comp", drop=FALSE, fill=0, sep = "_") %>%
-#      mutate(totsph_comdem = E + M + S)
-#  } else {
-#    FH_dat_coc2_1 <- data.frame()
-#  }
-#  
-#  # *recompute incidence based on common demoninator between measurements;
-#  # *summarize totals by damage agent for each coc;
-#  FH_dat_coc3 <- FH_dat_coc1 %>%
-#    filter(DAM_NUM == 1)  %>%
-#    group_by(n, SITE_IDENTIFIER, new_visit_number, AGN, COMP_CHG_new) %>%
-#    summarize(tot_ba_dam_comp = sum(ba_ha, na.rm = T),
-#              tot_stems_dam_comp = sum(PHF_TREE, na.rm = T),
-#              n_tree = n())  %>%
-#    ungroup() %>%
-#    data.table()
-#  
-#  # *sum the totals so to compare live standing at first measure, to those same trees at second measure, wheher still alive;
-#  # *of if they died during that period;
-#  if (nrow(FH_dat_coc3) > 1){
-#    FH_dat_coc3_1 <- FH_dat_coc3 %>%
-#      dcast(n + SITE_IDENTIFIER + new_visit_number + AGN ~ COMP_CHG_new,
-#            value.var = "tot_stems_dam_comp", drop=FALSE, fill=0, sep = "_") %>%
-#      mutate(damsph_comdem = E + M + S)
-#    
-#    FH_dat_coc4 <- FH_dat_coc3_1 %>%
-#      left_join(FH_dat_coc2_1, 
-#                by = c("n", "SITE_IDENTIFIER", "new_visit_number"),
-#                suffix = c(".dam", ".comp"))
-#    
-#    FH_dat_coc5 <- FH_dat_coc4 %>%
-#      ungroup() %>%
-#      group_by(n, new_visit_number, AGN) %>%
-#      summarise_all(mean, .names = "mean_{.col}")
-#    
-#    FH_dat_coc5 <- FH_dat_coc5 %>%
-#      ungroup() %>%
-#      mutate(incid_stems = damsph_comdem/totsph_comdem,
-#             perc_mort = M.dam/damsph_comdem,
-#             prob_get_and_die = incid_stems*perc_mort)
-#    
-#    fig10_dat_final <- FH_dat_coc5 %>%
-#      mutate(dam_1letter = toupper(substr(AGN, 1, 1)),
-#             dam_class = case_when(dam_1letter %in% c('O', '') ~ 'None',
-#                                   dam_1letter == 'U' ~ 'Unknown',
-#                                   dam_1letter == 'N' ~ 'Abiotic',
-#                                   dam_1letter == 'D' ~ 'Disease',
-#                                   dam_1letter == 'I' ~ 'Insect',
-#                                   dam_1letter == 'T' ~ 'Trt',
-#                                   dam_1letter == 'A' ~ 'Animal',
-#                                   dam_1letter == 'X' ~ 'Frk_Crk_Btp',
-#                                   TRUE ~ '')) %>%
-#      mutate(dam_class = fct_reorder(dam_class, -incid_stems)) 
-#  } else {
-#    fig10_dat_final <- data.frame()
-#  }
-#  
-#  return(fig10_dat_final)
-#})
-
-
-output$change_dam <- renderPlot({
-  
+fhcocplot <- reactive({
+  req(input$SelectCategory, input$SelectVar)
   fig10_dat_final <- fig10_dat_final()
   
   p <- if (nrow(fig10_dat_final) > 0) {
@@ -363,11 +282,13 @@ output$change_dam <- renderPlot({
       scale_x_discrete(drop = FALSE) +
       scale_y_continuous(labels = scales::percent, expand = c(0, 0),
                          limits = c(0, ceiling(max(fig10_dat_final[fig10_dat_final$AGN!="O",]$incid_stems)*20) / 20),
-                         minor_breaks = seq(0, ceiling(max(fig10_dat_final[fig10_dat_final$AGN!="O",]$incid_stems)*20) / 20, by = 0.01)) + 
+                         minor_breaks = seq(0, 
+                                            ceiling(max(fig10_dat_final[fig10_dat_final$AGN!="O",]$incid_stems)*20) / 20, 
+                                            by = 0.01)) + 
       facet_grid(. ~ reorder(dam_class, -incid_stems, min), scales="free_x", space="free_x") +
       labs(x = "", y = "Incidence (%)",
-           title = "Change in primary damage agent incidence (% of trees alive at the beginning of the period)") +
-      #theme_bw() + 
+           title = "Change in primary damage agent incidence",
+           subtitle = "(% of live trees)") +
       theme(
         axis.line = element_line(colour="darkgray"), 
         axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
@@ -387,26 +308,40 @@ output$change_dam <- renderPlot({
       xlab(NULL)
   }
   
-  p
+  return(p)
+})
+
+
+
+
+output$change_dam <- renderPlot({
+  
+  fhcocplot()
+})
+
+fhcoctext2 <- reactive({
+  req(input$SelectCategory, input$SelectVar)
+  
+  fhcoctext2 <- HTML("All trees that were alive at the beginning of the period, have either
+survived or died between measurements. The table below summarizes
+the components of change for those trees affected by 
+primary damage agents with highest percent incidence. In addition, the 
+probability of trees getting infected by a given damage agent and subsequently 
+dying from it, is also calculated.")
+  return(fhcoctext2)
 })
 
 
 
 output$fh_trees <- renderUI({
   
-  HTML("All trees that were alive at the beginning of the period, have either
-survived or died between measurements. The table on the right summarizes
-the components of change (# of survivor & mortality) for those trees affected by 
-primary damage agents with highest percent incidence. In addition, the 
-probability of trees getting infected by a given damage agent and subsequently 
-dying from it, is also calculated.")
+  fhcoctext2()
   
 })
 
 
-
-output$fh_trees_flex <- renderUI({
-  
+fhcocflex <- reactive({
+  req(input$SelectCategory, input$SelectVar)
   fig10_dat_final <- fig10_dat_final()
   
   if (nrow(fig10_dat_final) > 0){
@@ -431,21 +366,21 @@ output$fh_trees_flex <- renderUI({
     flextable3 <- flextable(table6_dat) 
     
     flextable3 <- add_header_row(flextable3, top = TRUE, colwidths = c(3,4,1),
-                                 values = c("", "Affected trees alive at the start of the period", "")) %>%
+                                 values = c("", "Number of Affected Trees by Primary Damage Agent", "")) %>%
       align(align = "center", part = "all") %>%
       merge_v(j = c(1:3,8), part = "header") 
     
     flextable3 <- labelizor(
       x = flextable3, 
       part = "header", 
-      labels = c("total" = 'Total trees\n alive at the\n start of the\n period (#/ha)', 
+      labels = c("total" = 'Live trees at\n period start\n [a]\n (#/ha)', 
                  "PDA" = "Primary\n Damage\n Agent",
-                 "Inci" = "Incidence\n at the end of\n the period\n (%)",
-                 "S" = "Survivor trees\n (a)\n (#/ha)",
-                 "M" = "Mortality\n trees (b)\n (#/ha)",
-                 "Tot" = "Total\n (a+b)\n (#/ha)",
-                 "PM" = "Mortality\n (b/(a+b))\n (%)",
-                 "Prob" = "Prob getting\n infected &\n then dying\n (%)")) %>%
+                 "Inci" = "Incidence\n [b]=e/a d\n (%)",
+                 "S" = "Survivor trees\n [c]\n (#/ha)",
+                 "M" = "Mortality trees\n [d]\n (#/ha)",
+                 "Tot" = "Total affected\n [e]=c+d (#/ha)",
+                 "PM" = "Mortality\n [f]=d/e\n (%)",
+                 "Prob" = "Prob. getting\n Infected &\n Dying [g]=b*f\n (%)")) %>%
       autofit()
     
     flextable3 <- merge_v(flextable3, j = 1:2, part = "header") 
@@ -457,115 +392,40 @@ output$fh_trees_flex <- renderUI({
   } else {
     flextable3 <- flextable(data.frame(matrix(rep("-", 8), ncol=8,nrow=1)))
     flextable3 <- add_header_row(flextable3, top = TRUE, colwidths = c(3,4,1),
-                                 values = c("", "Affected trees alive at the start of the period", "")) %>%
+                                 values = c("", "Number of Affected Trees by Primary Damage Agent", "")) %>%
       align(align = "center", part = "all")
     
     flextable3 <- labelizor(
       x = flextable3, 
       part = "header", 
-      labels = c("X1" = 'Total trees\n alive at the\n start of the\n period (#/ha)', 
+      labels = c("X1" = 'Live trees at\n period start\n [a]\n (#/ha)', 
                  "X2" = "Primary\n Damage\n Agent",
-                 "X3" = "Incidence\n at the end of\n the period\n (%)",
-                 "X4" = "Survivor trees\n (a)\n (#/ha)",
-                 "X5" = "Mortality\n trees (b)\n (#/ha)",
-                 "X6" = "Total\n (a+b)\n (#/ha)",
-                 "X7" = "Mortality\n (b/(a+b))\n (%)",
-                 "X8" = "Prob getting\n infected &\n then dying\n (%)")) %>%
+                 "X3" = "Incidence\n [b]=e/a d\n (%)",
+                 "X4" = "Survivor trees\n [c]\n (#/ha)",
+                 "X5" = "Mortality trees\n [d]\n (#/ha)",
+                 "X6" = "Total affected\n [e]=c+d (#/ha)",
+                 "X7" = "Mortality\n [f]=d/e\n (%)",
+                 "X8" = "Prob. getting\n Infected &\n Dying [g]=b*f\n (%)")) %>%
       autofit()
     
     flextable3 <- merge_v(flextable3, j = 1:2, part = "header") 
     
   }
   
-  return(flextable3 %>%
-           htmltools_value())   
-  
+  return(flextable3)   
 })
 
 
 
-#risk_vol <- reactive({
-#  
-#  req(input$SelectCategory, input$SelectVar)
-#  input$genearate
-#  
-#  volsum_num <- tree_fh_data %>%
-#    filter(CLSTR_ID %in% clstr_id(), DAM_NUM==1, LV_D=="L", S_F == "S") %>%
-#    reframe(volsum = sum(vol_ha, na.rm = T)) %>%
-#    pull(volsum)
-#  
-#  meanage = ysm_msyt_vdyp_volume %>%
-#    filter(CLSTR_ID %in% clstr_id()) %>%
-#    summarize(meanage = mean(ref_age_adj)) %>%
-#    pull(meanage)
-#  
-#  risk_vol <- tree_fh_data %>%
-#    filter(CLSTR_ID %in% clstr_id(), DAM_NUM==1, LV_D=="L", 
-#           mort_flag %in% c(1,2), !(AGN_new %in% c('DSC', 'DSG', 'DSS'))) %>%
-#    group_by(mort_flag, AGN_new) %>%
-#    reframe(volsum = sum(vol_ha, na.rm = T))  %>%
-#    arrange(mort_flag, desc(volsum)) %>%
-#    mutate(volperc = ifelse(mort_flag == 1, volsum /volsum_num*0.9, volsum /volsum_num),
-#           meanyear = meanage,
-#           year60 = ifelse(mort_flag==2, volperc*0.0025*(60-meanyear), volperc),
-#           year80 = ifelse(mort_flag==2, volperc*0.0025*(80-meanyear), volperc),
-#           year100 = ifelse(mort_flag==2, volperc*0.0025*(100-meanyear), volperc))
-#  
-#  
-#  return(risk_vol)
-#  
-#})
-#
-#
-#
-#year100_immed <- reactive({
-#  
-#  req(input$SelectCategory, input$SelectVar)
-#  input$genearate
-#  
-#  risk_vol <- risk_vol()
-#  
-#  year100_immed <- round(sum(risk_vol[risk_vol$mort_flag==1,]$year100*100),1)
-#  
-#  return(year100_immed)
-#  
-#})
-#
-#
-#
-#year100_inc <- reactive({
-#  
-#  req(input$SelectCategory, input$SelectVar)
-#  input$genearate
-#  
-#  risk_vol <- risk_vol()
-#  
-#  year100_inc<- round(sum(risk_vol[risk_vol$mort_flag==2,]$year100)*100,1)
-#  
-#  return(year100_inc)
-#  
-#})
-#
-#
-#year100_comb <- reactive({
-#  
-#  req(input$SelectCategory, input$SelectVar)
-#  input$genearate
-#  
-#  risk_vol <- risk_vol()
-#  year100_immed <- year100_immed()
-#  year100_inc <- year100_inc()
-#  
-#  year100_comb<- round((1-(1-year100_immed/100)*(1-year100_inc/100))*100,1)
-#  
-#  return(year100_comb)
-#  
-#  
-#})
+output$fh_trees_flex <- renderUI({
+  
+  htmltools_value(fhcocflex())
+  
+})
 
 
-
-output$future_fh <- renderUI({
+fufhtext <- reactive({
+  req(input$SelectCategory, input$SelectVar)
   
   year100_immed <- year100_immed()
   year100_inc <- year100_inc()
@@ -575,19 +435,19 @@ output$future_fh <- renderUI({
   stemrustimpact <- stemrustimpact()
   
   phrase <- ifelse(max_measyear >= 2017, 
-         paste0("The GRIM/CRIME forest health modules (affecting DSC,DSG,DSS) resulted in a <b>",
-         stemrustimpact %>% tail(1) %>% pull(rustimpact), "</b> volume impact on YSM TASS 
+                   paste0("The GRIM/CRIME forest health modules (affecting DSC,DSG,DSS) resulted in a <b>",
+                          stemrustimpact %>% tail(1) %>% pull(rustimpact), "</b> volume impact on YSM TASS 
          projections by age <b>", stemrustimpact %>% tail(1) %>% pull(AGE), "</b>. In addition, 
          the interim forest health factors resulted in a further ","<b>", year100_comb, 
-         "</b>","% volume impact on YSM TASS projections by age 100."),
-         paste0("The GRIM/CRIME forest health modules could not be included since the 
+                          "</b>","% volume impact on YSM TASS projections by age 100."),
+                   paste0("The GRIM/CRIME forest health modules could not be included since the 
          latest sample visit was completed prior to 2017.  Therefore, interim 
          forest health factors also account for (DSC,DSG,DSS) stem rusts and 
          resulted in an additional <b>", year100_comb, " %</b> volume impact on YSM 
          TASS projections by age 100."))
   
   
-  HTML(paste0("<p>Forest health impacts are currently modeled in TASS using 
+  fufhtext <- HTML(paste0("<p>Forest health impacts are currently modeled in TASS using 
   the forest health modules GRIM & CRIME that quantify volume impacts of 
   a specific group of stem rusts (DSC, DSG, DSS). YSM sample measurements 
   collected since 2017 include the necessary tree detail information to 
@@ -603,13 +463,21 @@ output$future_fh <- renderUI({
   rate of 2.5% volume loss per decade (right graph).
   Their combined impact is applied as an additional reduction factor to 
   each YSM TASS projection up to rotation age.</p>", "<p>", phrase, "</p>"))
+  return(fufhtext)
+})
+
+
+
+output$future_fh <- renderUI({
+  
+  fufhtext()
   
 })
 
 
 
-output$dam_immed <- renderPlot({
-  
+fufhplot1 <- reactive({
+  req(input$SelectCategory, input$SelectVar)
   risk_vol <- risk_vol()
   
   fig16 <- if (sum(risk_vol$mort_flag == 1) > 0) {
@@ -622,8 +490,8 @@ output$dam_immed <- renderPlot({
       scale_fill_brewer(name = NULL, palette = "Set2", direction = -1) +
       scale_y_continuous(labels=scales::percent) +
       labs(x = "Current Age (yrs)", y = "% volume impact",
-           title = "Damage Agents - Immediate Impact") +
-      #theme_bw() + 
+           title = "Damage Agents",
+           subtitle = "Immediate Impact") +
       theme(
         axis.ticks.x=element_blank(), 
         panel.grid.major.y = element_line(color = 'darkgray'), 
@@ -638,7 +506,8 @@ output$dam_immed <- renderPlot({
       geom_bar(aes(x = "",  y = 0), stat="identity", width = 0.5) +
       #geom_text(aes(0,0,label='N/A')) +
       labs(x = "Current Age (yrs)", y = "% volume impact",
-           title = "Damage Agents - Immediate Impact")+ 
+           title = "Damage Agents",
+           subtitle = "Immediate Impact")+ 
       theme(
         axis.ticks.x=element_blank(), 
         panel.grid.major.y = element_line(color = 'darkgray'), 
@@ -647,6 +516,14 @@ output$dam_immed <- renderPlot({
         rect = element_blank(),
         legend.title = element_blank())
   }
+  return(fig16)
+  
+})
+  
+
+fufhplot2 <- reactive({
+  req(input$SelectCategory, input$SelectVar)
+  risk_vol <- risk_vol()
   
   fig17 <- if (sum(risk_vol$mort_flag == 2) > 0) {
     risk_vol %>%
@@ -661,8 +538,8 @@ output$dam_immed <- renderPlot({
       scale_y_continuous(labels=scales::percent) +
       scale_x_discrete(breaks =1:3, labels=c('60', '80', '100')) +
       labs(x = "Age (yrs)", y = "% volume impact",
-           title = "Damage Agents - Incremental Impact") +
-      #theme_bw() + 
+           title = "Damage Agents",
+           subtitle = "Incremental Impact") +
       theme(
         axis.ticks.x=element_blank(), 
         panel.grid.major.y = element_line(color = 'darkgray'), 
@@ -673,11 +550,11 @@ output$dam_immed <- renderPlot({
       )  
   } else {
     ggplot() + 
-      #theme_bw() + 
       geom_bar(aes(x = factor(c(60, 80, 100)),  y = c(0,0,0)), stat="identity", width = 0.5) +
       geom_text(aes(2,1,label='N/A')) +
       labs(x = "Age (yrs)", y = "% volume impact",
-           title = "Damage Agents - Incremental Impact")+ 
+           title = "Damage Agents",
+           subtitle = "Incremental Impact")+ 
       theme(
         axis.ticks.x=element_blank(), 
         panel.grid.major.y = element_line(color = 'darkgray'), 
@@ -687,8 +564,13 @@ output$dam_immed <- renderPlot({
         legend.title = element_blank())
   }
   
-  p <- grid.arrange(fig16, fig17, ncol = 2)
+  return(fig17)
+})
+
+
+output$dam_immed <- renderPlot({
   
-  p
+  grid.arrange(fufhplot1(), fufhplot2(), ncol = 2)
+  
   
 })

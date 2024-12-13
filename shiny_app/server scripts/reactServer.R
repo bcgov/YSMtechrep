@@ -457,7 +457,7 @@ si_bias <- reactive({
     
   } else NULL
   
-  si_bias1 <- ifelse(is.null(si_bias), "None", paste(si_bias, collapse=" "))
+  si_bias1 <- ifelse(is.null(si_bias), "No bias, or sample size too small", paste(si_bias, collapse=" "))
   
   return(si_bias1)
   
@@ -920,12 +920,13 @@ test1 <- reactive({
   
   Fig15_dat <- Fig15_dat()
   
-  if(nrow(Fig15_dat) > 0 & length(Fig15_dat$prednv_pai - Fig15_dat$grdnv_pai) > 1){
+  if(nrow(Fig15_dat) > 0 & all(!is.na(Fig15_dat$grdnv_pai)) & 
+     length(Fig15_dat$prednv_pai - Fig15_dat$grdnv_pai) > 1){
     test1<-t.test(Fig15_dat$prednv_pai - Fig15_dat$grdnv_pai)
     test1est <- test1$estimate
     test1p <- test1$p.value
     test1result <- c(test1est, test1p)
-  } else test1result <- NULL
+  } else test1result <- c(NA, NA)
   
   return(test1result)
   
@@ -938,12 +939,13 @@ test2 <- reactive({
   
   Fig15_dat <- Fig15_dat()
   
-  if(nrow(Fig15_dat) > 0 & length(Fig15_dat$tass_pai - Fig15_dat$grdnv_pai) > 1){
+  if(nrow(Fig15_dat) > 0 & all(!is.na(Fig15_dat$grdnv_pai)) & 
+     length(Fig15_dat$tass_pai - Fig15_dat$grdnv_pai) > 1){
     test2<-t.test(Fig15_dat$tass_pai - Fig15_dat$grdnv_pai)
     test2est <- test2$estimate
     test2p <- test2$p.value
     test2result <- c(test2est, test2p)
-  } else test2result <- NULL
+  } else test2result <- c(NA, NA)
   
   return(test2result)
   
@@ -954,17 +956,24 @@ test1_comment <- reactive({
   req(input$SelectCategory, input$SelectVar)
   input$genearate
   
+  if (total_remeas_plot() > 0){
+    
   test1 <- test1()
   
-  if (!is.null(test1) & test1[2] < 0.05){
+  if (!is.null(test1) & !is.na(test1[2]) & test1[2] < 0.05){
     test1_comment <- paste0("TSR is ", "<b>",
-    ifelse(test1[1] > 0, "over", "under"), "</b>",
-    "-estimating actual growth by ", "<b>", round(abs(test1[1]), 1), "</b>"," m<sup>3</sup>/ha/yr.</br>")
-  } else if (!is.null(test1) & test1[2] >= 0.05){
-    test1_comment <- "no significant difference between TSR & YSM."
-  } else if (is.null(test1)){
-    test1_comment <- "-"
+                            ifelse(!is.na(test1[1]) & test1[1] > 0, "over", "under"), "</b>",
+                            "-estimating actual growth by ", "<b>", 
+                            ifelse(!is.na(test1[1]), round(abs(test1[1]), 1), "-"), 
+                            "</b>"," m<sup>3</sup>/ha/yr.</br>")
+  } else if (!is.null(test1) & !is.na(test1[2]) & test1[2] >= 0.05){
+    test1_comment <- "no significant difference between TSR and YSM."
+  } else if (is.null(test1) | all(is.na(test1))){
+    test1_comment <- "(insufficient remeasured data)"
+  }} else {
+    test1_comment <- "No re-measred YSM samples"
   }
+  
   return(test1_comment)
   
 })
@@ -974,17 +983,21 @@ test2_comment <- reactive({
   req(input$SelectCategory, input$SelectVar)
   input$genearate
   
+  if (total_remeas_plot() > 0){
   test2 <- test2()
   
-  if (!is.null(test2) & test2[2] < 0.05){
+  if (!is.null(test2) & !is.na(test2[2])  & test2[2] < 0.05){
     test2_comment <- paste0("TASS is ", "<b>",
-                             ifelse(test2[1] > 0, "over", "under"), "</b>",
+                             ifelse(!is.na(test2[1]) & test2[1] > 0, "over", "under"), "</b>",
                              "-estimating actual growth by ", "<b>", 
-                             round(abs(test2[1]), 1), "</b>"," m<sup>3</sup>/ha/yr.</br>")
-  } else if (!is.null(test2) & test2[2] >= 0.05){
-    test2_comment <- "no significant difference between TASS & YSM."
-  } else if (is.null(test2)){
-    test2_comment <- "-"
+                            ifelse(!is.na(test2[1]), round(abs(test2[1]), 1), "-"), 
+                            "</b>"," m<sup>3</sup>/ha/yr.</br>")
+  } else if (!is.null(test2) & !is.na(test2[2]) & test2[2] >= 0.05){
+    test2_comment <- "no significant difference between TASS and YSM."
+  } else if (is.null(test2) | all(is.na(test2))){
+    test2_comment <- "(insufficient remeasured data)"
+  }} else {
+    test2_comment <- "No re-measred YSM samples"
   }
   return(test2_comment)
 })
