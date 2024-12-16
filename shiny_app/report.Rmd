@@ -1,0 +1,546 @@
+---
+title: "`r title()` Young Stand Monitoring Program"
+date: "Version 2024-12-05; Created `r Sys.Date()`"
+#runtime: shiny
+always_allow_html: true
+geometry: margin=1cm
+output:
+  pdf_document:
+    keep_tex: true
+    latex_engine: xelatex
+    toc: true
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.pos = "H", out.extra = "")
+knitr::opts_chunk$set(echo = TRUE, fig.align="center")
+knitr::opts_chunk$set(fig.height = 4, collapse = TRUE)
+knitr::opts_chunk$set(dev = "ragg_png")
+set_flextable_defaults(fonts_ignore=TRUE)
+
+htmltopdf <-function(x) {
+  if (input$format == "HTML"){
+    x
+    } else {
+      pandoc::pandoc_convert(text = x, from = "html", to = "markdown")
+      }
+}
+
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, x)
+  } else x
+}
+```
+
+<style>
+.leaflet {
+    margin: auto;
+}
+</style>
+
+
+## Overview
+
+`r htmltopdf(overview())`
+
+```{r plotgraph, fig.width=8, echo=FALSE, fig.align='center'}
+plotgraph()
+```
+
+<br>
+
+```{r flex, echo=FALSE,warning=FALSE, message = FALSE}
+flex()
+```
+
+
+## Summary of Key Findings for Existing Young Stands in `r title()` related to Timber Supply
+
+```{r, echo=FALSE, include=FALSE}
+
+projectiontable <- projectiontable()
+prjtab_70 <- projectiontable %>% filter(AGE >=70, AGE <100)
+  max_row = which.max(abs(prjtab_70$meanvoldiff/prjtab_70$meanvol_tass*100))
+  
+  maxvoldiff = prjtab_70$percvoldiff[max_row]
+  ageatmaxvoldiff = prjtab_70$AGE[max_row]
+  Significant = ifelse(prjtab_70$pval[max_row] <0.05, "Yes", "No")
+  TSRbias1 = ifelse(prjtab_70$meanvoldiff[max_row] < 0, "Conservative", "Optimistic")
+  TSRbias2 = ifelse(Significant == "No", "No", TSRbias1)
+  
+```
+
+
+1. The leading species from YSM ground samples is compared to the 
+    interpreted leading species in the Vegetation Resources Inventory forest 
+    inventory coverage (VRI). The leading species percent agreement is: 
+    **`r colorize(correct_ls(), "red")`** `r htmltopdf("<span style='color:red;'>(% agreement)</span>")`
+    
+2. Species composition from YSM ground samples is compared against 
+    TSR inputs (ie., regeneration assumptions used in modeling existing stands 
+    in Timber Supply Review [TSR]). The overall species composition overlap is: 
+    **`r colorize(round(percoverlap(), 0), "red")`** <span style='color:red;'>(% overlap)</span>
+    
+3. The Provincial Site Productivity Layer (PSPL), one of the TSR 
+    inputs used for modeling existing managed stands, is assessed for bias 
+    from YSM ground based site index data. If significant, site index bias 
+    (in percent) is listed by species, where a positive percent is an 
+    under-estimate in the PSPL, and a negative percent is an over-estimate: 
+    **`r colorize(si_bias(), "red")`** 
+    
+4. YSM sample measurements include conifer and deciduous tree species. 
+    The deciduous proportion in the YSM samples (% of total volume) is: 
+    **`r colorize(decid_vol(), "red")`** `r colorize("(% of m^3^/ha)", "red")`
+    
+5. YSM sample measurements include separate tracking of both managed 
+    vs. residual cohorts. The residual proportion in the YSM samples 
+    (% of total volume) is: 
+    **`r colorize(round(fig6_sum(), 0), "red")`** `r colorize("(% of m^3^/ha)", "red")`
+
+6. The periodic annual increment (PAI) of TSR yield tables are compared 
+    against re-measured YSM samples over the same remeasurement period, to test 
+    if TSR projections are significantly different from YSM growth rates: 
+    **`r colorize(test1_comment(), "red")`**
+    
+7. The PAI of YSM TASS projections are compared against re-measured 
+    YSM samples over the same remeasurement period, to test if TASS projections 
+    are significantly different from YSM growth rates: 
+    **`r colorize(test2_comment(), "red")`**
+              
+8. For YSM measurements since 2017, the impact from stem rusts can be 
+    directly modeled in TASS using GRIM / CRIME. The volume impact of TASS YSM 
+    projections by age 100 (in addition to default OAFs) is: 
+    **`r colorize(year100_inc(), "red")`** `r colorize("(% of m^3^/ha)", "red")`
+    
+9. To address forest health risks from all other damage agents, an 
+    interim simplistic approach is applied to estimate future impacts of all 
+    known forest health agents, and results in an impact by age 100 (in addition 
+    to default OAFs) of: 
+    **`r colorize(year100_comb(), "red")`** `r colorize("(% of m^3^/ha)", "red")`
+     
+10. TSR yield tables are compared against YSM TASS projections, to test 
+    if TSR assumptions will meet future expectations of young stands by rotation 
+    age. Reported outputs include the maximum percent difference of TSR volume 
+    relative to YSM (a negative % is where TSR is lower than YSM, positive % is 
+    where TSR is greater than YSM); the projected age this occurs at; and a test 
+    to determine if the differences between the two is significant. 
+
+   - **`r colorize(paste0("Max % vol diff: ", maxvoldiff), "red")`**
+   - **`r colorize(paste0("Age @max vol diff: ", ageatmaxvoldiff), "red")`**
+   - **`r colorize(paste0("Significant?: ", Significant), "red")`**
+   - **`r colorize(paste0("TSR bias?: ", TSRbias2), "red")`**
+
+
+## Young Stand Description
+
+`r htmltopdf(ysd())`
+
+```{r, fig.width=5,fig.height=3, echo=FALSE,warning=FALSE, message = FALSE}
+summaryflex()
+livespplot() + theme_bw(12) +
+      theme(
+        axis.line = element_line(colour="darkgray"), 
+        panel.grid.major.y = element_line(color = 'darkgray'), 
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        rect = element_blank()
+      ) 
+```
+
+```{r, fig.width=4,fig.height=3, echo=FALSE,warning=FALSE, message = FALSE}
+becplot() + theme_bw(12) + 
+      theme(
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_line(colour="darkgray"),
+        rect = element_blank()
+      )
+```
+
+```{r, fig.width=6,fig.height=4, echo=FALSE,warning=FALSE, message = FALSE}
+stockplot() + theme_bw(12) +
+      theme(
+        panel.grid.major.y = element_line(color = 'darkgray'), 
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        rect = element_blank()
+      ) 
+```
+
+
+## Leading Species vs. VRI, & Overall Species Composition vs. TSR Inputs
+
+`r htmltopdf(lstext())`
+
+```{r, fig.height=4,echo=FALSE,warning=FALSE}
+lsflex() %>% bg(j = (1:(lsflex()$body$content$ncol/2))*2, 
+                     bg = "lightgray", part = "body")
+spcomp() + theme_bw(12) +
+    theme(
+      panel.grid.major.y = element_line(color = 'darkgray'), 
+      plot.caption = element_text(hjust=0, size=rel(1.2)),
+      legend.position="top",
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      rect = element_blank()
+    ) 
+```
+
+
+## Post-Harvest-Regenerated vs. Residual Trees
+
+`r htmltopdf(residtext())`
+
+```{r, fig.height=4,echo=FALSE,warning=FALSE}
+residplot() + theme_bw(12) +
+    #theme_bw() + 
+    theme(
+      axis.line = element_line(colour="darkgray"), 
+      panel.grid.major.y = element_line(color = 'darkgray'), 
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      rect = element_blank(),
+      legend.box.background = element_rect(fill = "white", color = NA),
+      legend.position =  "inside", 
+      legend.position.inside = c(0.90, 0.90),
+      legend.title = element_blank(),
+      plot.caption = element_text(hjust=0, size=rel(1.2))
+    )  
+```
+
+
+## Site Index vs. Provincial Site Productivity Layer
+
+`r htmltopdf(sitext())`
+
+```{r, fig.height=4,echo=FALSE,warning=FALSE, message = FALSE}
+siflex()
+```
+
+## Trends in Site Index Estimates over Time
+
+`r htmltopdf(sitrendtext())`
+
+```{r, fig.height=4,echo=FALSE,warning=FALSE, message = FALSE}
+siplot() + theme_bw(12) +
+    theme(axis.line = element_line(colour="darkgray"), 
+          panel.grid.major.y = element_line(color = 'darkgray'), 
+          #panel.grid.major.x = element_blank(),
+          panel.grid.minor.x = element_blank(),
+          rect = element_blank()
+    )  
+```
+
+
+## Comparing Current Volumes: TSR Predicted Yield Tables vs. YSM Actual Measurements
+
+`r htmltopdf(curvoltext())`
+
+```{r, fig.height=4,echo=FALSE,warning=FALSE}
+ysmtsr() + theme_bw(12) +
+    #theme_bw() + 
+    theme(
+      plot.title = element_text(lineheight = 0.9),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      panel.grid.major.y = element_line(color = 'darkgray'), 
+      rect = element_blank()
+    ) 
+
+ysmtsrbias() + theme_bw(12) +
+    #theme_bw() + 
+    theme(
+      legend.position="top",
+      #panel.grid.major.x = element_blank(),
+      panel.grid.major.y = element_line(color = 'darkgray'), 
+      panel.grid.minor.y = element_line(color = 'darkgray'), 
+      panel.grid.minor.x = element_blank(),
+      rect = element_blank()
+    ) 
+```
+
+
+## Test to Compare TSR Total Age vs. YSM Ground Sample Age
+
+`r htmltopdf(agetext())`
+
+::: columns
+::: column
+```{r, include=T, echo=F,warning=FALSE}
+ageflex1()
+```
+:::
+
+::: column
+```{r, include=T, echo=F,warning=FALSE}
+ageflex2()
+```
+:::
+:::
+
+```{r, include=T, echo=F, fig.height=2, fig.width=5.5, warning=FALSE, message = FALSE}
+ageplot() + theme_bw(12) +
+    #theme_bw() + 
+    theme(
+      axis.ticks = element_blank(),
+      panel.grid.major.y = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      panel.grid.minor.y = element_blank(),
+      axis.text.y = element_blank(), axis.ticks.x = element_blank(),
+      rect = element_blank()
+    ) 
+```
+
+
+## Test to Compare Modeled vs. YSM Re-measured Periodic Annual Increment
+
+`r htmltopdf(paitext())`
+
+::: columns
+::: column
+```{r, include=T, echo=F,warning=FALSE, message = FALSE}
+tsrpai1()
+tsrpai2()
+```
+:::
+
+::: column
+```{r, include=T, echo=F, warning=FALSE, message = FALSE}
+tasspai1()
+tasspai2()
+```
+:::
+:::
+
+```{r, fig.height=2.5, fig.width=6, echo=FALSE, warning=FALSE, message = FALSE}
+tassdiff() + theme_bw(12) +
+      theme(
+        legend.position = "left",
+        axis.ticks = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        axis.text.y = element_blank(), 
+        axis.ticks.x = element_blank(),
+        rect = element_blank()
+      ) 
+```
+
+
+## Quantifying Change in Growth and Mortality
+
+`r htmltopdf(coctext())`
+
+```{r, echo=FALSE,warning=FALSE, message = FALSE}
+cocplot() + theme_bw(12) +
+      #theme_bw() + 
+      theme(
+        axis.title.y = element_text(color="steelblue"),
+        axis.title.y.right = element_text(colour = "#B4464B"),
+        legend.box.background = element_rect(fill = "white", color = NA),
+        legend.position = c(0.15, 0.85),
+        legend.title = element_blank(),
+        axis.line = element_line(colour="darkgray"), 
+        panel.grid.major.y = element_line(color = 'darkgray'), 
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        rect = element_blank()
+      ) 
+```
+
+
+## Current Forest Health Incidence
+
+`r htmltopdf(curfhtext())`
+
+```{r, echo=FALSE, fig.height = 4, warning=FALSE, message = FALSE}
+curfhplot() + theme_bw(12) +
+    #theme_bw() + 
+    theme(
+      axis.line = element_line(colour="darkgray"), 
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+      panel.grid.major.y = element_line(color = 'darkgray'), 
+      #panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      rect = element_blank(),
+      legend.box.background = element_rect(fill = "white", color = "lightgray"),
+      legend.position = "none",
+      legend.title = element_blank(),
+      plot.caption = element_text(hjust=0, size=rel(1.2))
+    )  
+```
+
+
+## Comparing Change in Forest Health Incidence
+
+`r htmltopdf(fhcoctext1())`
+
+```{r, echo=FALSE,warning=FALSE, fig.height = 5,fig.width = 8, message = FALSE}
+fhcocplot() + theme_bw(12) +
+      theme(
+        axis.line = element_line(colour="darkgray"), 
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+        panel.grid.major.y = element_line(color = 'darkgray'), 
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        rect = element_blank(),
+        legend.box.background = element_rect(fill = "white", color = "lightgray"),
+        legend.position = c(0.9, 0.8),
+        legend.title = element_blank(),
+        plot.caption = element_text(hjust=0, size=rel(1.2))
+      ) 
+```
+
+`r htmltopdf(fhcoctext2())`
+
+```{r, echo=FALSE,warning=FALSE, message = FALSE}
+fhcocflex()
+```
+
+
+## Approximating Future Forest Health Risks
+
+`r htmltopdf(fufhtext())`
+
+::: columns
+::: column
+```{r, echo=FALSE, warning=FALSE, message = FALSE, fig.width=4, fig.height=3}
+fufhplot1() + theme_bw(12) +
+      theme(
+        axis.ticks.x=element_blank(), 
+        panel.grid.major.y = element_line(color = 'darkgray'), 
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        rect = element_blank(),
+        legend.title = element_blank()
+      )  
+```
+:::
+
+::: column
+```{r, echo=FALSE, warning=FALSE, message = FALSE, fig.width=4, fig.height=3}
+fufhplot2() + theme_bw(12) +
+      theme(
+        axis.ticks.x=element_blank(), 
+        panel.grid.major.y = element_line(color = 'darkgray'), 
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        rect = element_blank(),
+        legend.title = element_blank()
+      )  
+```
+:::
+:::
+
+
+## Will Existing Young Stands Meet Expectations at Rotation?
+
+`r htmltopdf(projtext())`
+
+```{r, echo=FALSE, warning=FALSE, message = FALSE, fig.height=4, fig.width=9}
+projvol() + theme_bw(12) +
+    theme(
+      axis.line = element_line(colour="darkgray"), 
+      panel.grid.major.y = element_line(color = 'darkgray'), 
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      rect = element_blank(),
+      legend.box.background = element_rect(fill = "white", color = "lightgray"),
+      legend.position = c(0.2, 0.9),
+      legend.title = element_blank(),
+      plot.caption = element_text(hjust=0, size=rel(0.8))
+    )  +
+    guides(colour = guide_legend(reverse = TRUE))
+```
+
+::: columns
+::: column
+```{r, echo=FALSE, warning=FALSE, message = FALSE}
+stemrusttable()
+```
+:::
+
+::: column
+```{r, echo=FALSE, warning=FALSE, message = FALSE}
+cumimptable()
+```
+:::
+:::
+
+
+## Test to compare YSM TASS projections against TSR Predicted Yield Tables
+
+`r htmltopdf(yieldtext())`
+
+```{r, echo=FALSE, warning=FALSE, message = FALSE}
+yieldtable()
+```
+
+
+## Total number of YSM samples by:
+
+::: columns
+::: column
+```{r, include=T, echo=F,warning=FALSE, message = FALSE}
+t1()
+t3()
+t5()
+```
+:::
+
+::: column
+```{r, include=T, echo=F, warning=FALSE, message = FALSE}
+t2()
+t4()
+```
+:::
+:::
+
+_** Note the samples defined as 'Excluded' in the TSR yield table current regime 
+assignment were dropped from this analysis._
+
+
+## Tree Species and Damage Agents Recorded from YSM Samples in `r title()`
+
+:::::::::::::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+#### Tree Species Codes / Names
+```{r, include=T, echo=F, warning=FALSE, message = FALSE}
+if (input$format == "HTML"){
+    datatable(spcdtab(), rownames= FALSE)
+    } else {
+      kable(spcdtab())
+      }
+```
+:::
+
+::: {}
+#### Damage Agent Codes / Names
+```{r, include=T, echo=F, warning=FALSE, message = FALSE}
+if (input$format == "HTML"){
+    datatable(damcdtab(), rownames= FALSE)
+    } else {
+      kable(damcdtab())
+      }
+```
+:::
+::::::::::::::
+
+
+## General Notes / Assumptions
+
+`r htmltopdf(assumptext())`
+
+## References
+
+`r htmltopdf(reftext())`
+
+
+
+
+

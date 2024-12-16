@@ -30,10 +30,13 @@ ui <- dashboardPage(
   
   dashboardBody(
     
+    tags$head(tags$style("body{min-height: 800px;  height: auto;  max-width: 1296px;  margin: auto;
+                         background-color: #b3b1b3}")),
     
   fluidPage(    
     
     waiter::use_waiter(),
+    #waiter::waiter_show_on_load(html = waiter_html("Loading App")),
     
     # BC gov custom css
     includeCSS("www/bcgov2.css"),
@@ -89,9 +92,8 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
                                     choices = NULL), 
          HTML("<font size='-1'>*only n&ge;10 are selectable.</font>")),
   
-  column(3, offset = 1, actionButton("genearate", 
-                                     "Generate report"), 
-                                     align = "center", style = "margin-bottom: 10px;"),
+  column(3, offset = 1, downloadButton("downloadReport", "Download report"), br(),
+         radioButtons("format", "Document format", c("HTML", "PDF"), inline = TRUE))
   
   ), # box
   
@@ -104,11 +106,12 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
     "Overview",
     tabPanel(title = "Overview",
              #hr(),
+             uiOutput('overview_header'),
              uiOutput("overview"),
              br(),
              leafletOutput("plotgraph"),
              br(),
-             uiOutput("flex"),
+             uiOutput("overviewflex"),
              br()
     ),
     
@@ -122,11 +125,11 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
              br(),
              uiOutput("stand_summary_flex"),
              br(),
-             plotOutput("live_sp"),
+             plotOutput("live_sp", width = "700px"),
              br(),
-             plotOutput("bec_dist", width = "80%"),
+             plotOutput("bec_dist", width = "500px"),
              br(),
-             plotOutput("stock_table"),
+             plotOutput("stock_table", width = "700px"),
              br(),
     ),
     
@@ -136,14 +139,14 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
              br(),
              uiOutput("leading_sp_flex"),
              br(),
-             plotOutput("spc_comp"),
+             plotOutput("spc_comp", width = "700px"),
              br(),
     ),
     tabPanel(title = "Residual Trees",
              h3("Post-Harvest Regenerated vs. Residual Trees"),
              uiOutput("residual"),
              br(),
-             plotOutput("residual_ysm"),
+             plotOutput("residual_ysm", width = "600px"),
              br(),
     ),
     
@@ -159,7 +162,7 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
              h3("Trends in Site Index Estimates over Time"),
              uiOutput("trend_si"),
              br(),
-             plotOutput("si_trend"),
+             plotOutput("si_trend", width = "700px"),
              br(),
     ),
     
@@ -168,9 +171,9 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
              h3("Comparing Current Volumes: TSR Predicted Yield Tables vs. YSM Actual Measurements"),
              uiOutput("comp_curr_vol"),
              br(),
-             plotOutput("age_vs_netmer"),
+             plotOutput("age_vs_netmer", width = "700px"),
              br(),
-             plotOutput("vol_bias"),
+             plotOutput("vol_bias", width = "700px"),
              br(),
     ),
     tabPanel(title = "Stand Age",
@@ -207,7 +210,7 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
                       br())
              ),
              br(),
-             plotOutput("pai_diff", height = "200px"),
+             plotOutput("pai_diff", height = "200px", width = "600px"),
              br(),
     ),  
     
@@ -216,7 +219,7 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
              h3("Quantifying Change in Growth and Mortality"),
              uiOutput("quant_coc"),
              br(),
-             plotOutput("coc_chart"),
+             plotOutput("coc_chart", width = "600px"),
              br(),
     ),
     tabPanel(title = "Current Forest Health Incidence",
@@ -251,7 +254,7 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
              h3("Will Existing Young Stands Meet Expectations at Rotation?"),
              uiOutput("tass_tsr"),
              br(),
-             plotOutput("tass_tsr_netvol"),
+             plotOutput("tass_tsr_netvol", width = "800px"),
              br(),
              fluidRow(
                column(6,

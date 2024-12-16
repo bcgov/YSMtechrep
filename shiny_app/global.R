@@ -18,14 +18,17 @@
 # 1. required packages ----------------------------------------------------------
 library(shiny)
 library(shinydashboard)
+library(shinycssloaders)
 library(data.table)
 library(ggplot2)
-library(plotly)
+#library(plotly)
 library(dplyr)
 options(dplyr.summarize.inform = FALSE)
 library(sf)
 library(leaflet)
 library(DT)
+#library(rmarkdown)
+#library(knitr)
 library(flextable)
 set_flextable_defaults(font.family = "Arial")
 library(tibble)
@@ -33,8 +36,12 @@ library(tidyverse)
 library(scales)
 library(gridExtra)
 library(waiter)
-
-
+library(tinytex)
+library(kableExtra)
+library(pandoc)
+library(pagedown)
+library(htmltools)
+library(webshot)
 
 
 # 2. required datafiles ------------------------------------------------------------
@@ -42,6 +49,7 @@ library(waiter)
 # main datasets 
 sample_data <- readRDS("data/sample_data.rds")
 spcs_data <- readRDS("data/spcs_data.rds")
+siteage_data <- readRDS("data/siteage_data.rds")
 SI_data <- readRDS("data/SI_data.rds")
 tree_fh_data <- readRDS("data/Tree_FH_data.rds")
 regen_data <- readRDS("data/regen_data.rds")
@@ -86,7 +94,6 @@ bec_list <- sort(unique(sample_data %>%
 
 
 # 4. chart themes  ----------------------------------------------------------------
-
 theme_set(theme_bw(15, base_family = 'Arial'))
 #theme_set(theme_bw(15) + theme(panel.grid.major = element_line(colour = "gray")))
 

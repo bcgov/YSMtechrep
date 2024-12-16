@@ -5,140 +5,10 @@
 ###############################################.
 #Subsetting by domain 
 
-#LD_dat <- reactive({
-#  
-#  req(input$SelectCategory, input$SelectVar)
-#  input$genearate
-#  
-#  LD_dat <- spcs_data %>%
-#    filter(CLSTR_ID %in% clstr_id(), UTIL == 4) %>%
-#    group_by(SITE_IDENTIFIER) %>%
-#    arrange(desc(SP_PCT_BA_LS)) %>%
-#    slice_head(n = 1)%>%
-#    select(SITE_IDENTIFIER, CLSTR_ID, SPECIES, SP_PCT_BA_LS)
-#  
-#  LD_dat <- LD_dat %>%
-#    left_join(vegcomp_pspl_sample %>% select(CLSTR_ID, SPECIES_CD_1, SPECIES_PCT_1), 
-#              by = "CLSTR_ID") %>%
-#    mutate(SPC_GRP1 = substr(SPECIES,1,2),
-#           SPC_GRP1 = ifelse(SPECIES %in% decidspc, 'Decid', SPC_GRP1),
-#           SPC_GRP1 = ifelse(SPC_GRP1 =="", 'Nonstock', SPC_GRP1),
-#           SPC_GRP_VRI = substr(SPECIES_CD_1,1,2),
-#           SPC_GRP_VRI = ifelse(SPECIES_CD_1 %in% decidspc, 'Decid', SPC_GRP_VRI)) 
-#  
-#  return(LD_dat)
-#  
-#})
-#
-#
-#correct_ls <- reactive({
-#  
-#  req(input$SelectCategory, input$SelectVar)
-#  input$genearate
-#  
-#  LD_dat <- LD_dat()
-#  
-#  correct <- round(sum(LD_dat$SPC_GRP1 == LD_dat$SPC_GRP_VRI)/nrow(LD_dat)*100, 0)
-#  
-#  return(correct)
-#  
-#})
-#
-#
-#Fig11_dat <- reactive({
-#  
-#  req(input$SelectCategory, input$SelectVar)
-#  input$genearate
-#  
-#  ysm_spc <- spcs_data %>% 
-#    filter(CLSTR_ID %in% clstr_id(), UTIL == 4, !(SPECIES %in% c('', NA)))
-#  
-#  ### Add species percent information to sample_data
-#  ysm_spc1 <- sample_data %>%
-#    filter(CLSTR_ID %in% clstr_id()) %>%
-#    left_join(ysm_spc, by = c("CLSTR_ID", "SITE_IDENTIFIER", "VISIT_NUMBER" )) %>%
-#    filter(!is.na(SITE_IDENTIFIER))
-#  
-#  ### Compute number plot measurements by MGMT_UNIT
-#  ysm_spc2 <- ysm_spc1 %>%
-#    mutate(n_ci = length(unique(CLSTR_ID)),
-#           SPC_GRP1 = ifelse(SPECIES %in% decidspc, 'DE', SPECIES))
-#  
-#  ### Compute mean stems per ha by species
-#  ysm_spc3 <- ysm_spc2 %>%
-#    group_by(SPC_GRP1) %>%
-#    reframe(mean_STEMS_HA = sum(STEMS_HA_LS, na.rm = T)/n_ci) %>%
-#    distinct()
-#  
-#  ysm_spc4 <- ysm_spc3 %>%
-#    mutate(tot_STEMS_HA = sum(mean_STEMS_HA, na.rm = T),
-#           spcperc = mean_STEMS_HA/tot_STEMS_HA)
-#  
-#  ysm_spc6 <- ysm_spc4 %>%
-#    arrange(desc(spcperc)) %>%
-#    mutate(order = row_number(),
-#           SPC_GRP2 = ifelse(order <= 7, SPC_GRP1, 'Other'),
-#           SPC_GRP2 = ifelse(SPC_GRP2 == 'DE', 'Decid', SPC_GRP2))
-#  
-#  regen_natural <- regen_data %>%
-#    filter(CLSTR_ID %in% clstr_id(), regen_src == "N", SPECIES_recode != "") %>%
-#    mutate(n_si = length(unique(CLSTR_ID)),
-#           n_ft = length(unique(FEATURE_ID)))
-#  
-#  regen_natural <- regen_natural %>%
-#    group_by(SPC_GRP1) %>%
-#    reframe(mean_DENSITY = sum(DENSITY, na.rm = T)/n_ft) %>%
-#    distinct()
-#  
-#  regen_natural <- regen_natural %>%
-#    mutate(tot_DENSITY = sum(mean_DENSITY, na.rm = T),
-#           spcperc = mean_DENSITY/tot_DENSITY) %>%
-#    arrange(desc(spcperc)) %>%
-#    mutate(order = row_number(),
-#           SPC_GRP2 = ifelse(order <= 7, SPC_GRP1, 'Other'),
-#           SPC_GRP2 = ifelse(SPC_GRP2 == 'DE', 'Decid', SPC_GRP2))
-#  
-#  ### Data for figure
-#  ysm_spc_dat <- ysm_spc6 %>% 
-#    mutate(source="YSM") %>%
-#    select(SPC_GRP1, spcperc, order, SPC_GRP2, source)
-#  
-#  regen_natural <- regen_natural %>%
-#    mutate(source="TSR_INPUT") %>%
-#    select(SPC_GRP1, spcperc, order, SPC_GRP2, source)
-#  
-#  Fig11_dat <- rbind(ysm_spc_dat, regen_natural) 
-#  
-#  return(Fig11_dat)
-#  
-#})
-#
-#percoverlap <- reactive({
-#  
-#  req(input$SelectCategory, input$SelectVar)
-#  input$genearate
-#  
-#  Fig11_dat <- Fig11_dat()
-#  
-#  percoverlap <- Fig11_dat %>%
-#  #filter(MGMT_UNIT %in% mgmt_unit) %>%
-#  select(-order) %>%
-#  pivot_wider(names_from = source,
-#              names_sep = ".",
-#              values_from = c(spcperc)) %>%
-#  mutate(diff = abs(YSM - TSR_INPUT)) %>%
-#  summarize(perc_sum = sum(diff, na.rm = T)) %>%
-#  mutate(perc_over = 1- perc_sum) %>%
-#  pull(perc_over)
-#  
-#  return(percoverlap)
-#  
-#})
-
-
-output$leading_sp <- renderUI({
+lstext <- reactive({
+  req(input$SelectCategory, input$SelectVar)
   
-  HTML("Leading species (by basal area) is compared between YSM & VRI where the 
+  lstext <- HTML("<p>Leading species (by basal area) is compared between YSM & VRI where the 
        <i>‘correct leading species classification rate’</i> is a percent of all YSM samples 
        with matching inventory leading species at latest measurement (table below). 
        A separate assessment of overall species composition is also compared 
@@ -146,16 +16,22 @@ output$leading_sp <- renderUI({
        Overall species composition overlap is a rough index, and expressed as 
        the ratio between the minimum in common relative to the maximum in common 
        that could have been. The planted & natural densities used in TSR inputs 
-       are combined as part of the overall species composition comparison.")
-
+       are combined as part of the overall species composition comparison.</p>")
+  
+  return(lstext)
 })
 
 
-output$leading_sp_flex <- renderUI({
+output$leading_sp <- renderUI({
+  lstext()
+})
+
+lsflex <- reactive({
+  req(input$SelectCategory, input$SelectVar)
   
   if(!is.null(clstr_id())){
     
-    LD_dat <- LD_dat()
+    LD_dat <- as.data.frame(LD_dat())
     
     LD_table <- proc_freq(LD_dat, "SPC_GRP_VRI", "SPC_GRP1",
                           include.row_total = T,
@@ -169,7 +45,12 @@ output$leading_sp_flex <- renderUI({
                props = fp_text_default(bold = TRUE))),
       align_with_table = FALSE,
       word_stylename = "Table Caption") %>%
-      add_footer_lines(value = as_paragraph(paste0("Correct Leading Species Classification Rate = ", correct_ls(), "%")))
+      add_footer_lines(value = as_paragraph(paste0("Correct Leading Species Classification Rate = ", 
+                                                   correct_ls(), "%")))
+    
+    LD_table <- bg(LD_table, 
+                   j = (1:(LD_table$body$content$ncol/2))*2, 
+                   bg = "lightgray", part = "body")
     
     LD_table <- labelizor(x = LD_table, 
                           part = "header", 
@@ -178,18 +59,17 @@ output$leading_sp_flex <- renderUI({
       align(align = "left", part = "header") %>%
       autofit()
     
-    LD_table <- bg(LD_table, 
-                   j = (1:(LD_table$body$content$ncol/2))*2, 
-                   bg = "lightgray", part = "body")
-    
-    return(LD_table %>%
-             htmltools_value())      
+    return(LD_table)      
   }
-  
 })
 
-output$spc_comp <- renderPlot({
-  
+
+output$leading_sp_flex <- renderUI({
+  htmltools_value(lsflex())
+})
+
+spcomp <- reactive({
+  req(input$SelectCategory, input$SelectVar)
   Fig11_dat <- Fig11_dat()
   
   percoverlap <- percoverlap()
@@ -213,5 +93,11 @@ output$spc_comp <- renderPlot({
       rect = element_blank()
     ) 
   
-  p
+  return(p)
+})
+
+
+output$spc_comp <- renderPlot({
+  
+  spcomp()
 })
