@@ -347,6 +347,7 @@ reftext <- reactive({
   BC Open Government Licence</b></br>
 <a href='https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resources/forest-inventory/ground-sample-inventories/provincial-monitoring'>
 https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resources/forest-inventory/ground-sample-inventories/provincial-monitoring</a></p>
+<p><b>Github repository</b></br><a href='https://github.com/bcgov/YSMtechrep'</a></p>
 ")
   return(reftext)
 })

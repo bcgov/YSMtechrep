@@ -288,11 +288,13 @@ percoverlap <- reactive({
                 values_from = c(spcperc)) %>%
     rowwise() %>%
     mutate(diff = abs(YSM - TSR_INPUT),
-           overlap = min(YSM, TSR_INPUT)) %>%
+           overlap = min(YSM, TSR_INPUT),
+           overlapmax = max(YSM, TSR_INPUT)) %>%
     summarize(diff_sum = sum(diff, na.rm = T),
-              over_sum = sum(overlap, na.rm = T))
+              over_sum = sum(overlap, na.rm = T),
+              overlapmax_sum = sum(overlapmax, na.rm = T))
   
-  percoverlap <- sum(spccoverlap$over_sum, na.rm = T) - sum(spccoverlap$diff_sum, na.rm = T) 
+  percoverlap <- sum(spccoverlap$over_sum, na.rm = T) #- sum(spccoverlap$diff_sum, na.rm = T) 
   
   return(percoverlap)
   

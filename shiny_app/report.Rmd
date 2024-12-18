@@ -1,5 +1,6 @@
 ---
 title: "`r title()` Young Stand Monitoring Program"
+author: "Forest Analysis and Inventory Branch"
 date: "Version 2024-12-05; Created `r Sys.Date()`"
 #runtime: shiny
 always_allow_html: true
@@ -15,7 +16,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(fig.pos = "H", out.extra = "")
-knitr::opts_chunk$set(echo = TRUE, fig.align="center")
+knitr::opts_chunk$set(echo = FALSE, fig.align="center")
 knitr::opts_chunk$set(fig.height = 4, collapse = TRUE)
 knitr::opts_chunk$set(dev = "ragg_png")
 set_flextable_defaults(fonts_ignore=TRUE)
