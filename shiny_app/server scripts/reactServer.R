@@ -118,33 +118,47 @@ summary_data <- reactive({
     filter(CLSTR_ID %in% clstr_id(), UTIL == 4) %>%
     mutate(SPC_GRP1 = substr(SPECIES,1,2)) %>%
     mutate(SPC_GRP1 = ifelse(SPECIES %in% decidspc, 'DE', SPC_GRP1))%>%  
-    mutate(BA_HA_L = BA_HA_LS + BA_HA_LF,
-           BA_HA_D = BA_HA_DS + BA_HA_DF,
-           STEMS_HA_L = STEMS_HA_LS + STEMS_HA_LF,
-           STEMS_HA_D = STEMS_HA_DS + STEMS_HA_DF,
-           VHA_WSV_L = VHA_WSV_LS + VHA_WSV_LF,
-           VHA_WSV_D = VHA_WSV_DS + VHA_WSV_DF,
-           n = length(unique(SITE_IDENTIFIER))) %>% 
+    group_by(CLSTR_ID) %>% 
     select(SITE_IDENTIFIER, CLSTR_ID, SPECIES, SPC_GRP1, 
-           BA_HA_L, BA_HA_D, STEMS_HA_L, STEMS_HA_D, 
-           VHA_WSV_L, VHA_WSV_D, n, 
-           QMD_LS, QMD_DS)
+           BA_HA_LS, BA_HA_DS, STEMS_HA_LS, STEMS_HA_DS, VHA_WSV_LS, VHA_WSV_DS,
+           QMD_LS, QMD_DS) 
   
   summary_mer<-spcs_data %>% 
     filter(CLSTR_ID %in% clstr_id(), UTIL == ifelse(SPECIES =="PL", 12.5, 17.5)) %>% 
     select(SITE_IDENTIFIER, CLSTR_ID, UTIL, SPECIES, 
-           VHA_MER_LS, VHA_MER_LF, VHA_MER_DS, VHA_MER_DF) %>% 
-    mutate(VHA_MER_L = VHA_MER_LS + VHA_MER_LF,
-           VHA_MER_D = VHA_MER_DS + VHA_MER_DF) 
+           VHA_MER_LS, VHA_MER_DS)
   
   summary_data <- summary_data %>%
-    left_join(summary_mer, by = c('SITE_IDENTIFIER', 'CLSTR_ID', "SPECIES"))
-  
-  summary_data <- summary_data %>%
-    left_join(SI_data, by = c('SITE_IDENTIFIER', 'CLSTR_ID', "SPECIES"))
+    left_join(summary_mer, by = c('SITE_IDENTIFIER', 'CLSTR_ID', "SPECIES")) %>%
+    data.table()
   
   return(summary_data)
   
+})
+
+summary_si <- reactive({
+  
+  req(input$SelectCategory, input$SelectVar)
+  input$genearate
+  
+  summary_si <- spcs_data %>% 
+    filter(CLSTR_ID %in% clstr_id(), UTIL == 4) %>%
+    mutate(SPC_GRP1 = substr(SPECIES,1,2)) %>%
+    mutate(SPC_GRP1 = ifelse(SPECIES %in% decidspc, 'DE', SPC_GRP1)) %>%
+    arrange(SITE_IDENTIFIER, CLSTR_ID, desc(BA_HA_LS)) %>%
+    group_by(SITE_IDENTIFIER, CLSTR_ID) %>%
+    slice(1) 
+  
+  summary_si <- summary_si %>%
+    left_join(SI_data, by = c('SITE_IDENTIFIER', 'CLSTR_ID', "SPECIES")) %>%
+    ungroup() %>%
+    summarise(n = sum(!is.na(AGET_TLSO)),
+              Avg = ifelse(n>0, mean(AGET_TLSO, na.rm = T), NA),
+              Min = ifelse(n>0, min(AGET_TLSO, na.rm = T), NA),
+              Max = ifelse(n>0, max(AGET_TLSO, na.rm = T), NA)) %>%
+    as.data.table()
+  
+  return(summary_si)
 })
 
 
@@ -155,9 +169,9 @@ decid_vol <- reactive({
   decid_vol <- summary_data %>%
     mutate(spc_dec_con = ifelse(SPC_GRP1 == "DE", "decid", "con")) %>%
     group_by(spc_dec_con) %>%
-    summarize(VHA_WSV_L = sum(VHA_WSV_L, na.rm = T)) %>%
+    summarize(VHA_WSV_LS = sum(VHA_WSV_LS, na.rm = T)) %>%
     ungroup() %>%
-    mutate(vol = round(VHA_WSV_L/sum(VHA_WSV_L, na.rm = T)*100,0)) %>%
+    mutate(vol = round(VHA_WSV_LS/sum(VHA_WSV_LS, na.rm = T)*100,0)) %>%
     filter(spc_dec_con == "decid") %>%
     pull(vol)
   
@@ -285,16 +299,17 @@ percoverlap <- reactive({
     select(-order) %>%
     pivot_wider(names_from = source,
                 names_sep = ".",
-                values_from = c(spcperc)) %>%
+                values_from = c(spcperc),
+                values_fill = 0) %>%
     rowwise() %>%
     mutate(diff = abs(YSM - TSR_INPUT),
            overlap = min(YSM, TSR_INPUT),
            overlapmax = max(YSM, TSR_INPUT)) %>%
     summarize(diff_sum = sum(diff, na.rm = T),
               over_sum = sum(overlap, na.rm = T),
-              overlapmax_sum = sum(overlapmax, na.rm = T))
+              max_sum = sum(overlapmax, na.rm = T))
   
-  percoverlap <- sum(spccoverlap$over_sum, na.rm = T) #- sum(spccoverlap$diff_sum, na.rm = T) 
+  percoverlap <- round(sum(spccoverlap$over_sum, na.rm = T)/sum(spccoverlap$max_sum, na.rm = T)*100, 0)
   
   return(percoverlap)
   
@@ -736,8 +751,11 @@ volproj <- reactive({
   
   volproj1 <- setDT(tsr_tass_volproj) %>%
     filter(CLSTR_ID %in% clstr_id()) %>%
+    arrange(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, desc(xy), desc(rust), desc(TASS_ver)) %>%
+    group_by(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, rust, AGE) %>%
+    slice(1) %>%
     mutate(volTASS_adj = volTASS*(1- year100_immed/100)*
-             (1-max(AGE - meanage, 0)*year100_inc/100*sum(risk_vol[risk_vol$mort_flag==2,]$volperc)),
+             (1-max(AGE - meanage, 0)*0.25/100*sum(risk_vol[risk_vol$mort_flag==2,]$volperc)),
            n_si = length(unique(SITE_IDENTIFIER)),
            n_ci = length(unique(CLSTR_ID)))
   
@@ -771,6 +789,9 @@ stemrustimpact <- reactive({
   volproj <- volproj()
   
   stemrustimpact <- volproj %>%
+    arrange(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, desc(xy), desc(rust)) %>%
+    group_by(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, rust, AGE) %>%
+    slice(1) %>%
     group_by(AGE, rust) %>%
     summarize(meanvol_tsr = mean(volTSR, na.rm = T),
               sd_tsr = sd(volTSR , na.rm = T),
@@ -801,31 +822,51 @@ projectiontable <- reactive({
   req(input$SelectCategory, input$SelectVar)
   input$genearate
   
-  risk_vol <- risk_vol()
-  meanage <- meanage()
+  #risk_vol <- risk_vol()
+  #meanage <- meanage()
+  #
+  #year100_immed <- year100_immed()
+  #year100_inc<- year100_inc()
+  #year100_comb<- year100_comb()
   
-  year100_immed <- year100_immed()
-  year100_inc<- year100_inc()
-  year100_comb<- year100_comb()
+  volproj <- volproj()
   
-  projectiontable <- tsr_tass_volproj %>%
-    filter(CLSTR_ID %in% clstr_id(), AGE %in% c(60, 70, 80, 90, 100)) %>%
-    mutate(GMV_adj1 = GMV_approx*(1- year100_immed/100)*
-             (1-max(AGE - meanage, 0)*year100_inc/100*sum(risk_vol[risk_vol$mort_flag==2,]$volperc)),
-           voldiff = volTSR - GMV_adj1) %>%
+  #projectiontable <- tsr_tass_volproj %>%
+  #  filter(CLSTR_ID %in% clstr_id(), AGE %in% c(60, 70, 80, 90, 100)) %>%
+  #  mutate(GMV_adj1 = GMV_approx*(1- year100_immed/100)*
+  #           (1-max(AGE - meanage, 0)*0.25/100*sum(risk_vol[risk_vol$mort_flag==2,]$volperc)),
+  #         voldiff = volTSR - GMV_adj1) %>%
+  #  arrange(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, desc(xy), desc(rust)) %>%
+  #  group_by(SITE_IDENTIFIER, AGE) %>%
+  #  slice(1) %>%
+  #  ungroup() %>%
+  #  group_by(AGE) %>%
+  #  summarize(n_samples = n(),
+  #            meanvol_tsr = round(mean(volTSR, na.rm = T), 0),
+  #            meanvol_tass = round(mean(GMV_adj1, na.rm = T), 0),
+  #            meanvoldiff = round(mean(voldiff, na.rm = T), 0),
+  #            sdvoldiff = sd(voldiff, na.rm = T)) %>%
+  #  ungroup() %>%
+  #  mutate(se_voldiff = sdvoldiff/sqrt(n_samples),
+  #         pval = round(2*pt(abs(meanvoldiff)/se_voldiff, n_samples-1, lower.tail = F), 3),
+  #         percvoldiff = paste0(round(meanvoldiff/meanvol_tass*100, 0), "%"))
+  
+  projectiontable <- volproj %>%
+    filter(AGE %in% c(60, 70, 80, 90, 100)) %>%
     arrange(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, desc(xy), desc(rust)) %>%
     group_by(SITE_IDENTIFIER, AGE) %>%
     slice(1) %>%
     ungroup() %>%
+    mutate(voldiff = volTSR - volTASS_adj) %>%
     group_by(AGE) %>%
-    summarize(n_samples = n(),
-              meanvol_tsr = round(mean(volTSR, na.rm = T), 0),
-              meanvol_tass = round(mean(GMV_adj1, na.rm = T), 0),
+    summarize(meanvol_tsr = round(mean(volTSR, na.rm = T), 0),
+              meanvol_tass = round(mean(volTASS_adj, na.rm = T), 0),
+              n = n(),
               meanvoldiff = round(mean(voldiff, na.rm = T), 0),
               sdvoldiff = sd(voldiff, na.rm = T)) %>%
     ungroup() %>%
-    mutate(se_voldiff = sdvoldiff/sqrt(n_samples),
-           pval = round(2*pt(abs(meanvoldiff)/se_voldiff, n_samples-1, lower.tail = F), 3),
+    mutate(se_voldiff = sdvoldiff/sqrt(n),
+           pval = round(2*pt(abs(meanvoldiff)/se_voldiff, n-1, lower.tail = F), 3),
            percvoldiff = paste0(round(meanvoldiff/meanvol_tass*100, 0), "%"))
   
   return(projectiontable)

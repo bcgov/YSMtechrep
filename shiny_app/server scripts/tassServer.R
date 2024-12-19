@@ -233,9 +233,10 @@ output$tass_tsr_test <- renderUI({
 
 yieldtable <- reactive({
   req(input$SelectCategory, input$SelectVar)
-  projectiontable <- projectiontable()
+  projectiontable <- projectiontable() %>%
+    select(n, meanvol_tsr, meanvol_tass, meanvoldiff, pval, percvoldiff)
   
-  projectiontable1 <- data.frame(t(projectiontable %>% select(-sdvoldiff, -se_voldiff, -AGE)))
+  projectiontable1 <- data.frame(t(projectiontable))
   rownames(projectiontable1) <- c('# YSM samples', "TSR Mean Proj. Vol", "YSM Mean Proj. Vol",
                                   "Mean vol diff", "P-value of vol diff", 
                                   "% vol diff")
