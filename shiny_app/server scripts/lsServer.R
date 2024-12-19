@@ -48,7 +48,7 @@ lsflex <- reactive({
       add_footer_lines(value = as_paragraph(paste0("Correct Leading Species Classification Rate = ", 
                                                    correct_ls(), "%")))
     
-    LD_table <- bg(LD_table, 
+    LD_table <- bg(x = LD_table, 
                    j = (1:(LD_table$body$content$ncol/2))*2, 
                    bg = "lightgray", part = "body")
     

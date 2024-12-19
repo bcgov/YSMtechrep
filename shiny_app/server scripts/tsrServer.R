@@ -377,7 +377,7 @@ tasspai1 <- reactive({
   Fig15_dat <- Fig15_dat()
   
   ### TASS PAI summary table
-  tass_pai_table1 <- data.frame(attr = c("YSM", "TSR"),
+  tass_pai_table1 <- data.frame(attr = c("YSM", "TASS"),
                                 obs = rep(dim(Fig15_dat)[1],2),
                                 Yrs = c(round(mean(Fig15_dat$year_dff),0), round(mean(Fig15_dat$year_dff),0)),
                                 PAI = c(round(mean(Fig15_dat$grdnv_pai), 2),

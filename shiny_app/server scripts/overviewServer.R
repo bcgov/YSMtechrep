@@ -230,12 +230,14 @@ text_key <- reactive({
   req(input$SelectCategory, input$SelectVar)
   
   projectiontable <- projectiontable()
-  max_row = which.max(abs(projectiontable$meanvoldiff/projectiontable$meanvol_tass*100))
+  prjtab_70 <- projectiontable %>% filter(AGE >=70, AGE <100)
   
-  maxvoldiff = projectiontable$percvoldiff[max_row]
-  ageatmaxvoldiff = projectiontable$AGE[max_row]
-  Significant = ifelse(projectiontable$pval[max_row] <0.05, "Yes", "No")
-  TSRbias1 = ifelse(projectiontable$meanvoldiff[max_row] < 0, "Conservative", "Optimistic")
+  max_row = which.max(abs(prjtab_70$meanvoldiff/prjtab_70$meanvol_tass*100))
+  
+  maxvoldiff = prjtab_70$percvoldiff[max_row]
+  ageatmaxvoldiff = prjtab_70$AGE[max_row]
+  Significant = ifelse(prjtab_70$pval[max_row] <0.05, "Yes", "No")
+  TSRbias1 = ifelse(prjtab_70$meanvoldiff[max_row] < 0, "Conservative", "Optimistic")
   TSRbias2 = ifelse(Significant == "No", "No", TSRbias1)
   test1_comment <- test1_comment()
   test2_comment <- test2_comment()
@@ -315,15 +317,20 @@ output$key_finding <- renderUI({
   
   
   projectiontable <- projectiontable()
-  max_row = which.max(abs(projectiontable$meanvoldiff/projectiontable$meanvol_tass*100))
+  prjtab_70 <- projectiontable %>% filter(AGE >=70, AGE <100)
   
-  maxvoldiff = projectiontable$percvoldiff[max_row]
-  ageatmaxvoldiff = projectiontable$AGE[max_row]
-  Significant = ifelse(projectiontable$pval[max_row] <0.05, "Yes", "No")
-  TSRbias1 = ifelse(projectiontable$meanvoldiff[max_row] < 0, "Conservative", "Optimistic")
+  max_row = which.max(abs(prjtab_70$meanvoldiff/prjtab_70$meanvol_tass*100))
+  
+  maxvoldiff = prjtab_70$percvoldiff[max_row]
+  ageatmaxvoldiff = prjtab_70$AGE[max_row]
+  Significant = ifelse(prjtab_70$pval[max_row] <0.05, "Yes", "No")
+  TSRbias1 = ifelse(prjtab_70$meanvoldiff[max_row] < 0, "Conservative", "Optimistic")
   TSRbias2 = ifelse(Significant == "No", "No", TSRbias1)
   test1_comment <- test1_comment()
   test2_comment <- test2_comment()
+  
+  stemrustimpact100 <- stemrustimpact() %>%
+    filter(AGE == 100) %>% mutate(rustimpact100 = round((N-Y)/N*100,1)) %>% pull(rustimpact100)
   
   HTML(paste0("<h3>Summary of Key Findings for Existing Young Stands in ",
               title(), " related to Timber Supply</h3>","</br>",
@@ -367,7 +374,7 @@ output$key_finding <- renderUI({
               "<li>For YSM measurements since 2017, the impact from stem rusts can be 
     directly modeled in TASS using GRIM / CRIME. The volume impact of TASS YSM 
     projections by age 100 (in addition to default OAFs) is: ", 
-              "<b><font color='#FF0000'> ", year100_inc(), "</b> (% of m<sup>3</sup>/ha)</font></li>",
+              "<b><font color='#FF0000'> ", stemrustimpact100, "</b> (% of m<sup>3</sup>/ha)</font></li>",
               
               "<li>To address forest health risks from all other damage agents, an 
     interim simplistic approach is applied to estimate future impacts of all 

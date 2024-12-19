@@ -1,0 +1,12 @@
+name: test_YSM_techrep
+title: test_YSM_techrep
+username: bcgov-env
+account: bcgov-env
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 13589333
+bundleId: 9513089
+url: https://bcgov-env.shinyapps.io/test_YSM_techrep/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

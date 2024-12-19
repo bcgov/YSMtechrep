@@ -30,13 +30,14 @@ summaryflex <- reactive({
   if(!is.null(clstr_id())){
     
     summary_data <- summary_data()
+    summary_si <- summary_si()
     
-    n_sid = unique(summary_data$n)
+    n_sid = length(clstr_id())
     
-    sum_cols <- c("BA_HA_L", "BA_HA_D",
-                  "STEMS_HA_L", "STEMS_HA_D",
-                  "VHA_WSV_L", "VHA_WSV_D",
-                  "VHA_MER_L", "VHA_MER_D")
+    sum_cols <- c("BA_HA_LS", "BA_HA_DS",
+                  "STEMS_HA_LS", "STEMS_HA_DS",
+                  "VHA_WSV_LS", "VHA_WSV_DS",
+                  "VHA_MER_LS", "VHA_MER_DS")
     
     summary_table <- summary_data[, lapply(.SD, sum, na.rm=TRUE), by = SITE_IDENTIFIER, .SDcols=sum_cols] 
     
@@ -45,27 +46,18 @@ summaryflex <- reactive({
     Max <- summary_table[, lapply(.SD, max, na.rm=TRUE), .SDcols=sum_cols]
     SD <- summary_table[, lapply(.SD, sd, na.rm=TRUE), .SDcols=sum_cols]
     QMD_mean <- summary_data[, lapply(.SD, mean, na.rm=TRUE),  .SDcols=c("QMD_LS","QMD_DS")] 
-    summary_table2 <- summary_data %>%
-      filter(!is.na(SI_M_TLSO)) %>%
-      summarise(n = sum(!is.na(AGET_TLSO)),
-                Avg = ifelse(n>0, mean(AGET_TLSO, na.rm = T), NA),
-                Min = ifelse(n>0, min(AGET_TLSO, na.rm = T), NA),
-                Max = ifelse(n>0, max(AGET_TLSO, na.rm = T), NA)) %>%
-      as.data.table()
-    
     
     table2 <- data.frame(
-      n = c(rep(n_sid, 5), summary_table2$n), 
-      Avg = c(Avg[1, c(round(BA_HA_L, 1), round(STEMS_HA_L, 0), round(QMD_mean$QMD_LS, 0),  round(VHA_WSV_L, 0), round(VHA_MER_L,0))], round(summary_table2$Avg, 0)),
-      Min = c(Min[1, c(round(BA_HA_L, 1), round(STEMS_HA_L, 0), NA,  round(VHA_WSV_L, 0), round(VHA_MER_L,0))], round(summary_table2$Min, 0)),
-      Max = c(Max[1, c(round(BA_HA_L, 1), round(STEMS_HA_L, 0), NA,  round(VHA_WSV_L, 0), round(VHA_MER_L,0))], round(summary_table2$Max, 0)),
-      SD = c(SD[1, c(round(BA_HA_L, 1), round(STEMS_HA_L, 0), NA,  round(VHA_WSV_L, 0), round(VHA_MER_L,0))], NA),
-      Avg_D = c(Avg[1, c(round(BA_HA_D, 1), round(STEMS_HA_D, 0), round(QMD_mean$QMD_DS, 0),  round(VHA_WSV_D, 0), round(VHA_MER_D,0))], NA)
-      
-    )
+      n = c(rep(n_sid, 5), summary_si$n), 
+      Avg = c(Avg[1, c(round(BA_HA_LS, 1), round(STEMS_HA_LS, 0), round(QMD_mean$QMD_LS, 0),  round(VHA_WSV_LS, 0), round(VHA_MER_LS,0))], round(summary_si$Avg, 0)),
+      Min = c(Min[1, c(round(BA_HA_LS, 1), round(STEMS_HA_LS, 0), NA,  round(VHA_WSV_LS, 0), round(VHA_MER_LS,0))], round(summary_si$Min, 0)),
+      Max = c(Max[1, c(round(BA_HA_LS, 1), round(STEMS_HA_LS, 0), NA,  round(VHA_WSV_LS, 0), round(VHA_MER_LS,0))], round(summary_si$Max, 0)),
+      SD = c(SD[1, c(round(BA_HA_LS, 1), round(STEMS_HA_LS, 0), NA,  round(VHA_WSV_LS, 0), round(VHA_MER_LS,0))], NA),
+      Avg_D = c(Avg[1, c(round(BA_HA_DS, 1), round(STEMS_HA_DS, 0), round(QMD_mean$QMD_DS, 0),  round(VHA_WSV_DS, 0), round(VHA_MER_DS,0))], NA))
+    
     rownames(table2) <- c('Basal Area', "Total Stems (#/ha)", "Quadratic Mean DBH (cm)",
                           "Whole Stem Vol.", "Net Merch Vol.", 
-                          "Total age all site trees (yrs)")
+                          "Total age of lead species (yrs)")
     
     flextable2 <- flextable(table2 %>% 
                               rownames_to_column("  ")) %>% 
@@ -85,7 +77,6 @@ summaryflex <- reactive({
     flextable2 <- flextable::compose(flextable2,
                                      i = 5, j = 1, 
                                      value = as_paragraph('Net Merch Vol. (m',as_sup('3'),'/ha)'))
-    
     flextable2 <- bg(flextable2, 
                      j = 7,
                      bg = "lightgray", part = "all")
@@ -110,7 +101,7 @@ livespplot <- reactive({
     
     spc_ba <- summary_data %>%
       group_by(SPC_GRP1) %>%
-      summarise(SUM = sum(BA_HA_L, na.rm = TRUE), 
+      summarise(SUM = sum(BA_HA_LS, na.rm = TRUE), 
                 FREQ = n()) %>%
       arrange(desc(SUM))
     
@@ -125,7 +116,7 @@ livespplot <- reactive({
     # *create species group 3, comprising 8 species classes in descending order by stems / ha;
     spc_stem <- summary_data %>%
       group_by(SPC_GRP1) %>%
-      summarise(SUM = sum(STEMS_HA_L, na.rm = TRUE), 
+      summarise(SUM = sum(STEMS_HA_LS, na.rm = TRUE), 
                 FREQ = n()) %>%
       arrange(desc(SUM))
     
