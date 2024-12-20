@@ -645,7 +645,11 @@ risk_vol <- reactive({
   
   risk_vol <- tree_fh_data %>%
     filter(CLSTR_ID %in% clstr_id(), DAM_NUM==1, LV_D=="L", 
-           mort_flag %in% c(1,2), !(AGN_new %in% c('DSC', 'DSG', 'DSS'))) %>%
+           mort_flag %in% c(1,2)) %>%
+    rowwise() %>%
+    filter(if(MEAS_YR >= 2017) !(AGN_new %in% c('DSC', 'DSG', 'DSS')) else TRUE) %>%
+    #filter(CLSTR_ID %in% clstr_id(), DAM_NUM==1, LV_D=="L", 
+    #       mort_flag %in% c(1,2), !(AGN_new %in% c('DSC', 'DSG', 'DSS'))) %>%
     group_by(mort_flag, AGN_new) %>%
     reframe(volsum = sum(vol_ha, na.rm = T))  %>%
     arrange(mort_flag, desc(volsum)) %>%
