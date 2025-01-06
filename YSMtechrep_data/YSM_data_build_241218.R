@@ -420,6 +420,7 @@ FH_dat <- FH_dat %>%
 #FH_dat <- FH_dat %>%
 #  mutate(DAM_AGNB = ifelse(DAM_AGNA == DAM_AGNB & grepl('U', DAM_AGNA, fixed = TRUE), 'U', DAM_AGNB))
 
+# *look at numeric values only in severity class;
 FH_dat <- FH_dat %>%
   mutate(SEVPERC_A = as.numeric(gsub("[^\\d]+", "", SEV_A, perl = T)),
          SEVPERC_B = as.numeric(gsub("[^\\d]+", "", SEV_B, perl = T)),
@@ -518,12 +519,14 @@ FH_dat1_1_1 <- FH_dat1 %>%
 #  slice(1)
 
 # *start categorizing severity;
+# *first import ismc damage agent to severity class lookup table;
 lookup_sev1 <- lookup_sev %>%
   mutate(dam_3letter = DAMAGE_AGENT_CODE,
          severity_grp = DAMAGE_AGENT_SEVERITY_CODE) %>%
   select(dam_3letter, severity_grp) %>%
   distinct()
 
+# *next, import severity rating lookup table created by D.Rush 2021-jan;
 lookup_rush2 <- lookup_rush %>%
   mutate_at(vars(matches("dam")), trimws)
 
@@ -550,6 +553,7 @@ FH_dat1_2 <- FH_dat1_2 %>%
          sev_class_num = ifelse(grepl("[A-Za-z]", dam_severity_adj, perl = T) == F, 
                                 as.numeric(dam_severity_adj), NA))
 
+# *use only percent encirclemt for most recent stem rust severity ratings;
 FH_dat1_2 <- FH_dat1_2 %>%
   mutate(dam_severity_adj = ifelse(severity_grp == "STEMRUST1", 
                                    substr(dam_severity_adj, 2, 2), dam_severity_adj)) %>%
@@ -572,6 +576,7 @@ FH_dat1_2 <- FH_dat1_2 %>%
                                           'HIGH', sev_class)
                             )))
 
+# *default to severity class when no match;
 FH_dat1_2 <- FH_dat1_2 %>%
   mutate(sev_class = ifelse(sev_class %in% c("", NA), "UNKN", sev_class))
 
