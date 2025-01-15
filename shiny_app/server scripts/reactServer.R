@@ -596,10 +596,17 @@ fig10_dat_final <- reactive({
                 by = c("n_si", "SITE_IDENTIFIER", "new_visit_number"),
                 suffix = c(".dam", ".comp"))
     
+    #FH_dat_coc5 <- FH_dat_coc4 %>%
+    #  ungroup() %>%
+    #  group_by(n_si, new_visit_number, AGN) %>%
+    #  summarise_all(mean, .names = "mean_{.col}") 
+    
     FH_dat_coc5 <- FH_dat_coc4 %>%
       ungroup() %>%
       group_by(n_si, new_visit_number, AGN) %>%
-      summarise_all(mean, .names = "mean_{.col}") 
+      reframe(across(D.dam:totsph_comdem, sum)) %>%
+      ungroup() %>%
+      mutate(across(c(D.dam:totsph_comdem), function(x) x/n_si))
     
     FH_dat_coc5 <- FH_dat_coc5 %>%
       ungroup() %>%
