@@ -1058,7 +1058,8 @@ test2_comment <- reactive({
 fig8_dat <- reactive({
   
   fig8_dat <- tree_fh_data %>%
-    filter(CLSTR_ID %in% clstr_id_last2(), DAM_NUM==1) %>%
+    #filter(CLSTR_ID %in% clstr_id_last2(), DAM_NUM==1) %>%
+    filter(CLSTR_ID %in% clstr_id_all(), DAM_NUM==1) %>%
     group_by(SITE_IDENTIFIER, PLOT, TREE_NO) %>%
     arrange(VISIT_NUMBER) %>%
     mutate(meas_no = row_number())  %>%
@@ -1082,8 +1083,11 @@ fig8_dat <- reactive({
         a2 <- fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]
         
         # *for components of change analysis, need to constrain phf to first measure;
-        if (!is.na(a2$PHF_TREE) & a1$PHF_TREE != a2$PHF_TREE){
-          fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]$phf_coc <- a1$PHF_TREE
+        #if (!is.na(a2$PHF_TREE) & a1$PHF_TREE != a2$PHF_TREE){
+        #  fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]$phf_coc <- a1$PHF_TREE
+        #}
+        if (!is.na(a2$phf_coc) & a1$phf_coc != a2$phf_coc){
+          fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]$phf_coc <- a1$phf_coc
         }
         # *fill in residual classification if recorded at one measurement , but not the next;
         # *assign as residual across both measurements;
@@ -1142,6 +1146,10 @@ fig8_dat <- reactive({
       }
     }
   }
+  
+  fig8_dat <- fig8_dat %>%
+    filter(CLSTR_ID %in% clstr_id_last2())
+  
   return(fig8_dat)
   
 })
