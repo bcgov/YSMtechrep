@@ -53,7 +53,7 @@ cocplot <- reactive({
   
   p <- if (nrow(fig8) > 1){ ggplot(fig8, aes(x = comp_chg_coc)) +
       geom_bar(aes(y = value_adj, fill = variable, group = variable),
-               stat = "identity", position = position_dodge())  +
+               stat = "identity", position = position_dodge2(), width = 0.7)  +
       labs(x = "", title = "Components of Change") + 
       scale_fill_manual(values = c("steelblue", "#B4464B"), name = NULL, labels = c("Stems/ha", "BA/ha")) +
       #scale_fill_discrete(name = "", labels = c("Stems/ha", "BA/ha")) +
@@ -348,20 +348,42 @@ fhcocflex <- reactive({
     tot_tree_alive <- round(unique(fig10_dat_final[fig10_dat_final$new_visit_number=='Last',]$totsph_comdem),0)
     
     table6_dat <- fig10_dat_final %>%
-      arrange(incid_stems) %>%
+      arrange(desc(incid_stems)) %>%
       filter(new_visit_number == 'Last') %>%
-      slice_max(incid_stems, n =15) %>%
+      mutate(rank = row_number()) %>%
+      mutate(rank_new = ifelse(rank>15, 16, rank),
+             AGN_rank = ifelse(rank>15, "Rest", AGN)) %>%
+      group_by(AGN_rank, rank_new) %>%
+      summarise(incid_stems = sum(incid_stems, na.rm = T)*100,
+                S.dam = sum(S.dam, na.rm = T),
+                M.dam = sum(M.dam, na.rm = T),
+                damsph_comdem = sum(damsph_comdem, na.rm = T),
+                perc_mort = mean(perc_mort, na.rm = T)*100,
+                prob_get_and_die = sum(prob_get_and_die, na.rm = T)*100) %>%
+      ungroup() %>%
+      arrange(rank_new) %>%
       mutate(total = "", 
-             PDA = AGN,
-             Inci = round(incid_stems*100, 1),
+             PDA = AGN_rank,
+             Inci = round(incid_stems, 1),
              S = round(S.dam, 0),
              M = round(M.dam, 0), 
              Tot = round(damsph_comdem, 0),
-             PM = round(perc_mort*100, 1),
-             Prob = round(prob_get_and_die*100, 1)) %>%
-      ungroup() %>%
+             PM = round(perc_mort, 1),
+             Prob = round(prob_get_and_die, 1)) %>%
       select(total, PDA, Inci, S, M, Tot, PM, Prob) %>%
       mutate(across(everything(), .fns = function(x) ifelse(x == 0, "", x)))
+      #slice_max(incid_stems, n =15) %>%
+      #mutate(total = "", 
+      #       PDA = AGN,
+      #       Inci = round(incid_stems*100, 1),
+      #       S = round(S.dam, 0),
+      #       M = round(M.dam, 0), 
+      #       Tot = round(damsph_comdem, 0),
+      #       PM = round(perc_mort*100, 1),
+      #       Prob = round(prob_get_and_die*100, 1)) %>%
+      #ungroup() %>%
+      #select(total, PDA, Inci, S, M, Tot, PM, Prob) %>%
+      #mutate(across(everything(), .fns = function(x) ifelse(x == 0, "", x)))
     
     flextable3 <- flextable(table6_dat) 
     

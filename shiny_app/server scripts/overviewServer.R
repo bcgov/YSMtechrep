@@ -48,14 +48,21 @@ use other criteria (eg., harvest history).</p>  ",
            "<p>Ground samples (dots on map, below) are established on a ", 
            "<b>",gridsize(),"</b> grid, with trees tagged in 0.04ha permanent plots with a planned
 five-year re-measurement cycle.</p>  ",
+           "<p>At each 5-year visit, previously unsampled grid points that now
+           exceed the minimum 15year limit will have new recruitment ground
+           samples established. In addition, samples that age-out of the
+           maximum 50year limit, will still be re-measured for two more 10year
+           cycles, to ensure YSM remeasurements continue on to at least an
+           anticipated rotation age.</p>",
            "<p>Some key YSM objectives are to: describe the characteristics and
 structure of young stands, report on forest health, assess the accuracy
 of predicted attributes and spatial coverages, and compare against
 growth models to help evaluate if young stands will meet future timber
 supply expectations.</p>  ",
-           "<p>The TSA map (right) includes the source of site index found in the 
+           "<p>The TSA map (below) includes the source of site index found in the 
 latest Provincial Site Productivity Layer (PSPL) : either TEM/PEM & 
-SIBEC, or Biophysical Site Index Model.</p>  <p>", additionlaphrase(),"</p>")
+SIBEC, or Biophysical Site Index Model.</p>  <p>", 
+           additionlaphrase(),"</p>")
   
   return(text)
 })
@@ -75,14 +82,18 @@ plotgraph <- reactive({
              visit_year = paste0(MEAS_YR, collapse  = ',')) %>%
       select(SITE_IDENTIFIER, SAMPLE_ESTABLISHMENT_TYPE, visit_num, visit_year, BECsub,
              MGMT_UNIT, TSA_DESC, BEC_ZONE, BEC_SBZ, BEC_VAR, GRID_SIZE,
-             BC_ALBERS_X, BC_ALBERS_Y) %>% 
+             BC_ALBERS_X, BC_ALBERS_Y, Latitude, Longitude) %>% 
       distinct()
     
     location <- st_as_sf(x = location,                         
-                         coords = c("BC_ALBERS_X", "BC_ALBERS_Y"),
-                         crs = 3005)
+                         coords = c("Longitude", "Latitude"),
+                         crs = 4326)
     
-    location <- st_transform(location , crs = 4326)
+    #location <- st_as_sf(x = location,                         
+    #                     coords = c("BC_ALBERS_X", "BC_ALBERS_Y"),
+    #                     crs = 3005)
+    #
+    #location <- st_transform(location , crs = 4326)
     
     if(input$SelectCategory == "TSA_DESC"){
       

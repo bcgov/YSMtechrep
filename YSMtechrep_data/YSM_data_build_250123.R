@@ -206,11 +206,18 @@ sample_data2 <- sample_data2 %>%
   ungroup() 
 
 sample_data3 <- sample_data2 %>%
-  ### Remove nsite < 10
-  filter((nsite_bytsa >= 10 & TSA_filter =="Y") |(nsite_bybec >= 13 & BEC_filter =="Y")) 
+  ### Retain only nsite >= 10 for reporting purpose
+  filter((nsite_bytsa >= 10 & TSA_filter =="Y") |(nsite_bybec >= 10 & BEC_filter =="Y")) 
+
+sample_data3 <- sample_data3 %>%
+  ### Define a now visit number as VISIT_NUMBER may not be consecutive
+  group_by(SITE_IDENTIFIER) %>%
+  arrange(VISIT_NUMBER) %>%
+  mutate(visit_number_new = row_number()) %>%
+  ungroup()
 
 ### Save data for application
-saveRDS(sample_data, paste0(savepath,"sample_data.rds"))
+saveRDS(sample_data3, paste0(savepath,"sample_data.rds"))
 
 
 
@@ -769,9 +776,108 @@ Tree_FH_data <- Tree_FH_data %>%
   ungroup() %>%
   data.table
 
+Tree_FH_data1 <- Tree_FH_data %>%
+  left_join(sample_data %>% select(SITE_IDENTIFIER, VISIT_NUMBER, visit_number_new),
+            by = c('SITE_IDENTIFIER', 'VISIT_NUMBER')) %>%
+  mutate(tree_id = paste0(SITE_IDENTIFIER, "-", TREE_NO),
+         phf_coc = PHF_TREE,
+         resid_coc = RESIDUAL,
+         comp_chg_coc = COMP_CHG,
+         species_coc = SPECIES,
+         lvd_coc = LV_D,
+         sf_coc = S_F)
+
+# *run checks across measurements;
+### Takes a while..
+for (i in unique(Tree_FH_data1$tree_id)){
+  
+  #max_meas <- max(Tree_FH_data1[Tree_FH_data1$tree_id == i, ]$visit_number_new)
+  meas_no <- sort(unique(Tree_FH_data1[Tree_FH_data1$tree_id == i, ]$visit_number_new))
+  
+  if (length(meas_no) > 1){
+    
+    for (j in meas_no){
+      
+      a1 <- Tree_FH_data1[Tree_FH_data1$tree_id == i & 
+                            Tree_FH_data1$DAM_NUM == 1 &
+                            Tree_FH_data1$visit_number_new == j, ]
+      a2 <- Tree_FH_data1[Tree_FH_data1$tree_id == i & 
+                            Tree_FH_data1$DAM_NUM == 1 &
+                            Tree_FH_data1$visit_number_new == j + 1, ]
+      # *ingress trees;
+      if (nrow(a1) == 0){
+        Tree_FH_data1[Tree_FH_data1$tree_id == i & 
+                        Tree_FH_data1$visit_number_new == j + 1, ]$comp_chg_coc <- ifelse(a2$lvd_coc == "L", "I", "M")
+      } else if (nrow(a2) == 0){
+        ## *live at first msmt, missing at second msmt, assign as mortality, and assume dead fallen;
+        #Tree_FH_data1[Tree_FH_data1$tree_id == i & 
+        #                Tree_FH_data1$visit_number_new == j, ]$comp_chg_coc <- "M"
+        #Tree_FH_data1[Tree_FH_data1$tree_id == i & 
+        #                Tree_FH_data1$visit_number_new == j, ]$lvd_coc <- "D"
+        #Tree_FH_data1[Tree_FH_data1$tree_id == i & 
+        #                Tree_FH_data1$visit_number_new == j, ]$sf_coc <- "F"
+      } else {
+        # *where tree was previously recorded as dead, but subsequently recorded as live, 
+        # then believe second measure;
+        # *and redefine tree as alive at first measure;
+        if (a1$lvd_coc == "D" & a2$lvd_coc == "L"){
+          Tree_FH_data1[Tree_FH_data1$tree_id == i & 
+                          Tree_FH_data1$visit_number_new == j, ]$lvd_coc <- a2$lvd_coc
+        }
+        # *for components of change analysis, need to constrain phf to first measure;
+        if (!is.na(a2$phf_coc) & a1$phf_coc != a2$phf_coc){
+          Tree_FH_data1[Tree_FH_data1$tree_id == i & 
+                          Tree_FH_data1$visit_number_new == j + 1, ]$phf_coc <- a1$phf_coc
+        }
+        # *fill in residual classification if recorded at one measurement , but not the next;
+        # *assign as residual across both measurements;
+        if (a1$RESIDUAL != a2$RESIDUAL & (a1$RESIDUAL == "Y" | a2$RESIDUAL == "Y")){
+          Tree_FH_data1[Tree_FH_data1$tree_id == i, ]$resid_coc <- "Y"
+        }
+        # *components of change;
+        # *survivor trees;
+        if (a1$lvd_coc == "L" & a2$lvd_coc == "L" & a2$sf_coc == "S"){
+          Tree_FH_data1[Tree_FH_data1$tree_id == i & 
+                          Tree_FH_data1$visit_number_new == j + 1, ]$comp_chg_coc <- "S"
+        }
+        # *fallen live, assume this will become mortality;
+        if (a1$lvd_coc == "L" & a2$lvd_coc == "L" & a2$sf_coc == "F"){
+          Tree_FH_data1[Tree_FH_data1$tree_id == i & 
+                          Tree_FH_data1$visit_number_new == j + 1, ]$lvd_coc <- "D"
+          Tree_FH_data1[Tree_FH_data1$tree_id == i & 
+                          Tree_FH_data1$visit_number_new == j + 1, ]$comp_chg_coc <- "M"
+        }
+        # *mortality : trees that died between measurements;
+        if (a1$LV_D == "L" & a2$lvd_coc == "D"){
+          Tree_FH_data1[Tree_FH_data1$tree_id == i & 
+                          Tree_FH_data1$visit_number_new == j + 1, ]$comp_chg_coc <- "M"
+        }
+        # *if second measure is unknown then use first measure species;
+        if (a2$SPECIES == "XC"){
+          Tree_FH_data1[Tree_FH_data1$tree_id == i & 
+                          Tree_FH_data1$visit_number_new == j, ]$species_coc <- a1$SPECIES
+          # *otherwise resolve inconsistencies by believing second measure;
+        } else if (a1$SPECIES != a2$SPECIES) {
+          Tree_FH_data1[Tree_FH_data1$tree_id == i & 
+                          Tree_FH_data1$visit_number_new == j, ]$species_coc <- a2$SPECIES
+        }
+      }
+    }
+  }
+  if (length(meas_no) == 1){
+    if (unique(Tree_FH_data1[Tree_FH_data1$tree_id == i, ]$visit_number_new) == 1){
+      Tree_FH_data1[Tree_FH_data1$tree_id == i, ]$comp_chg_coc <- ""
+    } else {
+      Tree_FH_data1[Tree_FH_data1$tree_id == i, ]$comp_chg_coc <- 
+        ifelse(Tree_FH_data1[Tree_FH_data1$tree_id == i, ]$lvd_coc == "L", "I", 
+               Tree_FH_data1[Tree_FH_data1$tree_id == i, ]$comp_chg_coc)
+    }
+  }
+}
+
 
 ### Save data for application
-saveRDS(Tree_FH_data, paste0(savepath,"Tree_FH_data.rds"))
+saveRDS(Tree_FH_data1, paste0(savepath,"Tree_FH_data.rds"))
 
 
 ################################################################################

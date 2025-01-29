@@ -34,27 +34,42 @@ summaryflex <- reactive({
     
     n_sid = length(clstr_id())
     
-    sum_cols <- c("BA_HA_LS", "BA_HA_DS",
-                  "STEMS_HA_LS", "STEMS_HA_DS",
-                  "VHA_WSV_LS", "VHA_WSV_DS",
-                  "VHA_MER_LS", "VHA_MER_DS")
+    summary_data <- summary_data %>%
+      group_by(SITE_IDENTIFIER) %>%
+      summarise(BA_LS = sum(BA_HA_LS, na.rm = T),
+                STEMS_LS = sum(STEMS_HA_LS, na.rm = T),
+                WSV_LS = sum(VHA_WSV_LS, na.rm = T),
+                NTWB_LS = sum(VHA_NTWB_LS, na.rm = T),
+                BA_DS = sum(BA_HA_DS, na.rm = T),
+                STEMS_DS = sum(STEMS_HA_DS, na.rm = T),
+                WSV_DS = sum(VHA_WSV_DS, na.rm = T),
+                NTWB_DS = sum(VHA_NTWB_DS, na.rm = T)) %>%
+      mutate(QMD_LS = sqrt((BA_LS*40000)/(pi*STEMS_LS)),
+             QMD_DS = sqrt((BA_DS*40000)/(pi*STEMS_DS))) %>%
+      replace(is.na(.), 0)
     
-    summary_table <- summary_data[, lapply(.SD, sum, na.rm=TRUE), by = SITE_IDENTIFIER, .SDcols=sum_cols] 
+    summary_data1 <- summary_data %>%
+      summarise(across(BA_LS:QMD_DS, list(min = min, max = max, mean = mean, sd = sd)))
     
-    Avg <- summary_table[, lapply(.SD, mean, na.rm=TRUE), .SDcols=sum_cols]
-    Min <- summary_table[, lapply(.SD, min, na.rm=TRUE), .SDcols=sum_cols]
-    Max <- summary_table[, lapply(.SD, max, na.rm=TRUE), .SDcols=sum_cols]
-    SD <- summary_table[, lapply(.SD, sd, na.rm=TRUE), .SDcols=sum_cols]
-    QMD_mean <- summary_data[, lapply(.SD, mean, na.rm=TRUE),  .SDcols=c("QMD_LS","QMD_DS")] 
+    summary_data2 <- summary_data1 %>%
+      pivot_longer(everything(),
+                   names_to = c(".value", "LD", "fun"),
+                   names_pattern = "(.*)_(.*)_(.*)") 
+    
+    Avg = setDT(summary_data2)[LD == "LS" & fun == "mean", .(BA, STEMS, QMD, WSV, NTWB)]
+    Min = setDT(summary_data2)[LD == "LS" & fun == "min", .(BA, STEMS, QMD, WSV, NTWB)]
+    Max = setDT(summary_data2)[LD == "LS" & fun == "max", .(BA, STEMS, QMD, WSV, NTWB)]
+    SD = setDT(summary_data2)[LD == "LS" & fun == "sd", .(BA, STEMS, QMD, WSV, NTWB)]
+    Avg_D = setDT(summary_data2)[LD == "DS" & fun == "mean", .(BA, STEMS, QMD, WSV, NTWB)]
     
     table2 <- data.frame(
       n = c(rep(n_sid, 5), summary_si$n), 
-      Avg = c(Avg[1, c(round(BA_HA_LS, 1), round(STEMS_HA_LS, 0), round(QMD_mean$QMD_LS, 0),  round(VHA_WSV_LS, 0), round(VHA_MER_LS,0))], round(summary_si$Avg, 0)),
-      Min = c(Min[1, c(round(BA_HA_LS, 1), round(STEMS_HA_LS, 0), NA,  round(VHA_WSV_LS, 0), round(VHA_MER_LS,0))], round(summary_si$Min, 0)),
-      Max = c(Max[1, c(round(BA_HA_LS, 1), round(STEMS_HA_LS, 0), NA,  round(VHA_WSV_LS, 0), round(VHA_MER_LS,0))], round(summary_si$Max, 0)),
-      SD = c(SD[1, c(round(BA_HA_LS, 1), round(STEMS_HA_LS, 0), NA,  round(VHA_WSV_LS, 0), round(VHA_MER_LS,0))], NA),
-      Avg_D = c(Avg[1, c(round(BA_HA_DS, 1), round(STEMS_HA_DS, 0), round(QMD_mean$QMD_DS, 0),  round(VHA_WSV_DS, 0), round(VHA_MER_DS,0))], NA))
-    
+      Avg = c(Avg[1, c(round(BA, 1), round(STEMS, 0), round(QMD, 1),  round(WSV, 0), round(NTWB,0))], round(summary_si$Avg, 0)),
+      Min = c(Min[1, c(round(BA, 1), round(STEMS, 0), NA,  round(WSV, 0), round(NTWB,0))], round(summary_si$Min, 0)),
+      Max = c(Max[1, c(round(BA, 1), round(STEMS, 0), NA,  round(WSV, 0), round(NTWB,0))], round(summary_si$Max, 0)),
+      SD = c(SD[1, c(round(BA, 1), round(STEMS, 0), NA,  round(WSV, 0), round(NTWB,0))], NA),
+      Avg_D = c(Avg_D[1, c(round(BA, 1), round(STEMS, 0), round(QMD, 1),  round(WSV, 0), round(NTWB,0))], NA))
+        
     rownames(table2) <- c('Basal Area', "Total Stems (#/ha)", "Quadratic Mean DBH (cm)",
                           "Whole Stem Vol.", "Net Merch Vol.", 
                           "Total age of lead species (yrs)")

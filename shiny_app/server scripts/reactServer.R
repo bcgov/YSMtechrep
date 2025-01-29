@@ -120,17 +120,19 @@ summary_data <- reactive({
     mutate(SPC_GRP1 = ifelse(SPECIES %in% decidspc, 'DE', SPC_GRP1))%>%  
     group_by(CLSTR_ID) %>% 
     select(SITE_IDENTIFIER, CLSTR_ID, SPECIES, SPC_GRP1, 
-           BA_HA_LS, BA_HA_DS, STEMS_HA_LS, STEMS_HA_DS, VHA_WSV_LS, VHA_WSV_DS,
-           QMD_LS, QMD_DS) 
+           BA_HA_LS, BA_HA_DS, STEMS_HA_LS, STEMS_HA_DS, VHA_WSV_LS, VHA_WSV_DS) 
   
   summary_mer<-spcs_data %>% 
     filter(CLSTR_ID %in% clstr_id(), UTIL == ifelse(SPECIES =="PL", 12.5, 17.5)) %>% 
     select(SITE_IDENTIFIER, CLSTR_ID, UTIL, SPECIES, 
-           VHA_MER_LS, VHA_MER_DS)
+           VHA_NTWB_LS, VHA_NTWB_DS)
   
   summary_data <- summary_data %>%
     left_join(summary_mer, by = c('SITE_IDENTIFIER', 'CLSTR_ID', "SPECIES")) %>%
     data.table()
+  
+  summary_data <- summary_data %>%
+    replace(is.na(.), 0)
   
   return(summary_data)
   
@@ -541,8 +543,8 @@ fig10_dat_final <- reactive({
     rowwise() %>%
     mutate(#COMP_CHG_new = COMP_CHG,
       COMP_CHG_new = comp_chg_coc,
-      COMP_CHG_new = ifelse(new_visit_number == 'First' & LV_D == "D", "D", COMP_CHG_new),
-      COMP_CHG_new = ifelse(new_visit_number == 'First' & LV_D == "L", "E", COMP_CHG_new)) %>%
+      COMP_CHG_new = ifelse(new_visit_number == 'First' & lvd_coc == "D", "D", COMP_CHG_new),
+      COMP_CHG_new = ifelse(new_visit_number == 'First' & lvd_coc == "L", "E", COMP_CHG_new)) %>%
     data.table
   
   FH_dat_coc1 <- FH_dat_coc %>%
@@ -1058,97 +1060,100 @@ test2_comment <- reactive({
 fig8_dat <- reactive({
   
   fig8_dat <- tree_fh_data %>%
-    #filter(CLSTR_ID %in% clstr_id_last2(), DAM_NUM==1) %>%
-    filter(CLSTR_ID %in% clstr_id_all(), DAM_NUM==1) %>%
-    group_by(SITE_IDENTIFIER, PLOT, TREE_NO) %>%
-    arrange(VISIT_NUMBER) %>%
-    mutate(meas_no = row_number())  %>%
-    ungroup() %>%
-    mutate(tree_id = paste0(SITE_IDENTIFIER, "-", TREE_NO))
+    filter(CLSTR_ID %in% clstr_id_last2(), DAM_NUM==1)
   
-  fig8_dat$phf_coc <- fig8_dat$PHF_TREE
-  fig8_dat$resid_coc <- fig8_dat$RESIDUAL
-  fig8_dat$comp_chg_coc <- fig8_dat$COMP_CHG
-  fig8_dat$species_coc <- fig8_dat$SPECIES
-  
-  for (i in unique(fig8_dat$tree_id)){
-    
-    max_meas <- max(fig8_dat[fig8_dat$tree_id == i, ]$meas_no)
-    
-    if (max_meas > 1){
-      
-      for (j in 1:(max_meas-1)){
-        
-        a1 <- fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j, ]
-        a2 <- fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]
-        
-        # *for components of change analysis, need to constrain phf to first measure;
-        #if (!is.na(a2$PHF_TREE) & a1$PHF_TREE != a2$PHF_TREE){
-        #  fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]$phf_coc <- a1$PHF_TREE
-        #}
-        if (!is.na(a2$phf_coc) & a1$phf_coc != a2$phf_coc){
-          fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]$phf_coc <- a1$phf_coc
-        }
-        # *fill in residual classification if recorded at one measurement , but not the next;
-        # *assign as residual across both measurements;
-        if (a1$RESIDUAL != a2$RESIDUAL & (a1$RESIDUAL == "Y" | a2$RESIDUAL == "Y")){
-          fig8_dat[fig8_dat$tree_id == i, ]$resid_coc <- "Y"
-        }
-        
-        if (a1$LV_D == "L" & a2$LV_D == "L" & a2$S_F == "F"){
-          
-          fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]$comp_chg_coc <- "M"
-        }
-        
-        if (a2$SPECIES == "XC"){
-          
-          fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j, ]$species_coc <- a1$SPECIES
-        } else if (a1$SPECIES != a2$SPECIES) {
-          
-          fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j, ]$species_coc <- a2$SPECIES
-        }
-      }
-      # *components of change;
-      # *fallen live, assume this will become mortality;
-      if (a1$LV_D == "L" & a2$LV_D == "L" & a2$S_F == "F"){
-        fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]$comp_chg_coc <- "M"
-      }
-      # *mortality : trees that died between measurements;
-      if (a1$LV_D == "L" & a2$LV_D == "D"){
-        fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]$comp_chg_coc <- "M"
-      }
-      
-    }
-    else if (max_meas == 1){
-      
-      c <- fig8_dat[fig8_dat$tree_id == i, ]$meas_no
-      
-      if (c == 1){
-        
-        b <- fig8_dat[fig8_dat$tree_id == i, ]
-        # *live at first msmt, missing at second msmt, assign as mortality, and assume dead fallen;
-        if (b$LV_D == "L"){
-          
-          new_cid <- paste0(substr(b$CLSTR_ID, 1, 9), 2)
-          b$CLSTR_ID <- new_cid
-          b$VISIT_NUMBER <- 2
-          #b$MEAS_YR <- sample_data[sample_data$CLSTR_ID == new_cid, ]$MEAS_YR
-          b$LV_D <- "D"
-          b$S_F <- "F"
-          b$comp_chg_coc <- "M"
-          
-          #fig8_dat <- rbind(fig8_dat, b)  ## not appear on Rene's data
-        }
-      }
-      # *ingress trees;
-      else if (c == 2){
-        fig8_dat[fig8_dat$tree_id == i, ]$comp_chg_coc <- "I"
-      }
-    }
-  }
-  
-  fig8_dat <- fig8_dat %>%
-    filter(CLSTR_ID %in% clstr_id_last2())
+  #fig8_dat <- tree_fh_data %>%
+  #  #filter(CLSTR_ID %in% clstr_id_last2(), DAM_NUM==1) %>%
+  #  filter(CLSTR_ID %in% clstr_id_all(), DAM_NUM==1) %>%
+  #  group_by(SITE_IDENTIFIER, PLOT, TREE_NO) %>%
+  #  arrange(VISIT_NUMBER) %>%
+  #  mutate(meas_no = row_number())  %>%
+  #  ungroup() %>%
+  #  mutate(tree_id = paste0(SITE_IDENTIFIER, "-", TREE_NO))
+  #
+  #fig8_dat$phf_coc <- fig8_dat$PHF_TREE
+  #fig8_dat$resid_coc <- fig8_dat$RESIDUAL
+  #fig8_dat$comp_chg_coc <- fig8_dat$COMP_CHG
+  #fig8_dat$species_coc <- fig8_dat$SPECIES
+  #
+  #for (i in unique(fig8_dat$tree_id)){
+  #  
+  #  max_meas <- max(fig8_dat[fig8_dat$tree_id == i, ]$meas_no)
+  #  
+  #  if (max_meas > 1){
+  #    
+  #    for (j in 1:(max_meas-1)){
+  #      
+  #      a1 <- fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j, ]
+  #      a2 <- fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]
+  #      
+  #      # *for components of change analysis, need to constrain phf to first measure;
+  #      #if (!is.na(a2$PHF_TREE) & a1$PHF_TREE != a2$PHF_TREE){
+  #      #  fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]$phf_coc <- a1$PHF_TREE
+  #      #}
+  #      if (!is.na(a2$phf_coc) & a1$phf_coc != a2$phf_coc){
+  #        fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]$phf_coc <- a1$phf_coc
+  #      }
+  #      # *fill in residual classification if recorded at one measurement , but not the next;
+  #      # *assign as residual across both measurements;
+  #      if (a1$RESIDUAL != a2$RESIDUAL & (a1$RESIDUAL == "Y" | a2$RESIDUAL == "Y")){
+  #        fig8_dat[fig8_dat$tree_id == i, ]$resid_coc <- "Y"
+  #      }
+  #      
+  #      if (a1$LV_D == "L" & a2$LV_D == "L" & a2$S_F == "F"){
+  #        
+  #        fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]$comp_chg_coc <- "M"
+  #      }
+  #      
+  #      if (a2$SPECIES == "XC"){
+  #        
+  #        fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j, ]$species_coc <- a1$SPECIES
+  #      } else if (a1$SPECIES != a2$SPECIES) {
+  #        
+  #        fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j, ]$species_coc <- a2$SPECIES
+  #      }
+  #    }
+  #    # *components of change;
+  #    # *fallen live, assume this will become mortality;
+  #    if (a1$LV_D == "L" & a2$LV_D == "L" & a2$S_F == "F"){
+  #      fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]$comp_chg_coc <- "M"
+  #    }
+  #    # *mortality : trees that died between measurements;
+  #    if (a1$LV_D == "L" & a2$LV_D == "D"){
+  #      fig8_dat[fig8_dat$tree_id == i & fig8_dat$meas_no == j + 1, ]$comp_chg_coc <- "M"
+  #    }
+  #    
+  #  }
+  #  else if (max_meas == 1){
+  #    
+  #    c <- fig8_dat[fig8_dat$tree_id == i, ]$meas_no
+  #    
+  #    if (c == 1){
+  #      
+  #      b <- fig8_dat[fig8_dat$tree_id == i, ]
+  #      # *live at first msmt, missing at second msmt, assign as mortality, and assume dead fallen;
+  #      if (b$LV_D == "L"){
+  #        
+  #        new_cid <- paste0(substr(b$CLSTR_ID, 1, 9), 2)
+  #        b$CLSTR_ID <- new_cid
+  #        b$VISIT_NUMBER <- 2
+  #        #b$MEAS_YR <- sample_data[sample_data$CLSTR_ID == new_cid, ]$MEAS_YR
+  #        b$LV_D <- "D"
+  #        b$S_F <- "F"
+  #        b$comp_chg_coc <- "M"
+  #        
+  #        #fig8_dat <- rbind(fig8_dat, b)  ## not appear on Rene's data
+  #      }
+  #    }
+  #    # *ingress trees;
+  #    else if (c == 2){
+  #      fig8_dat[fig8_dat$tree_id == i, ]$comp_chg_coc <- "I"
+  #    }
+  #  }
+  #}
+  #
+  #fig8_dat <- fig8_dat %>%
+  #  filter(CLSTR_ID %in% clstr_id_last2())
   
   return(fig8_dat)
   
