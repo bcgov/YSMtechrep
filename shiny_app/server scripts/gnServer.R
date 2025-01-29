@@ -52,7 +52,13 @@ output$ysm_tables1 <- renderUI({
 t2 <- reactive({
   req(input$SelectCategory, input$SelectVar)
   t2 <- proc_freq(ysm_msyt_vdyp_volume %>%
-                    filter(CLSTR_ID %in% clstr_id()), "yt_source_f",
+                    filter(CLSTR_ID %in% clstr_id()) %>%
+                    mutate(yt_source_label = fct_recode(yt_source_f, 
+                                                        "TSR TIPSY Opening Specific" = "Managed",
+                                                        "TSR TIPSY Aggregate" ="AGGREGATE",
+                                                        "TSR VDYP" = "VDYP" ,
+                                                        "TSR missed : VDYP filled" = "VDYP-fill_missed_tsr")), 
+                  "yt_source_label",
                   #main = "# Ground Samples by Year (end of growing season)",
                   include.row_percent = F,
                   include.column_percent = F,
@@ -77,15 +83,15 @@ output$ysm_tables2 <- renderUI({
 
 t3 <- reactive({
   req(input$SelectCategory, input$SelectVar)
-  t3 <- proc_freq(ysm_msyt_vdyp_volume  %>%
-                    filter(CLSTR_ID %in% clstr_id()) %>%
-                    mutate(occupancy = factor(ifelse(vol_wsv_ha != 0, "Treed", "Empty"),
-                                              levels = c("Treed", "Empty")))
-                  , "occupancy",
-                  #main = "# Ground Samples by Year (end of growing season)",
-                  include.row_percent = F,
-                  include.column_percent = F,
-                  include.table_percent = F) 
+  #t3 <- proc_freq(ysm_msyt_vdyp_volume  %>%
+  #                  filter(CLSTR_ID %in% clstr_id()) %>%
+  #                  mutate(occupancy = factor(ifelse(vol_wsv_ha != 0, "Treed", "Empty"),
+  #                                            levels = c("Treed", "Empty")))
+  #                , "occupancy",
+  #                #main = "# Ground Samples by Year (end of growing season)",
+  #                include.row_percent = F,
+  #                include.column_percent = F,
+  #                include.table_percent = F) 
   
   t3 <- proc_freq(LD_dat()  %>%
                     #filter(CLSTR_ID %in% clstr_id()) %>%
