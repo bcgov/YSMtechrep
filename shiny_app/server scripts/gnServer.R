@@ -8,16 +8,16 @@ t1 <- reactive({
   req(input$SelectCategory, input$SelectVar)
   
   if (input$SelectCategory == "TSA_DESC"){
-    temp <- sample_data %>%
+    t1_1 <- sample_data %>%
       filter(CLSTR_ID %in% clstr_id()) %>%
       select(SAMPLE_ESTABLISHMENT_TYPE, GRID_SIZE)
     
-    temp1 <- melt(temp, id.vars=1)
-    temp2 <-temp1 %>%
+    t1_2 <- reshape2::melt(t1_1, id.vars=1)
+    t1_3 <-t1_2 %>%
       group_by(SAMPLE_ESTABLISHMENT_TYPE, value) %>%
       summarize(n = n()) 
     
-    t1 <- flextable(temp2)
+    t1 <- flextable(t1_3)
     t1 <- labelizor(
       x = t1, 
       part = "header", 

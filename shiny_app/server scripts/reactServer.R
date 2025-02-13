@@ -195,14 +195,20 @@ LD_dat <- reactive({
     select(SITE_IDENTIFIER, CLSTR_ID, SPECIES, SP_PCT_BA_LS)
   
   LD_dat <- LD_dat %>%
-    left_join(vegcomp_pspl_sample %>% select(CLSTR_ID, SPECIES_CD_1, SPECIES_PCT_1), 
+    left_join(vegcomp_pspl_sample %>% select(CLSTR_ID, BEC_ZONE, SPECIES_CD_1, SPECIES_PCT_1), 
               by = "CLSTR_ID") %>%
     mutate(SPC_GRP1 = substr(SPECIES,1,2),
            SPC_GRP1 = ifelse(SPECIES %in% decidspc, 'Decid', SPC_GRP1),
            SPC_GRP1 = ifelse(SPC_GRP1 =="", 'Nonstock', SPC_GRP1),
            SPC_GRP1 = ifelse(is.na(SP_PCT_BA_LS), 'Nonstock', SPC_GRP1),
            SPC_GRP_VRI = substr(SPECIES_CD_1,1,2),
-           SPC_GRP_VRI = ifelse(SPECIES_CD_1 %in% decidspc, 'Decid', SPC_GRP_VRI)) 
+           SPC_GRP_VRI = ifelse(SPECIES_CD_1 %in% decidspc, 'Decid', SPC_GRP_VRI),
+           SPC_GRP_VRI_cor = case_when(SPC_GRP_VRI == "SX" & BEC_ZONE == "ESSF" ~ "SE",
+                                       SPC_GRP_VRI == "SX" & BEC_ZONE %in% c("CMA", "CDF", "CWH", "MH") ~ "SS",
+                                       SPC_GRP_VRI == "SX" & BEC_ZONE %in% c("IMA", "BFA", "BG", "BWBS", 
+                                                                             "ICH", "IDF", "MS", "PP", "SBPS",
+                                                                             "SBS", "SWB") ~ "SW",
+                                       TRUE ~ SPC_GRP_VRI)) 
   
   return(LD_dat)
   
@@ -216,7 +222,8 @@ correct_ls <- reactive({
   
   LD_dat <- LD_dat()
   
-  correct <- round(sum(LD_dat$SPC_GRP1 == LD_dat$SPC_GRP_VRI)/nrow(LD_dat)*100, 0)
+  #correct <- round(sum(LD_dat$SPC_GRP1 == LD_dat$SPC_GRP_VRI)/nrow(LD_dat)*100, 0)
+  correct <- round(sum(LD_dat$SPC_GRP1 == LD_dat$SPC_GRP_VRI_cor)/nrow(LD_dat)*100, 0)
   
   return(correct)
   

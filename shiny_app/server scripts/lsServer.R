@@ -33,7 +33,7 @@ lsflex <- reactive({
     
     LD_dat <- as.data.frame(LD_dat())
     
-    LD_table <- proc_freq(LD_dat, "SPC_GRP_VRI", "SPC_GRP1",
+    LD_table <- proc_freq(LD_dat, "SPC_GRP_VRI_cor", "SPC_GRP1",
                           include.row_total = T,
                           include.row_percent = F,
                           include.column_total = T,
@@ -54,7 +54,7 @@ lsflex <- reactive({
     
     LD_table <- labelizor(x = LD_table, 
                           part = "header", 
-                          labels = c("SPC_GRP_VRI" = "VRI", 
+                          labels = c("SPC_GRP_VRI_cor" = "VRI", 
                                      "SPC_GRP1" = "YSM"))  %>%
       align(align = "left", part = "header") %>%
       autofit()
