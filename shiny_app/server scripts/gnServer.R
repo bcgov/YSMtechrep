@@ -12,7 +12,7 @@ t1 <- reactive({
       filter(CLSTR_ID %in% clstr_id()) %>%
       select(SAMPLE_ESTABLISHMENT_TYPE, GRID_SIZE)
     
-    t1_2 <- melt(t1_1, id.vars=1)
+    t1_2 <- reshape2::melt(t1_1, id.vars=1)
     t1_3 <-t1_2 %>%
       group_by(SAMPLE_ESTABLISHMENT_TYPE, value) %>%
       summarize(n = n()) 

@@ -83,7 +83,8 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
       
   column(3, radioButtons(inputId = "SelectCategory", label = "Strata",
                         choices = c("By TSA" = "TSA_DESC", 
-                                    "By BEC" = "BECsub"))
+                                    #"By BEC zone" = "BEC_ZONE",
+                                    "By BEC subzone" = "BECsub"), inline = F)
                 
          ), # radiobutton column
   
