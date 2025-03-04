@@ -27,7 +27,7 @@ additionlaphrase <- reactive({
     distinct(MGMT_UNIT) 
   mgmts <- paste(mgmt$MGMT_UNIT, collapse = "; ")
   
-  additionlaphrase <- ifelse(input$SelectCategory == "BECsub",
+  additionlaphrase <- ifelse(input$SelectCategory %in% c("BECsub", "BEC_ZONE"),
                              paste0("Sampled mangement units intersecting with the ",
                                     title(), " include: ", mgmts, "."), 
                              "")
@@ -46,7 +46,8 @@ high-level technical summary of results compiled by FAIB for the YSM program in 
 Inventory (VRI) Vegcomp rank 1 layer. TFL-based monitoring programs may
 use other criteria (eg., harvest history).</p>  ",
            "<p>Ground samples (dots on map, below) are established on a ", 
-           "<b>",gridsize(),"</b> grid, with trees tagged in 0.04ha permanent plots with a planned
+           "<b>",gridsize(),"</b> grid, with trees tagged in 0.04ha circular 
+           monitoring plots with a planned
 five-year re-measurement cycle.</p>  ",
            "<p>At each 5-year visit, previously unsampled grid points that now
            exceed the minimum 15year limit will have new recruitment ground
@@ -105,9 +106,18 @@ plotgraph <- reactive({
       lng2 = as.numeric(st_bbox(aoimap)[3])
       lat2 = as.numeric(st_bbox(aoimap)[4])
       
-    } else {
+    } else if (input$SelectCategory == "BECsub"){
       aoimap <- becmap %>%
         filter(BECsub %in% sample_data[sample_data$SITE_IDENTIFIER %in% site_id(),]$BECsub)
+      
+      lng1 = as.numeric(st_bbox(aoimap)[1])
+      lat1 = as.numeric(st_bbox(aoimap)[2])
+      lng2 = as.numeric(st_bbox(aoimap)[3])
+      lat2 = as.numeric(st_bbox(aoimap)[4])
+      
+    } else if (input$SelectCategory == "BEC_ZONE"){
+      aoimap <- beczonemap %>%
+        filter(ZONE %in% sample_data[sample_data$SITE_IDENTIFIER %in% site_id(),]$BEC_ZONE)
       
       lng1 = as.numeric(st_bbox(aoimap)[1])
       lat1 = as.numeric(st_bbox(aoimap)[2])

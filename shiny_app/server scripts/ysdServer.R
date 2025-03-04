@@ -83,7 +83,7 @@ summaryflex <- reactive({
     
     flextable2 <- flextable::compose(flextable2,
                                      i = 1, j = 1, 
-                                     value = as_paragraph('Basal Area (m',as_sup('3'),'/ha)'))
+                                     value = as_paragraph('Basal Area (m',as_sup('2'),'/ha)'))
     
     flextable2 <- flextable::compose(flextable2,
                                      i = 4, j = 1, 

@@ -102,15 +102,15 @@ curfhtext <- reactive({
   req(input$SelectCategory, input$SelectVar)
   curfhtext <- HTML("All tagged trees are assessed for up to five forest health damage agents
 per tree. The mean incidence and 95% confidence intervals by damage
-agent (expressed as a percent of total live stems/ha of all damage
+agent (expressed as a percent of total live stems/ha of all unique damage
 agents recorded per tree) are computed at the latest measurement. Note
 that up to the 2020 field season, all fork and crook occurrences were
 recorded regardless of size and severity. Starting in the 2021 field
 season, those forks and crooks with very small (<10%) offsets in stem
 diameter (expected to have negligible/no impact on stem form) are no
 longer recorded; therefore, earlier recorded incidences of forks and
-crooks prior to 2021 were likely over-estimated. In addition fork and
-crook severity is now further classified into minor (<50%) vs. major
+crooks prior to 2021, were likely over-estimated. Since 2021, fork and
+crook severity is further classified into minor (<50%) or major
 (>=50%) diameter offsets. A full list of recorded damage agents is under
 General Notes.")
   return(curfhtext)
@@ -265,6 +265,7 @@ curfhplot <- reactive({
   
   FH_dat_final <- FH_dat8 %>% ungroup()
   
+  if (nrow(FH_dat_final) > 1){
   p <- ggplot(FH_dat_final %>% 
                 #filter(LV_D == "L", AGN != "O")) + 
                 filter(lvd_coc == "L", AGN != "O")) + 
@@ -281,7 +282,7 @@ curfhplot <- reactive({
     facet_grid(. ~ reorder(dam_class, -incid_stems_allplot, min), scales="free_x", space="free_x") +
     labs(x = "", y = "Incidence (%)",
          title = "Current Incidence",  
-         subtitle = "(% of total live stems/ha of up to 5 damage agents per tree)") +
+         subtitle = "(% of total live stems/ha of up to 5 unique damage agents recorded per tree)") +
     #theme_bw() + 
     theme(
       axis.line = element_line(colour="darkgray"), 
@@ -295,6 +296,12 @@ curfhplot <- reactive({
       legend.title = element_blank(),
       plot.caption = element_text(hjust=0, size=rel(1.2))
     )  
+  } else {
+    p <- ggplot() + 
+      theme_void() +
+      geom_text(aes(0,0,label='N/A')) +
+      xlab(NULL)
+  }
   
   return(p)
 })

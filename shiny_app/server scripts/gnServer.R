@@ -125,8 +125,9 @@ t4 <- reactive({
   req(input$SelectCategory, input$SelectVar)
   t4 <- proc_freq(ysm_msyt_vdyp_volume  %>%
                     filter(CLSTR_ID %in% clstr_id()) %>%
-                    mutate(xy_f = factor(xy, levels = c("Y", "N"),
-                                         labels = c("Stem mapped plots", "Not stem mapped")))
+                    mutate(xy_f = ifelse(is.na(xy), "Empty", xy),
+                           xy_f = factor(xy_f, levels = c("Y", "N", "Empty"),
+                                         labels = c("Stem mapped plots", "Not stem mapped", "Empty")))
                   , "xy_f",
                   #main = "# Ground Samples by Year (end of growing season)",
                   include.row_percent = F,
@@ -155,8 +156,9 @@ t5 <- reactive({
   req(input$SelectCategory, input$SelectVar)
   t5 <- proc_freq(ysm_msyt_vdyp_volume  %>%
                     filter(CLSTR_ID %in% clstr_id())  %>%
-                    mutate(TASS_ver_f = factor(TASS_ver, levels = c(2, 3),
-                                               labels = c("TASS ver. 2", "TASS ver. 3")))
+                    mutate(TASS_ver = ifelse(is.na(TASS_ver), 1, TASS_ver),,
+                           TASS_ver_f = factor(TASS_ver, levels = c(2, 3, 1),
+                                               labels = c("TASS ver. 2", "TASS ver. 3", "Empty")))
                   , "TASS_ver_f",
                   #main = "# Ground Samples by Year (end of growing season)",
                   include.row_percent = F,
