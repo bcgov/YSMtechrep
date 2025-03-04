@@ -66,6 +66,7 @@ damcd<-readRDS("data/damcd.rds")
 # shapefiles (for map) 
 tsa_sp <- st_transform(st_read("data/tsa_sp.shp"),4326)
 becmap <- st_transform(st_read("data/becmap.shp"),4326)
+beczonemap <- st_transform(st_read("data/beczone_lowres1000.shp"),4326)
 
 
 # SPCD for deciduous 
@@ -85,12 +86,19 @@ tsa_list <- sort(unique(sample_data %>%
                           filter(n() > 10) %>% 
                           pull(TSA_DESC)))
 
-# for BEC selection
+# for BEC subzone selection
 bec_list <- sort(unique(sample_data %>% 
                           filter(BEC_filter == "Y") %>% 
                           group_by(BECsub) %>% 
                           filter(n() > 10) %>% 
                           pull(BECsub)))
+
+# for BEC selection
+beczone_list <- sort(unique(sample_data %>% 
+                          filter(BEC_filter == "Y") %>% 
+                          group_by(BEC_ZONE) %>% 
+                          filter(n() > 10) %>% 
+                          pull(BEC_ZONE)))
 
 
 # 4. chart themes  ----------------------------------------------------------------

@@ -68,6 +68,29 @@ ui <- dashboardPage(
              width: 100%;
              height: 60px; 
              background-color: #036;}*/
+             
+        .shiny-options-group { 
+          /*height: 100px;*/
+          width: 600px;
+          -webkit-column-count: 2; /* Chrome, Safari, Opera */ 
+            -moz-column-count: 2;    /* Firefox */ 
+            
+            row-count: 2;
+          -webkit-column-fill: auto;
+          -moz-column-fill: auto;
+          column-fill: auto;
+          margin-top: 0px;
+        } 
+        
+        .control-label {
+          padding-bottom: 5px;
+        }
+        
+        div.radio {
+          margin-top: 5px;
+          margin-bottom: 0px;
+          padding-bottom: 5px;
+        }
       '))),
     
     box(title ="Note: This site is currently under development.", 
@@ -81,12 +104,23 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
   box(title = "Select the area of interest", #background = "light-blue", 
       solidHeader = TRUE, status = "primary", width = NULL,
       
-  column(3, radioButtons(inputId = "SelectCategory", label = "Strata",
-                        choices = c("By TSA" = "TSA_DESC", 
-                                    #"By BEC zone" = "BEC_ZONE",
-                                    "By BEC subzone" = "BECsub"), inline = F)
-                
-         ), # radiobutton column
+  column(3, 
+         list(tags$div(align = 'left', 
+                       class = 'multicol', 
+                       radioButtons("SelectCategory", "Strata",
+                                    choices = list("By TSA" = "TSA_DESC", 
+                                                       #"By BEC zone" = "BEC_ZONE",
+                                                       "By BEC subzone" = "BECsub",
+                                                       "By BEC" = "BEC_ZONE")
+                       ), style = "font-size:100%")), align = "center"
+         ), 
+         #radioButtons(inputId = "SelectCategory", label = "Strata",
+         #               choices = c("By TSA" = "TSA_DESC", 
+         #                           #"By BEC zone" = "BEC_ZONE",
+         #                           "By BEC subzone" = "BECsub",
+         #                           "By BEC" = "BEC_ZONE"), inline = F)
+         #       
+         #), # radiobutton column
   
   column(3, offset = 1, selectInput(inputId = "SelectVar",
                                     label = "Select",

@@ -9,8 +9,11 @@ server <- function(input, output, session) {
     freezeReactiveValue(input, "SelectVar")
     updateSelectInput(session,'SelectVar',
                       choices = if(input$SelectCategory == "TSA_DESC") {
-                        c(Choose = "", tsa_list)} else {
+                        c(Choose = "", tsa_list)
+                        } else if (input$SelectCategory == "BECsub"){
                           c(Choose = "", bec_list )
+                        } else if (input$SelectCategory == "BEC_ZONE"){
+                          c(Choose = "", beczone_list )
                         }
                       )
   })

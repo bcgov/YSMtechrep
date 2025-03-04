@@ -27,6 +27,11 @@ site_id <- reactive({
       filter(BEC_filter == "Y") %>% 
       filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
       pull(SITE_IDENTIFIER)
+  } else if (input$SelectCategory == "BEC_ZONE"){
+    site_id <- sample_data %>% 
+      filter(BEC_filter == "Y") %>% 
+      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+      pull(SITE_IDENTIFIER)
   }
   
   return(site_id)
@@ -45,6 +50,12 @@ clstr_id <- reactive({
       filter(LAST_MSMT == "Y") %>%
       pull(CLSTR_ID)
   } else if (input$SelectCategory == "BECsub"){
+    clstr_id <- sample_data %>% 
+      filter(BEC_filter == "Y") %>% 
+      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+      filter(LAST_MSMT == "Y") %>%
+      pull(CLSTR_ID)
+  } else if (input$SelectCategory == "BEC_ZONE"){
     clstr_id <- sample_data %>% 
       filter(BEC_filter == "Y") %>% 
       filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
@@ -71,6 +82,11 @@ clstr_id_all <- reactive({
       filter(BEC_filter == "Y") %>% 
       filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
       pull(CLSTR_ID)
+  } else if (input$SelectCategory == "BEC_ZONE"){
+    clstr_id_all <- sample_data %>% 
+      filter(BEC_filter == "Y") %>% 
+      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+      pull(CLSTR_ID)
   }
   
   return(clstr_id_all)
@@ -93,6 +109,15 @@ clstr_id_last2 <- reactive({
       slice_tail(n = 2) %>%
       pull(CLSTR_ID)
   } else if (input$SelectCategory == "BECsub"){
+    clstr_id_last2 <- sample_data %>% 
+      filter(BEC_filter == "Y") %>% 
+      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+      group_by(SITE_IDENTIFIER) %>%
+      filter(n() > 1) %>% 
+      arrange(VISIT_NUMBER) %>% 
+      slice_tail(n = 2) %>%
+      pull(CLSTR_ID)
+  } else if (input$SelectCategory == "BEC_ZONE"){
     clstr_id_last2 <- sample_data %>% 
       filter(BEC_filter == "Y") %>% 
       filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
@@ -610,12 +635,19 @@ fig10_dat_final <- reactive({
     #  group_by(n_si, new_visit_number, AGN) %>%
     #  summarise_all(mean, .names = "mean_{.col}") 
     
+    #FH_dat_coc5 <- FH_dat_coc4 %>%
+    #  ungroup() %>%
+    #  group_by(n_si, new_visit_number, AGN) %>%
+    #  reframe(across(D.dam:totsph_comdem, sum)) %>%
+    #  ungroup() %>%
+    #  mutate(across(c(D.dam:totsph_comdem), function(x) x/n_si))
+    
     FH_dat_coc5 <- FH_dat_coc4 %>%
       ungroup() %>%
       group_by(n_si, new_visit_number, AGN) %>%
-      reframe(across(D.dam:totsph_comdem, sum)) %>%
+      reframe(across(where(is.double), sum)) %>%
       ungroup() %>%
-      mutate(across(c(D.dam:totsph_comdem), function(x) x/n_si))
+      mutate(across(where(is.double), function(x) x/n_si))
     
     FH_dat_coc5 <- FH_dat_coc5 %>%
       ungroup() %>%
