@@ -111,7 +111,7 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
                                     choices = list("By TSA" = "TSA_DESC", 
                                                        #"By BEC zone" = "BEC_ZONE",
                                                        "By BEC subzone" = "BECsub",
-                                                       "By BEC" = "BEC_ZONE")
+                                                       "By BEC zone" = "BEC_ZONE")
                        ), style = "font-size:100%")), align = "center"
          ), 
          #radioButtons(inputId = "SelectCategory", label = "Strata",

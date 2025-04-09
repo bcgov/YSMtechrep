@@ -347,15 +347,13 @@ output$assumps <- renderUI({
 reftext <- reactive({
   req(input$SelectCategory, input$SelectVar)
   
-  reftext <- HTML("<p><b>YSM Technical Handouts for all available TSAs, plus 
-  resource information on Provincial Monitoring Programs</b></br>
-  <a href='https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resources/forest-inventory/ground-sample-inventories/provincial-monitoring'>
-  https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resources/forest-inventory/ground-sample-inventories/provincial-monitoring</a>
-  </br><p><b>Public access to Ground Sample Data approved as OpenData under 
-  BC Open Government Licence</b></br>
-<a href='https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resources/forest-inventory/ground-sample-inventories/provincial-monitoring'>
-https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resources/forest-inventory/ground-sample-inventories/provincial-monitoring</a></p>
-<p><b>Github repository</b></br><a href='https://github.com/bcgov/YSMtechrep'</a></p>
+  reftext <- HTML("<p><b>General Overview of FAIB Ground Sample Inventories (including Data Access)</b></br>
+  <a href='https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resources/forest-inventory/ground-sample-inventories' target='_blank'>
+  https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resources/forest-inventory/ground-sample-inventories</a>
+  </br><p><b>YSM Ground Sampling Procedures, Ground Sampling Quality Assurance Procedures, and Data Compilation</b></br>
+<a href='https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resources/forest-inventory/ground-sample-inventories/provincial-monitoring/standards' target='_blank'>
+https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resources/forest-inventory/ground-sample-inventories/provincial-monitoring/standards</a></p>
+<p><b>Github repository</b></br><a href='https://github.com/bcgov/YSMtechrep' target='_blank'>https://github.com/bcgov/YSMtechrep</a></p>
 ")
   return(reftext)
 })
