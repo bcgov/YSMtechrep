@@ -203,8 +203,12 @@ footer ul li a {
 }
 
 a:hover {
-  color: #fff;
+  color: #4b5e7e !important;
   text-decoration: underline;
+}
+
+a:hover, a:focus {
+  color: #4b5e7e !important;
 }
 
 :focus {
