@@ -91,6 +91,14 @@ ui <- dashboardPage(
           margin-bottom: 0px;
           padding-bottom: 5px;
         }
+        
+        a:hover {
+  color: #4b5e7e !important;
+        }
+        
+footer ul li a:hover {
+  color: #FFFFFF !important;
+}
       '))),
     
     box(title ="Note: This site is currently under development.", 
@@ -345,14 +353,14 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
                       DT::dataTableOutput('dam_table'))
              )
     ),
-    tabPanel(title = "General Notes / Assumptions",
-             h3("General Notes / Assumptions"),
+    tabPanel(title = "General Notes / Assumptions / References",
+             h3("General Notes / Assumptions / References"),
              uiOutput("assumps")
     ),
-    tabPanel(title = "References",
-             h3("References"),
-             uiOutput("refs")
-    ),
+    #tabPanel(title = "References",
+    #         h3("References"),
+    #         uiOutput("refs")
+    #),
     
   ),  # navlistPanel 
   br(),

@@ -1,7 +1,7 @@
 ---
 title: "`r title()` Young Stand Monitoring Program"
 author: "Forest Analysis and Inventory Branch"
-date: "Version 2025-03-03; Created `r Sys.Date()`"
+date: "Version 2025-04-14; Created `r Sys.Date()`"
 #runtime: shiny
 always_allow_html: true
 geometry: margin=1cm
@@ -537,9 +537,7 @@ if (input$format == "HTML"){
 
 `r htmltopdf(assumptext())`
 
-## References
 
-`r htmltopdf(reftext())`
 
 
 
