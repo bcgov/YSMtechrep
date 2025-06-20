@@ -574,7 +574,7 @@ fig10_dat_final <- reactive({
   FH_dat_coc <- FH_dat_coc %>%
     rowwise() %>%
     mutate(#COMP_CHG_new = COMP_CHG,
-      COMP_CHG_new = comp_chg_coc,
+      COMP_CHG_new = ifelse(comp_chg_coc == "ID", "M", comp_chg_coc),
       COMP_CHG_new = ifelse(new_visit_number == 'First' & lvd_coc == "D", "D", COMP_CHG_new),
       COMP_CHG_new = ifelse(new_visit_number == 'First' & lvd_coc == "L", "E", COMP_CHG_new)) %>%
     data.table
@@ -799,7 +799,24 @@ volproj <- reactive({
   year100_inc<- year100_inc()
   year100_comb<- year100_comb()
   
-  volproj1 <- setDT(tsr_tass_volproj) %>%
+  
+  temp <- setDT(tsr_tass_volproj) %>%
+    filter(CLSTR_ID %in% clstr_id()) %>%
+    arrange(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, desc(xy), desc(rust), desc(TASS_ver)) %>%
+    group_by(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, rust, AGE) %>%
+    slice(1) %>%
+    mutate(rust = ifelse(!is.na(volTASS) & is.na(rust), "N", rust))
+  
+  temp1 <- temp %>%
+    group_by(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID,  AGE) %>%
+    mutate(n = n()) %>% 
+    filter(n == 1) %>% 
+    mutate(rust = "Y")
+  
+  temp2 <- rbind(temp, temp1)
+  
+  
+  volproj1 <- temp2 %>%
     filter(CLSTR_ID %in% clstr_id()) %>%
     arrange(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, desc(xy), desc(rust), desc(TASS_ver)) %>%
     group_by(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, rust, AGE) %>%
@@ -808,6 +825,16 @@ volproj <- reactive({
              (1-max(AGE - meanage, 0)*0.25/100*sum(risk_vol[risk_vol$mort_flag==2,]$volperc)),
            n_si = length(unique(SITE_IDENTIFIER)),
            n_ci = length(unique(CLSTR_ID)))
+  
+  #volproj1 <- setDT(tsr_tass_volproj) %>%
+  #  filter(CLSTR_ID %in% clstr_id()) %>%
+  #  arrange(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, desc(xy), desc(rust), desc(TASS_ver)) %>%
+  #  group_by(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, rust, AGE) %>%
+  #  slice(1) %>%
+  #  mutate(volTASS_adj = volTASS*(1- year100_immed/100)*
+  #           (1-max(AGE - meanage, 0)*0.25/100*sum(risk_vol[risk_vol$mort_flag==2,]$volperc)),
+  #         n_si = length(unique(SITE_IDENTIFIER)),
+  #         n_ci = length(unique(CLSTR_ID)))
   
   #volproj2 <-volproj1 %>%
   #  group_by(AGE, rust) %>%
@@ -1099,7 +1126,8 @@ test2_comment <- reactive({
 fig8_dat <- reactive({
   
   fig8_dat <- tree_fh_data %>%
-    filter(CLSTR_ID %in% clstr_id_last2(), DAM_NUM==1)
+    filter(CLSTR_ID %in% clstr_id_last2(), DAM_NUM==1) %>%
+    mutate(comp_chg_coc = ifelse(comp_chg_coc == "ID", "M", comp_chg_coc))
   
   #fig8_dat <- tree_fh_data %>%
   #  #filter(CLSTR_ID %in% clstr_id_last2(), DAM_NUM==1) %>%

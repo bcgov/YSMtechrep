@@ -42,6 +42,7 @@ library(pandoc)
 library(pagedown)
 library(htmltools)
 library(webshot)
+library(reshape2)
 
 
 # 2. required datafiles ------------------------------------------------------------

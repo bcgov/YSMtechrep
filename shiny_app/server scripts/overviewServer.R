@@ -60,9 +60,7 @@ structure of young stands, report on forest health, assess the accuracy
 of predicted attributes and spatial coverages, and compare against
 growth models to help evaluate if young stands will meet future timber
 supply expectations.</p>  ",
-           "<p>The TSA map (below) includes the source of site index found in the 
-latest Provincial Site Productivity Layer (PSPL) : either TEM/PEM & 
-SIBEC, or Biophysical Site Index Model.</p>  <p>", 
+           "<p>", 
            additionlaphrase(),"</p>")
   
   return(text)
@@ -84,7 +82,15 @@ plotgraph <- reactive({
       select(SITE_IDENTIFIER, SAMPLE_ESTABLISHMENT_TYPE, visit_num, visit_year, BECsub,
              MGMT_UNIT, TSA_DESC, BEC_ZONE, BEC_SBZ, BEC_VAR, GRID_SIZE,
              BC_ALBERS_X, BC_ALBERS_Y, Latitude, Longitude) %>% 
-      distinct()
+      distinct() %>%
+      left_join(LD_dat() %>% 
+                  filter(CLSTR_ID %in% clstr_id()) %>%
+                  select(SITE_IDENTIFIER, SPECIES),
+                by = "SITE_IDENTIFIER") %>%
+      left_join(ysm_msyt_vdyp_volume %>% 
+                  filter(CLSTR_ID %in% clstr_id()) %>%
+                  select(SITE_IDENTIFIER, grdnv),
+                by = "SITE_IDENTIFIER") 
     
     location <- st_as_sf(x = location,                         
                          coords = c("Longitude", "Latitude"),
@@ -148,11 +154,20 @@ plotgraph <- reactive({
                                      paste(paste("<b>Management unit</b> - ", location$MGMT_UNIT, "<br/>"),
                                            paste("<b>Sample ID</b> - ", location$SITE_IDENTIFIER, "<br/>"),
                                            paste("<b>Sample type</b> - ", location$SAMPLE_ESTABLISHMENT_TYPE, "<br/>"),
-                                           paste("<b>BEC zone</b> - ", location$BEC_ZONE, "<br/>"), 
-                                           paste("<b>BEC subzone</b> - ", location$BEC_SBZ, "<br/>"),
-                                           paste("<b>BEC variant</b> - ", location$BEC_VAR, "<br/>"), 
+                                           #paste("<b>BEC zone</b> - ", location$BEC_ZONE, "<br/>"), 
+                                           #paste("<b>BEC subzone</b> - ", location$BEC_SBZ, "<br/>"),
+                                           #paste("<b>BEC variant</b> - ", location$BEC_VAR, "<br/>"), 
+                                           paste0("<b>BEC/subzone/variant</b>: ", location$BEC_ZONE, "/",
+                                                  location$BEC_SBZ, "/",ifelse(is.na(location$BEC_VAR), "-", 
+                                                                               location$BEC_VAR),"<br/>"), 
                                            paste("<b># of measures</b> - ", location$visit_num, "<br/>"),
-                                           paste("<b>Visited year</b> - ",location$visit_year, "<br/>")))
+                                           paste("<b>Visited year</b> - ",location$visit_year, "<br/>"),
+                                           paste("<b>Leading species</b>: ",location$SPECIES, "<br/>"),
+                                           #paste("<b>Stand age</b>: ",location$ref_age_adj, "(yrs)<br/>"),
+                                           paste("<b>Live net volume</b>: ",round(location$grdnv, 1), 
+                                                 "(cubic m/ha)<br/>")
+                                           )
+                                     )
       )   
   }
   return(plotgraph)

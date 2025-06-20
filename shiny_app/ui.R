@@ -54,10 +54,13 @@ ui <- dashboardPage(
         /*.nav-tabs>li>a {font-family: "BCSans", "Noto Sans", Verdana, Arial, sans-serif; color:#036;}
         .nav-tabs>li.active>a {font-family: "BCSans", "Noto Sans", Verdana, Arial, sans-serif; color:#036;}*/
         
-        /*.navbar{color: #036;}
-        .navbar-default .navbar-brand {color: #cc3f3f;}*/
+        /*.navbar{color: #036;}*/
+        .navbar-brand {color:#38598a;}
+        /*.navbar-brand a:hover {text-decoration:underline;!important;}
+        .one:hover {text-decoration:underline;!important;}*/
         
         .content-wrapper, .right-side {background-color: #FFFFFF;}
+        
         
         /*.footer {
              border-top: 2px solid #fcba19;
@@ -136,7 +139,9 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
          HTML("<font size='-1'>*only n&ge;10 are selectable.</font>")),
   
   column(3, offset = 1, downloadButton("downloadReport", "Download report"), br(),
-         radioButtons("format", "Document format", c("HTML", "PDF"), inline = TRUE))
+         #radioButtons("format", "Document format", c("HTML", "PDF"), inline = TRUE)
+         radioButtons("format", "Document format", c("HTML"), inline = TRUE)
+         )
   
   ), # box
   
@@ -146,13 +151,13 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
            
            #tags$style("t{color:blue;}"), 
     
-    "Overview",
+           "Overview",
     tabPanel(title = "Overview",
              #hr(),
              uiOutput('overview_header'),
              uiOutput("overview"),
              br(),
-             leafletOutput("plotgraph"),
+             leafletOutput("plotgraph", height = "600px"),
              br(),
              uiOutput("overviewflex"),
              br()

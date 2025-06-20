@@ -214,7 +214,14 @@ becplot <- reactive({
       return(fxn)
     }
     
-    p <- ggplot(data.frame(rev(sort(table(figdata)))), aes(x = figdata, y = Freq)) +
+    figdata1 <- data.frame(rev(sort(table(figdata))))
+    
+    if (dim(figdata1)[2] == 1){
+      figdata1 <- data.frame(figdata = row.names(figdata1), Freq = figdata1[1,1])
+    }
+    
+    #p <- ggplot(data.frame(rev(sort(table(figdata)))), aes(x = figdata, y = Freq)) +
+    p <- ggplot(figdata1, aes(x = figdata, y = Freq)) +
       geom_bar(stat="identity", width=0.5, fill="steelblue") +
       scale_x_discrete(guide = guide_axis(angle = -45)) +
       scale_y_continuous(expand = c(0, 0),
