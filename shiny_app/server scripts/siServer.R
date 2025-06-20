@@ -74,6 +74,8 @@ siplot <- reactive({
   
   fig7_dat <- SI_data %>%
     filter(CLSTR_ID %in% clstr_id_all(), SPECIES %in% si_dat$SPECIES) %>%
+    left_join(sample_data %>% select(CLSTR_ID, visit_number_new), by = "CLSTR_ID") %>%
+    filter(visit_number_new == 1 | CLSTR_ID %in% clstr_id()) %>%
     mutate(meas_no = ifelse(CLSTR_ID %in% clstr_id(), 2, 1)) %>%
     filter(!is.na(meansi), !is.na(meanage)) 
   
