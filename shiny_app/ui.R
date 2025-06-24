@@ -36,6 +36,7 @@ ui <- dashboardPage(
   fluidPage(    
     
     waiter::use_waiter(),
+    #waiterOnBusy(html = spin_1()),
     #waiter::waiter_show_on_load(html = waiter_html("Loading App")),
     
     # BC gov custom css
@@ -104,13 +105,13 @@ footer ul li a:hover {
 }
       '))),
     
-    box(title ="Note: This site is currently under development.", 
-        solidHeader = T, collapsible = T,status = "warning", width = NULL, collapsed=TRUE,
-        #p(strong("*Note that this site is currently under development."),style = "color:red"),
-        p("
-Published versions of the YSM Technical reports can be found at:
-https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resources/forest-inventory/ground-sample-inventories/provincial-monitoring/reports",
-          style = "color:red")),
+#    box(title ="Note: This site is currently under development.", 
+#        solidHeader = T, collapsible = T,status = "warning", width = NULL, collapsed=TRUE,
+#        #p(strong("*Note that this site is currently under development."),style = "color:red"),
+#        p("
+#Published versions of the YSM Technical reports can be found at:
+#https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resources/forest-inventory/ground-sample-inventories/provincial-monitoring/reports",
+#          style = "color:red")),
     
   box(title = "Select the area of interest", #background = "light-blue", 
       solidHeader = TRUE, status = "primary", width = NULL,
@@ -138,7 +139,8 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
                                     choices = NULL), 
          HTML("<font size='-1'>*only n&ge;10 are selectable.</font>")),
   
-  column(3, offset = 1, downloadButton("downloadReport", "Download report"), br(),
+  column(3, #waiterOnBusy(html = spin_1()),
+         offset = 1, downloadButton("downloadReport", "Download report"), br(),
          #radioButtons("format", "Document format", c("HTML", "PDF"), inline = TRUE)
          radioButtons("format", "Document format", c("HTML"), inline = TRUE)
          )
@@ -173,11 +175,12 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
              br(),
              uiOutput("stand_summary_flex"),
              br(),
+             div(
              plotOutput("live_sp", width = "700px"),
              br(),
              plotOutput("bec_dist", width = "500px"),
              br(),
-             plotOutput("stock_table", width = "700px"),
+             plotOutput("stock_table", width = "700px"), align = "center"),
              br(),
     ),
     
@@ -187,14 +190,14 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
              br(),
              uiOutput("leading_sp_flex"),
              br(),
-             plotOutput("spc_comp", width = "700px"),
+             div(plotOutput("spc_comp", width = "700px"), align = "center"),
              br(),
     ),
     tabPanel(title = "Residual Trees",
              h3("Post-Harvest Regenerated vs. Residual Trees"),
              uiOutput("residual"),
              br(),
-             plotOutput("residual_ysm", width = "600px"),
+             div(plotOutput("residual_ysm", width = "600px"), align = "center"),
              br(),
     ),
     
@@ -210,7 +213,7 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
              h3("Trends in Site Index Estimates over Time"),
              uiOutput("trend_si"),
              br(),
-             plotOutput("si_trend", width = "700px"),
+             div(plotOutput("si_trend", width = "700px"), align = "center"),
              br(),
     ),
     
@@ -219,9 +222,9 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
              h3("Comparing Current Volumes: TSR Predicted Yield Tables vs. YSM Actual Measurements"),
              uiOutput("comp_curr_vol"),
              br(),
-             plotOutput("age_vs_netmer", width = "700px"),
+             div(plotOutput("age_vs_netmer", width = "700px"),
              br(),
-             plotOutput("vol_bias", width = "700px"),
+             plotOutput("vol_bias", width = "700px"), align = "center"),
              br(),
     ),
     tabPanel(title = "Stand Age",
@@ -258,7 +261,7 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
                       br())
              ),
              br(),
-             plotOutput("pai_diff", height = "200px", width = "600px"),
+             div(plotOutput("pai_diff", height = "200px", width = "600px"), align = "center"),
              br(),
     ),  
     
@@ -267,21 +270,21 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
              h3("Quantifying Change in Growth and Mortality"),
              uiOutput("quant_coc"),
              br(),
-             plotOutput("coc_chart", width = "600px"),
+             div(plotOutput("coc_chart", width = "600px"), align = "center"),
              br(),
     ),
     tabPanel(title = "Current Forest Health Incidence",
              h3("Current Forest Health Incidence"),
              uiOutput("health_inci"),
              br(),
-             plotOutput("curr_fh_inci"),
+             div(plotOutput("curr_fh_inci"), align = "center"),
              br(),
     ),
     tabPanel(title = "Change in Forest Health Incidence",
              h3("Comparing Change in Forest Health Incidence"),
              uiOutput("comp_coc"),
              br(),
-             plotOutput("change_dam"),
+             div(plotOutput("change_dam"), align = "center"),
              br(),
              uiOutput("fh_trees"),
              br(),
@@ -292,7 +295,7 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
              h3("Approximating Future Forest Health Risks"),
              uiOutput("future_fh"),
              br(),
-             plotOutput("dam_immed", height = "300px", width = "800px"),
+             div(plotOutput("dam_immed", height = "300px", width = "800px"), align = "center"),
              br(),
              #plotOutput("dam_incr")
     ), 
@@ -328,23 +331,33 @@ https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resourc
     tabPanel(title = "Total number of YSM samples",
              h3("Total number of YSM samples by:"),
              br(),
+             
              fluidRow(align = 'center',
                       column(6,
-                             uiOutput("ysm_tables1")),
+                             uiOutput("ysm_tables1"),
+                             uiOutput("ysm_tables3"),
+                             uiOutput("ysm_tables5")),
                       column(6,
-                             uiOutput("ysm_tables2")),
-             ),
-             br(),
-             fluidRow(align = 'center',
-                      column(6,
-                             uiOutput("ysm_tables3")),
-                      column(6,
-                             uiOutput("ysm_tables4"))
-             ),
-             fluidRow(align = 'center',
-                      column(6,
-                             uiOutput("ysm_tables5"))
-             ),
+                             uiOutput("ysm_tables2"),
+                             uiOutput("ysm_tables4")))
+             
+             #fluidRow(align = 'center',
+             #         column(6,
+             #                uiOutput("ysm_tables1")),
+             #         column(6,
+             #                uiOutput("ysm_tables2")),
+             #),
+             #br(),
+             #fluidRow(align = 'center',
+             #         column(6,
+             #                uiOutput("ysm_tables3")),
+             #         column(6,
+             #                uiOutput("ysm_tables4"))
+             #),
+             #fluidRow(align = 'center',
+             #         column(6,
+             #                uiOutput("ysm_tables5"))
+             #),
              #plotOutput("ysm_tables"),
     ),
     tabPanel(title = "Tree Species and Damage Agents",

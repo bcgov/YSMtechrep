@@ -9,7 +9,7 @@ library(tidyverse)
 library(scales)
 library(RODBC)
 library(openxlsx)
-library(readr)
+#library(readr)
 
 
 ### Deciduous species list
@@ -32,15 +32,15 @@ OAF2 = 0.05
 ################################################################################
 
 ### Set data export location
-savepath <- "/YSMtechrep/shiny_app/data"
+savepath <- "D:/R/YSMreport/App_data/250620/"
 
 ### 1) Import ISMC compiled ground sample data
 ### Set data import location
-folderloc <- "/Inventory/Compilation/ismc/forpublish"  # Published BC ground samples
+folderloc <- "//objectstore3.nrs.bcgov/s164/S63016/!Workgrp/Inventory/Compilation/ismc/forpublish"  # Published BC ground samples
 ### Pick a compilation date (ex. 20240619)
-compdate <- ''
+compdate <- 20250514
 ### Need some unpublished data
-comp_path <- file.path(paste0("/Inventory/Compilation/ismc/Archive_nonPSP_", 
+comp_path <- file.path(paste0("//objectstore3.nrs.bcgov/s164/S63016/!Workgrp/Inventory/Compilation/ismc/Archive_nonPSP_", 
                               compdate))
 indatapath <- file.path(folderloc, paste0("nonPSP_",compdate))
 
@@ -48,21 +48,30 @@ indatapath <- file.path(folderloc, paste0("nonPSP_",compdate))
 faib_header <-fread(paste0(indatapath, "/faib_header.csv"))
 faib_sample_byvisit <-fread(paste0(indatapath, "/faib_sample_byvisit.csv"))
 faib_spcsmries <-fread(paste0(indatapath, "/faib_compiled_spcsmries.csv"))
-faib_smeries <-fread(paste0(indatapath, "/faib_compiled_smeries.csv"))
+faib_spcsmries_wk <-fread(paste0(indatapath, "/faib_compiled_spcsmries_wk.csv"))
+#faib_smeries <-fread(paste0(indatapath, "/faib_compiled_smries.csv"))
+#faib_smeries_wk <-fread(paste0(indatapath, "/faib_compiled_smries_wk.csv"))
 faib_siteage <-fread(paste0(indatapath, "/faib_compiled_spcsmries_siteage.csv"))
 faib_tree <-fread(paste0(indatapath, "/faib_tree_detail.csv"))
 ### Read ISMC compiled data (unpublished)
 vi_d<-readRDS(paste0(comp_path, "/compilation_nonPSP_db/compiled_vi_d.rds"))
 ### Import IMSC damage agent for severity class lookup table
-lookup_sev <-readRDS(paste0(comp_path, "/compilation_nonPSP_raw/ISMC_PROD_********_***_TreeDamageOccurrences.rds"))
+lookup_sev <-readRDS(paste0(comp_path, "/compilation_nonPSP_raw/ISMC_PROD_20250514_08am_TreeDamageOccurrences.rds"))
+#lookup_sev <-readRDS(paste0(comp_path, "/compilation_nonPSP_raw/ISMC_PROD_********_***_TreeDamageOccurrences.rds"))
 
 
 ### 2) Import MSYT projection table
-msytfpath <- "/MSYT_Delivery/delivery2023"
+#msytfpath <- "/MSYT_Delivery/delivery2023"
+msytfpath <- "D:/OtherData/MSYT/2024/prov"
 ### Input, output, and reference table
-MSYT_current_input <- fread(paste0(msytfpath,"/msyt/MSYT_current_input.csv"))
-MSYT_current_output <- fread(paste0(msytfpath,"/msyt/MSYT_current_output.csv"))
-MSYT_reference <- fread(paste0(msytfpath,"/msyt/MSYT_reference.csv"))
+#MSYT_current_input <- fread(paste0(msytfpath,"/msyt/MSYT_current_input.csv"))
+#MSYT_current_output <- fread(paste0(msytfpath,"/msyt/MSYT_current_output.csv"))
+#MSYT_reference <- fread(paste0(msytfpath,"/msyt/MSYT_reference.csv"))
+
+MSYT_current_input <- fread(paste0(msytfpath,"/MSYT_prov_current_input.csv"))
+MSYT_current_output <- fread(paste0(msytfpath,"/MSYT_prov_current_input_output.csv"))
+MSYT_reference <- fread(paste0(msytfpath,"/MSYT_prov_reference.csv"))
+
 ### Make sure the variable names match
 names(MSYT_reference) <- toupper(names(MSYT_reference))
 names(MSYT_current_input) <- toupper(names(MSYT_current_input))
@@ -70,47 +79,57 @@ names(MSYT_current_output) <- toupper(names(MSYT_current_output))
 
 
 ### 3) Import VDYP projection table
-vdyppath <- "/Inventory/Compilation/ismc/external_inputs"
+vdyppath <- "//objectstore3.nrs.bcgov/s164/S63016/!Workgrp/Inventory/Compilation/ismc/external_inputs"
 ### Input and output
-VDYP_all <- fread(paste0(vdyppath, "/spatial_overlay/ISMC_VRI_Overlay/VDYP7/VDYP7_OUTPUT_YLDTBL_old.csv"))
+#VDYP_all <- fread(paste0(vdyppath, "/spatial_overlay/ISMC_VRI_Overlay/VDYP7/VDYP7_OUTPUT_YLDTBL_old.csv"))
+#VDYP_input1 <- fread(paste0(vdyppath,  "/spatial_overlay/ISMC_VRI_Overlay/VDYP7/compiled_ISMC_inputs/VDYP7_INPUT_LAYER.csv"))
+#VDYP_all1 <- fread(paste0(vdyppath,  "/spatial_overlay/ISMC_VRI_Overlay/VDYP7/compiled_ISMC_inputs/VDYP7_OUTPUT_YLDTBL.csv"))
+
 VDYP_input <- fread(paste0(vdyppath,  "/spatial_overlay/ISMC_VRI_Overlay/VDYP7/VDYP7_INPUT_LAYER.csv"))
+VDYP_all <- fread(paste0(vdyppath,  "/spatial_overlay/ISMC_VRI_Overlay/VDYP7/VDYP7_OUTPUT_YLDTBL.csv"))
 
 
 ### 4) Import TASS output
-tass_output <- readRDS("/Output/tass_output_combined.rds")
+#tass_output <- readRDS("/Output/tass_output_combined.rds")
+tass_output <- readRDS("D:/R/YSMreport/TASS_input/20250604/TASSruns/tass_output_final.rds")
 
 
 ### 5) Other data
 ### Path to folder where external data locates
-external_path <- "/Inventory/Compilation/ismc/external_inputs"
+external_path <- "//objectstore3.nrs.bcgov/s164/S63016/!Workgrp/Inventory/Compilation/ismc/external_inputs"
 
 ### Import VRI data
 # Read VRI data - this version is based on the published 2022 vri feature_id;
 vridatpath <- file.path(paste0(external_path, 
-                               "/spatial_overlay/ISMC_VRI_Overlay/2_All_VRI_Attributes_2024Jun11.accdb"))
+                               "/spatial_overlay/ISMC_VRI_Overlay/2_All_VRI_Attributes_2025May20.accdb"))
 channel<-odbcConnectAccess2007(vridatpath)
+#vegcomp1<-sqlFetch(channel,"All_VRI_Attributes")
 vegcomp1<-sqlFetch(channel,"All_VRI_Attributes")
+odbcClose(channel)
+
+#vegcomp1 <- read.xlsx(paste0(external_path, "/spatial_overlay/ISMC_VRI_Overlay/2_All_VRI_Attributes_2025may20.xlsx"))
+
 
 # *import crosswalk table for feature_id based on 2022 vegcomp, 
 # needed to provide linkage for latest tsr msyt tables;
-vegcomp2<- read.xlsx(paste0(external_path, 
-                            "/spatial_overlay/ISMC_VRI_Overlay/2022VegCompR1_Overlay/1_Plot_Overlay_Out_2024Jun18.xlsx"))
-### Make sure the variable names match
-names(vegcomp2) <-c('SITE_IDENTIFIER', 'Alb_x', 'Alb_y', 'FEATURE_ID_2022', 'PROJ_AGE_1_2022', 'PROJECTED_DATE_2022')
+#vegcomp2<- read.xlsx(paste0(external_path, 
+#                            "/spatial_overlay/ISMC_VRI_Overlay/2022VegCompR1_Overlay/1_Plot_Overlay_Out_2024Jun18.xlsx"))
+#### Make sure the variable names match
+#names(vegcomp2) <-c('SITE_IDENTIFIER', 'Alb_x', 'Alb_y', 'FEATURE_ID_2022', 'PROJ_AGE_1_2022', 'PROJECTED_DATE_2022')
 
 ### Import PSPL data
 pspl <- fread(paste0(external_path, "/spatial_overlay/pspl_overlay/datasets/FME4_PSPL_Samples_Grid.csv"))
 
 ### Import forest health severity data
 #* severity rating lookup table created by D.Rusch;
-lookup_rush <- read.xlsx(paste0(external_path, 
-                                "/severity_rating_lookup_table/Severity_lookup_table_2021mar15.xlsx"),
+lookup_rush <- read.xlsx("//objectstore3.nrs.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/ForestHealth/CopiedfromRdejong/forest_health/severity_rating_lookup_table/Severity_lookup_table_2021mar15.xlsx",
                          sheet = 'input1')
 
 #* corrections to severity rating - unknown to correct severity ratings created by D.Rusch 2021mar10;
-sev_rusch <- read.xlsx(paste0(external_path, 
-                              "/forest_health/severity_rating_lookup_table/Unknown_severity_2021mar09.xlsx"))
+sev_rusch <- read.xlsx("//objectstore3.nrs.bcgov/s164/S63016/!Workgrp/Inventory/!WorkArea/hwoo/ForestHealth/CopiedfromRdejong/forest_health/severity_rating_lookup_table/Unknown_severity_2021mar09.xlsx")
 
+### Dropped sample
+sample_droppedfromISMC <- read.xlsx("//objectstore3.nrs.bcgov/s164/s63016/!Workgrp/Inventory/Vegetation_Resources_Inventory/Sample_Selection_Plans/Samples Dropped.xlsx")
 
 
 ################################################################################
@@ -128,8 +147,8 @@ sample_data1 <- faib_sample_byvisit %>%
          proj_id = sub("_.*", "", SAMPLE_SITE_NAME),
          OWN_SCHED = paste0(OWNER,"-",SCHEDULE)) %>%
   ### Join with VRI data to associate feature id for MSYT and VDYP projections
-  left_join(vegcomp2 %>% select(SITE_IDENTIFIER, FEATURE_ID_2022, PROJ_AGE_1_2022),
-            by = c("SITE_IDENTIFIER"), suffix = c("", "_vegcomp")) %>%
+  #left_join(vegcomp2 %>% select(SITE_IDENTIFIER, FEATURE_ID_2022, PROJ_AGE_1_2022),
+  #          by = c("SITE_IDENTIFIER"), suffix = c("", "_vegcomp")) %>%
   mutate(sample_change_case = case_when(
     SAMPLE_ESTABLISHMENT_TYPE == "VRI" & VISIT_TYPE == "REP" ~ 'rep_in_vri',
     SAMPLE_ESTABLISHMENT_TYPE == "CMI" & VISIT_TYPE == "TMP" & SAMPLE_SITE_PURPOSE_TYPE_CODE == "A" ~ 'eysm_in_cmi',
@@ -146,6 +165,8 @@ sample_data1 <- faib_sample_byvisit %>%
     YSM_MAIN_LM == "Y" & PROJ_AGE_ADJ < 15 ~ 'ysm_too_young',
     TRUE ~"")) 
 
+dropped_data1 <- sample_data1 %>%
+  filter(sample_change_case != "")
 
 ### Define YSM population 
 ### This is an example for 2024 population. Need to modify as needed.
@@ -191,7 +212,7 @@ sample_data2 <- sample_data1 %>%
                                     3000039, 3000021, 3000003) ~ "N",
                                 TRUE ~ BEC_filter)) %>%
   # *drop ysm plots that have excluded tsr yield tables;
-  filter(!(FEATURE_ID_2022 %in% MSYT_reference[MSYT_reference$CURRENT_YIELD == "Excluded",]$FEATURE_ID)) %>%
+  filter(!(FEATURE_ID %in% MSYT_reference[MSYT_reference$CURRENT_YIELD == "Excluded",]$FEATURE_ID)) %>%
   mutate(TSA_filter = case_when(TFL != "" ~ "N",
                                 TRUE ~ "Y")) %>% 
   filter(TSA_filter == "Y" | BEC_filter == "Y")
@@ -216,11 +237,17 @@ sample_data3 <- sample_data3 %>%
   mutate(visit_number_new = row_number()) %>%
   ungroup()
 
+sample_data4 <- sample_data3 %>%
+  left_join(sample_droppedfromISMC %>% select(Sample, Category), by = c('SITE_IDENTIFIER' = 'Sample')) %>%
+  filter(!(Category %in% c("4b", "5")))
+
+
+
 ### Save data for application
-saveRDS(sample_data3, paste0(savepath,"sample_data.rds"))
+saveRDS(sample_data4, paste0(savepath,"sample_data.rds"))
 
 
-
+sample_data <- setDT(sample_data4)
 ################################################################################
 ### Create species data, site-age data based on sample data
 ###  - Input: sample_data, faib_spcsmries, faib_siteage
@@ -228,8 +255,17 @@ saveRDS(sample_data3, paste0(savepath,"sample_data.rds"))
 ################################################################################
 
 ### Species data
-spcs_data <- faib_spcsmries %>%
+spcs_data1 <- faib_spcsmries %>%
   filter(CLSTR_ID %in% sample_data$CLSTR_ID)
+
+spcs_data2 <- faib_spcsmries_wk %>%
+  filter(CLSTR_ID %in% sample_data$CLSTR_ID)
+
+spcs_data3 <- anti_join(spcs_data1, spcs_data2, 
+                        by = c('CLSTR_ID', 'SITE_IDENTIFIER', 'VISIT_NUMBER', 'UTIL', 'SPECIES'))
+
+spcs_data <- rbind(spcs_data3, spcs_data2)
+
 
 ### Site age data
 siteage_data <- faib_siteage %>%
@@ -422,7 +458,9 @@ tree_data <- faib_tree %>%
                      LOSS1_IN,LOSS2_IN,LOSS3_IN,LOSS4_IN,LOSS5_IN,
                      LOC1_FRO,LOC2_FRO,LOC3_FRO,LOC4_FRO,LOC5_FRO,
                      FREQ1,FREQ2,FREQ3,FREQ4,FREQ5)], 
-            by = c('CLSTR_ID', 'PLOT', 'TREE_NO', 'SPECIES')) 
+            by = c('CLSTR_ID', 'PLOT', 'TREE_NO', 'SPECIES')) %>%
+  mutate(PHF_TREE_noWK = PHF_TREE,
+         PHF_TREE = PHF_TREE_WK)
 
 FH_dat <- tree_data %>%
   filter(!is.na(PHF_TREE)) %>%
@@ -472,7 +510,7 @@ update_dam_loss <- function(dam_agnt, loss) {
 #                      update_dam_loss(DAM_AGNA, LOSS5_IN), DAM_AGNE)
 #  )
 
-FH_dat1 <- FH_dat %>%
+FH_dat <- FH_dat %>%
   mutate(
     DAM_AGNA = update_dam_loss(DAM_AGNA, LOSS1_IN),
     DAM_AGNB = update_dam_loss(DAM_AGNB, LOSS2_IN),
@@ -632,6 +670,26 @@ FH_dat1_1_1 <- FH_dat1_1_1 %>%
 #  group_by(CLSTR_ID, PLOT, TREE_NO, AGN, dups, selected) %>%
 #  slice(1)
 
+### Restructure the severity rating data
+sev_rusch1 <- sev_rusch %>%
+  pivot_longer(
+    cols = starts_with("unkn_sev"),
+    names_to = "unkn_sev",
+    names_prefix = 'unkn_sev_',
+    values_to = "SEV",
+    values_drop_na = TRUE
+  )
+
+# *merge corrections to severity classification;
+FH_dat1_1_2 <- FH_dat1_1_1 %>%
+  left_join(sev_rusch1[, c('dam_3letter', 'SEV', 'corr_sev')], 
+            by = c('AGN' = 'dam_3letter', 'SEV'))
+
+# *replace unknown severity with corrected severity, where matches present;
+FH_dat1_1_2 <- FH_dat1_1_2 %>%
+  mutate(dam_severity = ifelse(is.na(corr_sev), SEV, corr_sev)) %>%
+  data.table
+
 # *start categorizing severity;
 # *first import ismc damage agent to severity class lookup table;
 lookup_sev1 <- lookup_sev %>%
@@ -655,7 +713,7 @@ lookup_sev2 <- lookup_sev1 %>%
 ### Hard coded
 lookup_sev3 <- lookup_sev2[!(lookup_sev2$dam_3letter %in% c('NW', 'NWS', "NWT") & lookup_sev2$allowed == "1-100"),]
 
-FH_dat1_2 <- FH_dat1_1_1 %>%
+FH_dat1_2 <- FH_dat1_1_2 %>%
   left_join(lookup_sev3, by = c("AGN" = "dam_3letter"))
 
 FH_dat1_2 <- FH_dat1_2 %>%
@@ -667,29 +725,128 @@ FH_dat1_2 <- FH_dat1_2 %>%
          sev_class_num = ifelse(grepl("[A-Za-z]", dam_severity_adj, perl = T) == F, 
                                 as.numeric(dam_severity_adj), NA))
 
-# *use only percent encirclemt for most recent stem rust severity ratings;
 FH_dat1_2 <- FH_dat1_2 %>%
-  mutate(dam_severity_adj = ifelse(severity_grp == "STEMRUST1", 
-                                   substr(dam_severity_adj, 2, 2), dam_severity_adj)) %>%
-  mutate(sev_class_num = ifelse(severity_grp == "STEMRUST1" & grepl("[A-Za-z]", dam_severity_adj, perl = T) == F, 
-                                as.numeric(gsub("[A-Za-z]", "", dam_severity_adj)), sev_class_num))
+  mutate(len_dam = nchar(AGN))  %>%
+  rowwise() %>% 
+  mutate(dam_1letter = toupper(substr(AGN, 1, 1)),
+         dam_2letter = toupper(substr(AGN, 1, min(len_dam,2))),
+         dam_3letter = toupper(substr(AGN, 1, min(len_dam,3))))
 
 FH_dat1_2 <- FH_dat1_2 %>%
-  mutate(dam_severity_adj = ifelse(grepl("[A-Za-z]", dam_severity_adj, perl = T), 
-                                   gsub("[0-9]", "", dam_severity_adj), dam_severity_adj)) 
+  mutate(dam_class = case_when(dam_1letter %in% c('O', '') ~ 'None',
+                               dam_1letter == 'U' ~ 'Unknown',
+                               dam_1letter == 'N' ~ 'Abiotic',
+                               dam_1letter == 'D' ~ 'Disease',
+                               dam_1letter == 'I' ~ 'Insect',
+                               dam_1letter == 'T' ~ 'Treatment',
+                               dam_1letter == 'A' ~ 'Animal',
+                               dam_1letter == 'X' ~ 'Frk_Crk_Btp',
+                               dam_1letter == 'V' ~ 'Vegetation',
+                               TRUE ~ ''))
 
 FH_dat1_2 <- FH_dat1_2 %>%
-  mutate(sev_class = ifelse(sev_class_num >= Low_min & sev_class_num <= Low_max, 'LOW', 
-                            ifelse(sev_class_num >= Mod_min & sev_class_num <= Mod_max, 'MOD',
-                                   ifelse(sev_class_num >= High_min, 'HIGH', sev_class))))
+  ungroup() %>%
+  mutate(dam_severity_adj = gsub(' ', '', toupper(SEV)),
+         sev_char = gsub("[0-9]", "", dam_severity_adj),
+         sev_num = as.numeric(gsub("[A-Za-z]", "", dam_severity_adj)))
 
 FH_dat1_2 <- FH_dat1_2 %>%
-  mutate(sev_class = ifelse(sev_class %in% c("UNKN", NA) & dam_severity_adj %in% c(Low_class1, Low_class2), 'LOW',
-                            ifelse(sev_class %in% c("UNKN", NA) & dam_severity_adj %in% c(Mod_class1, Mod_class2), 'MOD',
-                                   ifelse(sev_class %in% c("UNKN", NA) & dam_severity_adj %in% c(High_class1, High_class2), 
-                                          'HIGH', sev_class)
-                            )))
+  mutate(sev_class = case_when(severity_grp %in% c("BBEETLE", "FIRE", "ROOTROT", "STEMRUST2", "TWEEVIL") & 
+                                 sev_char %in% c(Low_class1, Low_class2) ~ 'LOW',
+                               severity_grp %in% c("BBEETLE", "FIRE", "ROOTROT", "STEMRUST2", "TWEEVIL") & 
+                                 sev_char %in% c(Mod_class1, Mod_class2) ~ 'MOD',
+                               severity_grp  %in% c("BBEETLE", "FIRE", "ROOTROT", "STEMRUST2", "TWEEVIL") & 
+                                 sev_char %in% c(High_class1, High_class2) ~ 'HIGH',
+                               
+                               severity_grp %in% c("PERCENTAGE", "HAWKSWORTH") & 
+                                 sev_num >= Low_min & sev_num <= Low_max ~ 'LOW',
+                               severity_grp %in% c("PERCENTAGE", "HAWKSWORTH") & 
+                                 sev_num >= Mod_min & sev_num <= Mod_max ~ 'MOD',
+                               severity_grp  %in% c("PERCENTAGE", "HAWKSWORTH") & 
+                                 sev_num >= High_min ~ 'HIGH',
+                               
+                               # *use only percent encirclemt for most recent stem rust severity ratings;
+                               severity_grp == "STEMRUST1" & is.na(sev_num) & 
+                                 sev_char %in% c(Low_class1, Low_class2) ~ 'LOW',
+                               severity_grp == "STEMRUST1" & is.na(sev_num) & 
+                                 sev_char %in% c(Mod_class1, Mod_class2) ~ 'MOD',
+                               severity_grp == "STEMRUST1" & is.na(sev_num) & 
+                                 sev_char %in% c(High_class1, High_class2) ~ 'HIGH',
+                               
+                               # *get percent encirclement for stem rust severity collected since 2017;
+                               severity_grp == "STEMRUST1" & !is.na(sev_num) & 
+                                 as.numeric(substr(dam_severity, 2, 2)) >= Low_min & 
+                                 as.numeric(substr(dam_severity, 2, 2)) <= Low_max ~ 'LOW',
+                               severity_grp == "STEMRUST1" & !is.na(sev_num) & 
+                                 as.numeric(substr(dam_severity, 2, 2)) >= Mod_min & 
+                                 as.numeric(substr(dam_severity, 2, 2)) <= Mod_max ~ 'MOD',
+                               severity_grp == "STEMRUST1" & !is.na(sev_num) & 
+                                 as.numeric(substr(dam_severity, 2, 2)) >= High_min ~ 'HIGH',
+                               
+                               # *default to severity class when no match;
+                               sev_char == "" ~  "UNKNOWN",
+                               TRUE ~ "UNKNOWN"
+  ))
 
+
+## *start categorizing severity;
+## *first import ismc damage agent to severity class lookup table;
+#lookup_sev1 <- lookup_sev %>%
+#  mutate(dam_3letter = DAMAGE_AGENT_CODE,
+#         severity_grp = DAMAGE_AGENT_SEVERITY_CODE) %>%
+#  select(dam_3letter, severity_grp) %>%
+#  distinct()
+#
+## *next, import severity rating lookup table created by D.Rush 2021-jan;
+#lookup_rush2 <- lookup_rush %>%
+#  mutate_at(vars(matches("dam")), trimws)
+#
+#lookup_rush3 <- lookup_rush2 %>%
+#  pivot_longer(cols = starts_with("dam"), names_to = "dam", 
+#               values_to = "dam_3letter",values_drop_na = TRUE) %>%
+#  distinct()
+#
+#lookup_sev2 <- lookup_sev1 %>%
+#  left_join(lookup_rush3, by = c("dam_3letter"))
+#
+#### Hard coded
+#lookup_sev3 <- lookup_sev2[!(lookup_sev2$dam_3letter %in% c('NW', 'NWS', "NWT") & lookup_sev2$allowed == "1-100"),]
+#
+#FH_dat1_2 <- FH_dat1_1_1 %>%
+#  left_join(lookup_sev3, by = c("AGN" = "dam_3letter"))
+#
+#FH_dat1_2 <- FH_dat1_2 %>%
+#  ungroup() %>%
+#  # *get percent encirclement for stem rust severity collected since 2017;
+#  mutate(dam_severity_adj = gsub(' ', '', toupper(SEV)),
+#         sev_class = ifelse(dam_severity_adj == "", "UNKN", NA),
+#         # *look at numeric values only in severity class;
+#         sev_class_num = ifelse(grepl("[A-Za-z]", dam_severity_adj, perl = T) == F, 
+#                                as.numeric(dam_severity_adj), NA))
+#
+## *use only percent encirclemt for most recent stem rust severity ratings;
+#FH_dat1_2 <- FH_dat1_2 %>%
+#  mutate(dam_severity_adj = ifelse(severity_grp == "STEMRUST1", 
+#                                   substr(dam_severity_adj, 2, 2), dam_severity_adj)) %>%
+#  mutate(sev_class_num = ifelse(severity_grp == "STEMRUST1" & grepl("[A-Za-z]", dam_severity_adj, perl = T) == F, 
+#                                as.numeric(gsub("[A-Za-z]", "", dam_severity_adj)), sev_class_num))
+#
+#FH_dat1_2 <- FH_dat1_2 %>%
+#  mutate(dam_severity_adj = ifelse(grepl("[A-Za-z]", dam_severity_adj, perl = T), 
+#                                   gsub("[0-9]", "", dam_severity_adj), dam_severity_adj)) 
+#
+#FH_dat1_2 <- FH_dat1_2 %>%
+#  mutate(sev_class = ifelse(sev_class_num >= Low_min & sev_class_num <= Low_max, 'LOW', 
+#                            ifelse(sev_class_num >= Mod_min & sev_class_num <= Mod_max, 'MOD',
+#                                   ifelse(sev_class_num >= High_min, 'HIGH', sev_class))))
+#
+#FH_dat1_2 <- FH_dat1_2 %>%
+#  mutate(sev_class = ifelse(sev_class %in% c("UNKN", NA) & dam_severity_adj %in% c(Low_class1, Low_class2), 'LOW',
+#                            ifelse(sev_class %in% c("UNKN", NA) & dam_severity_adj %in% c(Mod_class1, Mod_class2), 'MOD',
+#                                   ifelse(sev_class %in% c("UNKN", NA) & dam_severity_adj %in% c(High_class1, High_class2), 
+#                                          'HIGH', sev_class)
+#                            )))
+#
 # *default to severity class when no match;
 FH_dat1_2 <- FH_dat1_2 %>%
   mutate(sev_class = ifelse(sev_class %in% c("", NA), "UNKN", sev_class))
@@ -753,45 +910,7 @@ FH_dat2 <- FH_dat2 %>%
          # *create dbh classes;
          DBH_CLASS = round(DBH/5)*5)
 
-FH_dat2 <- FH_dat2 %>%
-  mutate(len_dam = nchar(AGN))  %>%
-  rowwise() %>% 
-  mutate(dam_1letter = toupper(substr(AGN, 1, 1)),
-         dam_2letter = toupper(substr(AGN, 1, min(len_dam,2))),
-         dam_3letter = toupper(substr(AGN, 1, min(len_dam,3))))
-
-FH_dat2 <- FH_dat2 %>%
-  mutate(dam_class = case_when(dam_1letter %in% c('O', '') ~ 'None',
-                               dam_1letter == 'U' ~ 'Unknown',
-                               dam_1letter == 'N' ~ 'Abiotic',
-                               dam_1letter == 'D' ~ 'Disease',
-                               dam_1letter == 'I' ~ 'Insect',
-                               dam_1letter == 'T' ~ 'Treatment',
-                               dam_1letter == 'A' ~ 'Animal',
-                               dam_1letter == 'X' ~ 'Frk_Crk_Btp',
-                               TRUE ~ ''))
-
-### Restructure the severity rating data
-sev_rusch1 <- sev_rusch %>%
-  pivot_longer(
-    cols = starts_with("unkn_sev"),
-    names_to = "unkn_sev",
-    names_prefix = 'unkn_sev_',
-    values_to = "SEV",
-    values_drop_na = TRUE
-  )
-
-# *merge corrections to severity classification;
 FH_dat3 <- FH_dat2 %>%
-  left_join(sev_rusch1[, c('dam_3letter', 'SEV', 'corr_sev')], 
-            by = c('dam_3letter', 'SEV'))
-
-# *replace unknown severity with corrected severity, where matches present;
-FH_dat3 <- FH_dat3 %>%
-  mutate(dam_severity = ifelse(is.na(corr_sev), SEV, corr_sev)) %>%
-  data.table
-
-FH_dat3 <- FH_dat3 %>%
   mutate(AGN = ifelse(AGN == '', 'O', AGN))
 
 Tree_FH_data <- FH_dat3 %>%
@@ -801,9 +920,61 @@ Tree_FH_data <- FH_dat3 %>%
          SI_TREE, SUIT_TR, SUIT_HT, SUIT_SI,
          BA_TREE, ba_ha, vol_ha, DAM_NUM, AGN, SEV, SEVPERC, 
          severity_grp, dam, dam_severity_adj, 
-         sev_class, sev_class_num, n, mort_code, mort_flag, AGN_new,
+         sev_char, sev_num, sev_class, n, mort_code, mort_flag, AGN_new,
          RESID_GRP, DBH_CLASS, dam_1letter, dam_2letter, dam_3letter,
          dam_class, corr_sev, dam_severity)
+
+#FH_dat2 <- FH_dat2 %>%
+#  mutate(len_dam = nchar(AGN))  %>%
+#  rowwise() %>% 
+#  mutate(dam_1letter = toupper(substr(AGN, 1, 1)),
+#         dam_2letter = toupper(substr(AGN, 1, min(len_dam,2))),
+#         dam_3letter = toupper(substr(AGN, 1, min(len_dam,3))))
+#
+#FH_dat2 <- FH_dat2 %>%
+#  mutate(dam_class = case_when(dam_1letter %in% c('O', '') ~ 'None',
+#                               dam_1letter == 'U' ~ 'Unknown',
+#                               dam_1letter == 'N' ~ 'Abiotic',
+#                               dam_1letter == 'D' ~ 'Disease',
+#                               dam_1letter == 'I' ~ 'Insect',
+#                               dam_1letter == 'T' ~ 'Treatment',
+#                               dam_1letter == 'A' ~ 'Animal',
+#                               dam_1letter == 'X' ~ 'Frk_Crk_Btp',
+#                               TRUE ~ ''))
+#
+##### Restructure the severity rating data
+##sev_rusch1 <- sev_rusch %>%
+##  pivot_longer(
+##    cols = starts_with("unkn_sev"),
+##    names_to = "unkn_sev",
+##    names_prefix = 'unkn_sev_',
+##    values_to = "SEV",
+##    values_drop_na = TRUE
+##  )
+##
+### *merge corrections to severity classification;
+##FH_dat3 <- FH_dat2 %>%
+##  left_join(sev_rusch1[, c('dam_3letter', 'SEV', 'corr_sev')], 
+##            by = c('dam_3letter', 'SEV'))
+##
+### *replace unknown severity with corrected severity, where matches present;
+##FH_dat3 <- FH_dat3 %>%
+##  mutate(dam_severity = ifelse(is.na(corr_sev), SEV, corr_sev)) %>%
+##  data.table
+##
+##FH_dat3 <- FH_dat3 %>%
+##  mutate(AGN = ifelse(AGN == '', 'O', AGN))
+#
+#Tree_FH_data <- FH_dat3 %>%
+#  select(SITE_IDENTIFIER, CLSTR_ID, VISIT_NUMBER, PLOT, TREE_NO, RESIDUAL, MEAS_YR, MEAS_INTENSE,
+#         TREE_WT, TH_TREE, DBH, HEIGHT, SPECIES, SPC_GRP1, LV_D, S_F, COMP_CHG, WALKTHRU_STATUS, 
+#         PHF_TREE, VOL_WSV, VOL_MER, VOL_NTWB, AGE_BH, AGE_TOT,
+#         SI_TREE, SUIT_TR, SUIT_HT, SUIT_SI,
+#         BA_TREE, ba_ha, vol_ha, DAM_NUM, AGN, SEV, SEVPERC, 
+#         severity_grp, dam, dam_severity_adj, 
+#         sev_class, sev_class_num, n, mort_code, mort_flag, AGN_new,
+#         RESID_GRP, DBH_CLASS, dam_1letter, dam_2letter, dam_3letter,
+#         dam_class, corr_sev, dam_severity)
 
 ### if a tree is identified as a residual in any visit, then it is a residual across all visits.
 Tree_FH_data <- Tree_FH_data %>%
@@ -821,6 +992,7 @@ Tree_FH_data1 <- Tree_FH_data %>%
          phf_coc = PHF_TREE,
          resid_coc = RESIDUAL,
          comp_chg_coc = COMP_CHG,
+         comp_chg_coc = ifelse(comp_chg_coc == "ID", "M", comp_chg_coc),
          species_coc = SPECIES,
          lvd_coc = LV_D,
          sf_coc = S_F)
@@ -1016,11 +1188,12 @@ regen_tsr_input <- rbind(regen_data4, vdyp_input3)
 
 ### Joint with sample data
 regen_tsr_input1 <- sample_data %>%
-  select(CLSTR_ID, SITE_IDENTIFIER, VISIT_NUMBER, FEATURE_ID, FEATURE_ID_2022,
+  select(CLSTR_ID, SITE_IDENTIFIER, VISIT_NUMBER, FEATURE_ID, #FEATURE_ID_2022,
          BEC_ZONE, BEC_SBZ, BEC_VAR, FIRST_MSMT, LAST_MSMT, MEAS_YR,
          MGMT_UNIT, TSA_DESC) %>%
   left_join(regen_tsr_input, 
-            by = c("FEATURE_ID_2022" = "FEATURE_ID"))
+            #by = c("FEATURE_ID_2022" = "FEATURE_ID"))
+            by = c("FEATURE_ID"))
 
 
 ### Save data for application
@@ -1094,10 +1267,11 @@ sample_data1 <- sample_data %>%
             by = c("CLSTR_ID"))
 
 msyt <- sample_data1 %>% 
-  select(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, FEATURE_ID, FEATURE_ID_2022, 
+  select(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, FEATURE_ID, #FEATURE_ID_2022, 
          MGMT_UNIT, MEAS_YR, PROJ_AGE_ADJ) %>%
   left_join(MSYT_reference, 
-            by = c("FEATURE_ID_2022" = "FEATURE_ID"), suffix = c("_YSM", ""))
+            by = c("FEATURE_ID"), suffix = c("_YSM", ""))
+            #by = c("FEATURE_ID_2022" = "FEATURE_ID"), suffix = c("_YSM", ""))
 
 msyt <- msyt %>%
   rowwise() %>%
@@ -1114,21 +1288,24 @@ msyt <- msyt %>%
     ref_age_adj = ifelse(ref_age_adj < 10, 10, ref_age_adj),
     ref_age_cd = ifelse(!is.na(results_age_adj) & results_age_adj > 0 & substr(MGMT_UNIT,1,3) != 'TFL', 
                         "RESULTS", "VEGCOMP")) %>%
-  arrange(FEATURE_ID_2022, SITE_IDENTIFIER, CLSTR_ID)
+  arrange(FEATURE_ID, SITE_IDENTIFIER, CLSTR_ID)
 
 ### MSYT projected volume
 msyt_vol <- MSYT_current_output %>%
-  filter(FEATURE_ID %in% unique(msyt$FEATURE_ID_2022)) %>%
+  filter(FEATURE_ID %in% unique(msyt$FEATURE_ID)) %>%
   select(FEATURE_ID, starts_with("MVCON_"), starts_with("MVDEC_")) %>%
   mutate_at(vars(starts_with("MVCON_")), as.numeric) %>%
   mutate_at(vars(starts_with("MVDEC_")), as.numeric) 
 
 msyt_vol1 <- tidyr::pivot_longer(msyt_vol, cols = matches('^MVCON_|^MVDEC_'), 
                                  names_to = c('.value', 'AGE'), 
-                                 names_sep = '_')
+                                 names_sep = '_') %>%
+  mutate_at(vars(MVCON, MVDEC), ~replace_na(., 0))
 
 msyt_vol2 <- msyt_vol1 %>%
+  #rowwise() %>%
   mutate(AGE = as.numeric(AGE),
+         #MVALL = sum(c(MVCON, MVDEC), na.rm = T),
          MVALL = MVCON + MVDEC,
          NETVOL = MVALL,
          NETVOL_CON = MVCON) %>%
@@ -1147,7 +1324,8 @@ msyt_vol5 <- msyt_vol4 %>%
   ungroup()
 
 msyt1 <- msyt %>%
-  left_join(msyt_vol5, by = c("FEATURE_ID_2022" = "FEATURE_ID", "ref_age_adj" = "AGE")) %>%
+  left_join(msyt_vol5, by = c("FEATURE_ID", "ref_age_adj" = "AGE")) %>%
+  #left_join(msyt_vol5, by = c("FEATURE_ID_2022" = "FEATURE_ID", "ref_age_adj" = "AGE")) %>%
   distinct
 
 
@@ -1161,7 +1339,8 @@ VDYP_all <- VDYP_all %>%
             by = c("FEATURE_ID", "LAYER_ID"))
 
 VDYP_proj <- VDYP_all %>%
-  filter(FEATURE_ID %in% unique(sample_data$FEATURE_ID_2022), PRJ_TOTAL_AGE >= 10, PRJ_TOTAL_AGE <= 100)
+  filter(FEATURE_ID %in% unique(sample_data$FEATURE_ID), PRJ_TOTAL_AGE >= 10, PRJ_TOTAL_AGE <= 100)
+  #filter(FEATURE_ID %in% unique(sample_data$FEATURE_ID_2022), PRJ_TOTAL_AGE >= 10, PRJ_TOTAL_AGE <= 100)
 
 vdyp1 <- VDYP_proj %>%
   select(FEATURE_ID, LAYER_ID, MAP_ID, PROJECTION_YEAR, PRJ_TOTAL_AGE, 
@@ -1272,10 +1451,10 @@ tass_output4_5 <- tass_output4_4 %>%
 # *create annual records from starting age to max age;
 tass_output4_6 <- tass_output4_5 %>% 
   group_by(xy, rust, TASS_ver, SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID) %>% 
-  mutate(GMV_approx = zoo::na.approx(GMV_adj, agespan, rule = 2),
-         Age_adj_approx = zoo::na.approx(age_adj, agespan, rule = 2),
-         Year_approx = zoo::na.approx(Year, agespan, rule = 2),
-         Age_approx = zoo::na.approx(Age, agespan, rule = 2)) %>% 
+  mutate(GMV_approx = zoo::na.approx(GMV_adj, agespan),
+         Age_adj_approx = zoo::na.approx(age_adj, agespan),
+         Year_approx = zoo::na.approx(Year, agespan),
+         Age_approx = zoo::na.approx(Age, agespan)) %>% 
   fill(xy, rust, TASS_VER, TASS_ver, SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, .direction = 'up') %>%
   ungroup()
 
@@ -1302,21 +1481,25 @@ tass_output7_1 <- tass_output7 %>%
 ### Combine all data
 #### YSM current volume
 currentvol <- sample_data1 %>%
-  select(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, FEATURE_ID, FEATURE_ID_2022, LAYER_ID,
+  #select(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, FEATURE_ID, FEATURE_ID_2022, LAYER_ID,
+  select(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, FEATURE_ID, LAYER_ID,
          MEAS_YR, PROJ_AGE_ADJ, MGMT_UNIT, BEC = BEC_ZONE, BEC_SBZ, TSA_DESC) %>%
   left_join(ysm_trees3, by = c("SITE_IDENTIFIER", "CLSTR_ID", "VISIT_NUMBER")) 
 
 ### Merge YSM - MSYT
 ### 1. TIPSY: Join with sample data 
 currentvol1 <- currentvol %>%
-  left_join(msyt1 %>% select(-SITE_IDENTIFIER, -VISIT_NUMBER, -FEATURE_ID, -MEAS_YR, -MGMT_UNIT, -PROJ_AGE_ADJ), 
-            by = c("CLSTR_ID", "FEATURE_ID_2022" = "FEATURE_ID_2022")) 
+  left_join(msyt1 %>% select(-SITE_IDENTIFIER, -VISIT_NUMBER, -MEAS_YR, -MGMT_UNIT, -PROJ_AGE_ADJ), 
+  #left_join(msyt1 %>% select(-SITE_IDENTIFIER, -VISIT_NUMBER, -FEATURE_ID, -MEAS_YR, -MGMT_UNIT, -PROJ_AGE_ADJ), 
+            by = c("CLSTR_ID", "FEATURE_ID")) 
+            #by = c("CLSTR_ID", "FEATURE_ID_2022" = "FEATURE_ID_2022")) 
 
 ### 2. VDYP: Merge YSM - VDYP
 currentvol2 <- currentvol1 %>%
   mutate(LAYER_ID_c = as.character(LAYER_ID)) %>%
   left_join(vdyp4 %>% select(FEATURE_ID, LAYER_ID, PRJ_TOTAL_AGE, vdyp_vol_dwb, vdyp_year) %>% distinct(), 
-            by = c("FEATURE_ID_2022" = "FEATURE_ID", "ref_age_adj" = "PRJ_TOTAL_AGE",
+            by = c("FEATURE_ID", "ref_age_adj" = "PRJ_TOTAL_AGE",
+            #by = c("FEATURE_ID_2022" = "FEATURE_ID", "ref_age_adj" = "PRJ_TOTAL_AGE",
                    "LAYER_ID_c"  = "LAYER_ID"),
             suffix = c("_vegcomp", ""))
 
@@ -1351,7 +1534,7 @@ currentvol4 <- currentvol3 %>%
     voldiffTASS = tassnv - grdnv)  
 
 ysm_msyt_vdyp <- currentvol4 %>%
-  select(SITE_IDENTIFIER, CLSTR_ID, VISIT_NUMBER, FEATURE_ID_2022,
+  select(SITE_IDENTIFIER, CLSTR_ID, VISIT_NUMBER, #FEATURE_ID_2022,
          OPENING_ID, TASS_ver, xy, 
          MGMT_UNIT, TSA_DESC, BEC, BEC_SBZ, 
          MEAS_YR, PROJ_AGE_ADJ, ref_age_adj, ref_age_cd, PRJ_TOTAL_AGE = PROJ_AGE_ADJ, 
@@ -1366,7 +1549,7 @@ ysm_msyt_vdyp <- currentvol4 %>%
 saveRDS(ysm_msyt_vdyp, paste0(savepath,"ysm_msyt_vdyp_volume.rds"))
 saveRDS(msyt_vol2, paste0(savepath,"msyt_volproj.rds"))
 
-
+msyt_volproj <- msyt_vol2
 
 ################################################################################
 ### Create projected volume data 
@@ -1380,26 +1563,30 @@ tsr_volproj <- sample_data1 %>%
   expand(nesting(CLSTR_ID, LAYER_ID), AGE = full_seq(c(30, 100), 10))
 
 tsr_volproj1 <- tsr_volproj %>%
-  left_join(sample_data1 %>% select(FEATURE_ID_2022, SITE_IDENTIFIER, CLSTR_ID, LAYER_ID, MEAS_YR, 
+  left_join(sample_data1 %>% select(FEATURE_ID, SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, LAYER_ID, MEAS_YR, 
+  #left_join(sample_data1 %>% select(FEATURE_ID_2022, SITE_IDENTIFIER, CLSTR_ID, LAYER_ID, MEAS_YR, 
                                    MGMT_UNIT, PROJ_AGE_ADJ, TSA_DESC,
                                    BEC_ZONE_YSM = BEC_ZONE, BEC_SBZ_YSM = BEC_SBZ, BEClabel) %>% 
               distinct(), 
             by = c("CLSTR_ID", "LAYER_ID"))
 
 tsr_volproj2 <- tsr_volproj1 %>%
-  left_join(msyt_volproj, by = c("FEATURE_ID_2022" = "FEATURE_ID", "AGE"))
+  left_join(msyt_volproj, by = c("FEATURE_ID", "AGE"))
+  #left_join(msyt_volproj, by = c("FEATURE_ID_2022" = "FEATURE_ID", "AGE"))
 
 ### Merge TASS - TSR projection
 tsr_volproj3 <- tsr_volproj2 %>%
   mutate(LAYER_ID_c = as.character(LAYER_ID)) %>%
   left_join(vdyp1, 
-            by = c("FEATURE_ID_2022" = "FEATURE_ID", "AGE" = "PRJ_TOTAL_AGE", "LAYER_ID_c" = "LAYER_ID"))
+            by = c("FEATURE_ID", "AGE" = "PRJ_TOTAL_AGE", "LAYER_ID_c" = "LAYER_ID"))
+            #by = c("FEATURE_ID_2022" = "FEATURE_ID", "AGE" = "PRJ_TOTAL_AGE", "LAYER_ID_c" = "LAYER_ID"))
 
 tsr_volproj3 <- tsr_volproj3 %>%
   filter(AGE %in% c(30, 40, 50, 60, 70, 80, 90, 100))
 
 tsr_volproj4 <- tsr_volproj3 %>%
-  left_join(MSYT_reference, by = c("FEATURE_ID_2022" = "FEATURE_ID"))
+  left_join(MSYT_reference, by = c("FEATURE_ID"))
+  #left_join(MSYT_reference, by = c("FEATURE_ID_2022" = "FEATURE_ID"))
 
 tsr_volproj4 <- tsr_volproj4 %>%
   rowwise() %>%
@@ -1419,8 +1606,9 @@ tsr_volproj4 <- tsr_volproj4 %>%
                             ifelse(grepl('AGGREGATE', toupper(CURRENT_YIELD)), "AGGREGATE", CURRENT_YIELD)),
          ### If not available in MSYT but is in VDYP runs
          yt_source = ifelse(is.na(yt_source) & !is.na(PRJ_VOL_DWB), "VDYP-fill_missed_tsr", yt_source),
-         yt_source_f = factor(yt_source, levels = c("Managed", "AGGREGATE", "VDYP",  "VDYP-fill_missed_tsr", "Excluded"), ordered = T),
-         
+         yt_source_f = factor(yt_source, 
+                              levels = c("Managed", "AGGREGATE", "VDYP",  "VDYP-fill_missed_tsr", "Excluded"), 
+                              ordered = T),
          volTSR = ifelse(yt_source %in% c("Managed","AGGREGATE"), NETVOL,       
                          ifelse(yt_source  %in% c("VDYP", "VDYP-fill_missed_tsr"), PRJ_VOL_DWB, NA)),
          volTSR = ifelse(is.na(volTSR), 0, volTSR))
@@ -1429,16 +1617,18 @@ tsr_volproj4 <- tsr_volproj4 %>%
 tsr_volproj5_1 <- tsr_volproj4 %>%
   left_join(tass_output6 %>%  
               filter(agespan %in% c(30, 40, 50, 60, 70, 80, 90, 100)) %>%
-              select(-PROJ_AGE_ADJ, -ref_age_adj),
+              select(-PROJ_AGE_ADJ, -ref_age_adj, -VISIT_NUMBER),
             by = c("SITE_IDENTIFIER", "CLSTR_ID", "AGE" = "agespan")) %>%
   mutate(volTASS = ifelse(is.na(GMV_approx) & is.na(TASS_ver), 0, GMV_approx))
 
 
 tsr_tass_volproj <- tsr_volproj5_1 %>%
-  select(FEATURE_ID_2022, SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, MEAS_YR, PROJ_AGE_ADJ, 
+  select(FEATURE_ID, #FEATURE_ID_2022, 
+         SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, MEAS_YR, PROJ_AGE_ADJ, 
          BEC_ZONE = BEC_ZONE_YSM, BEC_SBZ_YSM, MGMT_UNIT, 
          AGE, LAYER_ID, PROJECTION_YEAR, PRJ_BA, PRJ_TPH, PRJ_VOL_WS, PRJ_VOL_DWB, 
-         OPENING_ID, RSLT_AGE, RSLT_REFERENCE_YEAR, VRI_AGE, CATEGORY, RSLT_AGE, RSLT_REFERENCE_YEAR, NETVOL,
+         OPENING_ID, RSLT_AGE, RSLT_REFERENCE_YEAR, #VRI_AGE, 
+         CATEGORY, RSLT_AGE, RSLT_REFERENCE_YEAR, NETVOL,
          results_age, results_age_adj, ref_age_adj, ref_age_cd, CURRENT_YIELD, yt_source, yt_source_f, volTSR,
          xy, rust, TASS_ver, Year_approx, Age_approx, GMV_approx, volTASS) %>%
   distinct()
@@ -1449,5 +1639,6 @@ tsr_tass_volproj <- tsr_volproj5_1 %>%
 saveRDS(tass_output6, paste0(savepath,"ysm_tass_proj.rds"))
 ### TASS - MSYT projection 
 saveRDS(tsr_tass_volproj, paste0(savepath,"tsr_tass_volproj.rds"))
+
 
 

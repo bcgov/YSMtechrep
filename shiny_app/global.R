@@ -136,5 +136,18 @@ waiter_html <- function(x){
 
 br2 <- function() tagList(br(), br())
 
+## custom progress function
+#myProgress <- function(total, labels) {
+#  list(update = function(i) {
+#    shiny::setProgress(value = i/total, message = paste0("Running chunk ", i, "/", total, ": "), detail = labels[i])
+#    cat(sep = "", i, "/", total, ": ", labels[i], "\n")
+#  }, done = function() {
+#    shiny::setProgress(1, message = "Done")
+#  })
+#}
+#
+## register it with knitr
+#op <- options(knitr.progress.fun = myProgress)
+
 
 ##END

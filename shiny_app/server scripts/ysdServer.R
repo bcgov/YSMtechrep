@@ -94,7 +94,8 @@ summaryflex <- reactive({
                                      value = as_paragraph('Net Merch Vol. (m',as_sup('3'),'/ha)'))
     flextable2 <- bg(flextable2, 
                      j = 7,
-                     bg = "lightgray", part = "all")
+                     bg = "lightgray", part = "all") %>%
+      colformat_double(i =  c(2,4,5,6), digits = 0)
     
     flextable2 <- autofit(flextable2)
     

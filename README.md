@@ -1,17 +1,22 @@
 ## YSMtechrep
 
+<!-- badges: start -->
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![img](https://img.shields.io/badge/Lifecycle-Experimental-339999)](https://github.com/bcgov/repomountie/blob/master/doc/lifecycle-badges.md)
+<!-- badges: end -->
+
 An R Shiny dashboard provides a technical summary of B.C.'s young forest stands by various management units within the FAIB database.
 
 ---
 ## Readme
----
 
-The purpose of this application is to deliver a comprehensive summary of timber supply-related forest attributes for young stands in British Columbia using ground sample data collected through the Young Stand Monitoring (YSM) program. The application is currently hosted at ---, and the data are updated annually based on newly collected ground samples.
+The purpose of this application is to deliver a comprehensive summary of timber supply-related forest attributes for young stands in British Columbia using ground sample data collected through the Young Stand Monitoring (YSM) program. The application is currently hosted at https://bcgov-env.shinyapps.io/YSM_techrep/, and the data are updated annually based on newly collected ground samples.
 
 ## Features
 
 Users can generate summaries at different strata levels by selecting TSA or BEC & subzones under the "Strata" section in the "Select the area of interest" box. Once a stratum is selected, the available management units for the summaries appear under the "Select" menu.
-The application features various tabs on the left, which display the reports for the selected management unit. Users can export the full report as an HTML or PDF document using the "Download report" button.
+The application features various tabs on the left, which display the reports for the selected management unit. Users can export the full report as an HTML document using the "Download report" button.
 
 ## How to Contribute
 Government employees, public and members of the private sector are encouraged to contribute to the repository by forking and submitting a pull request.
@@ -23,7 +28,7 @@ Pull requests will be evaluated by the repository guardians on a schedule and if
 All contributors retain the original copyright to their stuff, but by contributing to this project, you grant a world-wide, royalty-free, perpetual, irrevocable, non-exclusive, transferable license to all users under the terms of the license under which this project is distributed.
 
 
-"Please note that this project is released with a [Contributor Code of Conduct](). By participating in this project you agree to abide by its terms."
+"Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms."
 
 ## License
 
@@ -43,3 +48,4 @@ All contributors retain the original copyright to their stuff, but by contributi
 
 Detailed guidance around licenses is available 
 [here]()
+
