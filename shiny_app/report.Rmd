@@ -1,7 +1,7 @@
 ---
 title: "`r title()` Young Stand Monitoring Program"
 author: "Forest Analysis and Inventory Branch"
-date: "Version 2025-04-14; Created `r Sys.Date()`"
+date: "Version 2025-06-20; Created `r Sys.Date()`"
 #runtime: shiny
 always_allow_html: true
 geometry: margin=1cm
@@ -16,7 +16,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(fig.pos = "H", out.extra = "")
-knitr::opts_chunk$set(echo = FALSE, fig.align="center")
+knitr::opts_chunk$set(echo = TRUE, fig.align="center")
 knitr::opts_chunk$set(fig.height = 4, collapse = TRUE)
 knitr::opts_chunk$set(dev = "ragg_png")
 set_flextable_defaults(fonts_ignore=TRUE)
@@ -36,6 +36,8 @@ colorize <- function(x, color) {
     sprintf("<span style='color: %s;'>%s</span>", color, x)
   } else x
 }
+
+library(shiny)
 ```
 
 <style>
@@ -141,7 +143,7 @@ prjtab_70 <- projectiontable %>% filter(AGE >=70, AGE <100)
 
 `r htmltopdf(ysd())`
 
-```{r, fig.width=5,fig.height=3, echo=FALSE,warning=FALSE, message = FALSE}
+```{r, fig.width=6,fig.height=3, echo=FALSE,warning=FALSE, message = FALSE}
 summaryflex()
 livespplot() + theme_bw(12) +
       theme(
@@ -153,9 +155,10 @@ livespplot() + theme_bw(12) +
       ) 
 ```
 
-```{r, fig.width=4,fig.height=3, echo=FALSE,warning=FALSE, message = FALSE}
+```{r, fig.width=5,fig.height=3, echo=FALSE,warning=FALSE, message = FALSE}
 becplot() + theme_bw(12) + 
       theme(
+        plot.title.position = "plot",
         panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank(),
         panel.grid.major.y = element_line(colour="darkgray"),
@@ -163,7 +166,7 @@ becplot() + theme_bw(12) +
       )
 ```
 
-```{r, fig.width=6,fig.height=4, echo=FALSE,warning=FALSE, message = FALSE}
+```{r, fig.width=7,fig.height=4, echo=FALSE,warning=FALSE, message = FALSE}
 stockplot() + theme_bw(12) +
       theme(
         panel.grid.major.y = element_line(color = 'darkgray'), 
@@ -173,6 +176,11 @@ stockplot() + theme_bw(12) +
       ) 
 ```
 
+
+```{r, include=FALSE}
+incProgress(1/3)
+#Sys.sleep(2)
+```
 
 ## Leading Species vs. VRI, & Overall Species Composition vs. TSR Inputs
 
@@ -404,6 +412,11 @@ fhcocflex()
 ```
 
 
+```{r, include=FALSE}
+incProgress(1/3)
+#Sys.sleep(2)
+```
+
 ## Approximating Future Forest Health Risks
 
 `r htmltopdf(fufhtext())`
@@ -537,7 +550,10 @@ if (input$format == "HTML"){
 
 `r htmltopdf(assumptext())`
 
-
+```{r, include=FALSE}
+incProgress(1/3)
+#Sys.sleep(2)
+```
 
 
 

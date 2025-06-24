@@ -492,6 +492,10 @@ fhcocflex <- reactive({
                                      i = 1, j = 1, 
                                      value = as_paragraph(round(tot_tree_alive, 0)))
     
+    flextable3 <- add_footer_row(flextable3,
+                                 values = "*Due to rounding, totals may not exactly match the sum of individual values.",
+                                 colwidths = 8, top = FALSE) 
+    
   } else {
     flextable3 <- flextable(data.frame(matrix(rep("-", 8), ncol=8,nrow=1)))
     flextable3 <- add_header_row(flextable3, top = TRUE, colwidths = c(3,4,1),

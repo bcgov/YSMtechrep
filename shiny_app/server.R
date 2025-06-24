@@ -17,7 +17,8 @@ server <- function(input, output, session) {
                         }
                       )
   })
-
+  
+  #Waiter$new(id = )
   output$downloadReport <- downloadHandler(
     filename = function() {
       paste0('YSM_report_', title(), "_", Sys.Date(), switch(
@@ -26,6 +27,8 @@ server <- function(input, output, session) {
     },
     
     content = function(file) {
+      #Sys.sleep(3)
+      withProgress(message = 'Exporting report..', {
       src <- normalizePath('report.Rmd')
       # temporarily switch to the temp dir, in case you do not have write
       # permission to the current working directory
@@ -45,7 +48,7 @@ server <- function(input, output, session) {
         PDF = rmarkdown::pdf_document()
         #PDF = rmarkdown::pandoc_convert(rmarkdown::render('report.Rmd', "html_document"), output = 'report.pdf')
       ))
-      
+      })
       file.rename(out, file)
     }
   )

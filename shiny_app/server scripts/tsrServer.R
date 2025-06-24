@@ -25,10 +25,10 @@ curvoltext <- reactive({
   rank1 attributes.</li></ol>
   
   <p>TSR predicted volumes are compared to YSM volumes using the TSR input age 
-       adjusted to the year of ground sampling. The left graph plots YSM actual 
+       adjusted to the year of ground sampling. The first graph plots YSM actual 
        volume (points are joined where re-measurements are available), plus the 
        average of all spatially intersected TSR predicted yield tables (solid blue line). 
-       The right graph illustrates the total bias (predicted minus actual volume) 
+       The second graph illustrates the total bias (predicted minus actual volume) 
        at each individual YSM sample location, at the latest measurement. 
        TSR predicted volumes underestimate current YSM volume when the bias is 
        negative, and overestimate current YSM volume when positive.</p></br>")
