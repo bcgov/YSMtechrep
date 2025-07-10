@@ -4,8 +4,7 @@ ui <- dashboardPage(
   
   title = "YSM Technical Report", # Browser title
   
-  dashboardHeader(
-                  tags$li(a(href = 'https://gov.bc.ca',
+  dashboardHeader(tags$li(a(href = 'https://gov.bc.ca',
                             img(src = 'logo-banner.png',
                                 title = "Home", height = "41px"),
                             style = "padding-top:10px; padding-bottom:10px;
@@ -14,16 +13,6 @@ ui <- dashboardPage(
                   title = div('YSM Technical Report', style = "color: white; font-weight: bold; font-size: 24px;
                               font-family: 'BCSans', 'Noto Sans', Verdana, Arial, sans-serif;
                               padding-top:10px;")
-    #titleWidth='100%',
-    #title = span(
-    #  tags$img(src="logo-banner.png", title = "Home", height = "41px"), 
-    #  column(12, class="title-box", 
-    #         tags$h1(class="primary-title", style="color: white; font-weight: bold; font-size: 24px;
-    #                          font-family: 'BCSans', 'Noto Sans', Verdana, Arial, sans-serif;
-    #                          padding-top:10px;", 'YSM Technical Report')
-    #         #tags$h2(class="primary-subtitle", style='margin-top:10px;', 'EXPERT ELICITATION FOR ADAPTIVE MANAGEMENT')
-    #  )
-    #              )
     ),
   
   dashboardSidebar(disable = TRUE),
@@ -32,12 +21,9 @@ ui <- dashboardPage(
     
     tags$head(tags$style("body{min-height: 800px;  height: auto;  max-width: 1296px;  margin: auto;
                          background-color: #b3b1b3}")),
-    
   fluidPage(    
     
     waiter::use_waiter(),
-    #waiterOnBusy(html = spin_1()),
-    #waiter::waiter_show_on_load(html = waiter_html("Loading App")),
     
     # BC gov custom css
     includeCSS("www/bcgov2.css"),
@@ -52,34 +38,17 @@ ui <- dashboardPage(
         -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
         box-shadow: inset 0 1px 1px rgba(0,0,0,.05);}
         
-        /*.nav-tabs>li>a {font-family: "BCSans", "Noto Sans", Verdana, Arial, sans-serif; color:#036;}
-        .nav-tabs>li.active>a {font-family: "BCSans", "Noto Sans", Verdana, Arial, sans-serif; color:#036;}*/
-        
-        /*.navbar{color: #036;}*/
         .navbar-brand {color:#38598a;}
-        /*.navbar-brand a:hover {text-decoration:underline;!important;}
-        .one:hover {text-decoration:underline;!important;}*/
         
         .content-wrapper, .right-side {background-color: #FFFFFF;}
         
-        
-        /*.footer {
-             border-top: 2px solid #fcba19;
-             color: #fff;
-             position: absolute;
-             font-family: ‘BCSans’, ‘Noto Sans’, Verdana, Arial, sans-serif; 
-             bottom: 0;
-             width: 100%;
-             height: 60px; 
-             background-color: #036;}*/
-             
         .shiny-options-group { 
           /*height: 100px;*/
           width: 600px;
           -webkit-column-count: 2; /* Chrome, Safari, Opera */ 
-            -moz-column-count: 2;    /* Firefox */ 
+          -moz-column-count: 2;    /* Firefox */ 
             
-            row-count: 2;
+          row-count: 2;
           -webkit-column-fill: auto;
           -moz-column-fill: auto;
           column-fill: auto;
@@ -97,83 +66,62 @@ ui <- dashboardPage(
         }
         
         a:hover {
-  color: #4b5e7e !important;
+          color: #4b5e7e !important;
         }
         
-footer ul li a:hover {
-  color: #FFFFFF !important;
-}
+        footer ul li a:hover {
+          color: #FFFFFF !important;
+        }
       '))),
     
-#    box(title ="Note: This site is currently under development.", 
-#        solidHeader = T, collapsible = T,status = "warning", width = NULL, collapsed=TRUE,
-#        #p(strong("*Note that this site is currently under development."),style = "color:red"),
-#        p("
-#Published versions of the YSM Technical reports can be found at:
-#https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resources/forest-inventory/ground-sample-inventories/provincial-monitoring/reports",
-#          style = "color:red")),
-    
-  box(title = "Select the area of interest", #background = "light-blue", 
+  box(title = "Select the area of interest", 
       solidHeader = TRUE, status = "primary", width = NULL,
       
-  column(3, 
-         list(tags$div(align = 'left', 
-                       class = 'multicol', 
-                       radioButtons("SelectCategory", "Strata",
-                                    choices = list("By TSA" = "TSA_DESC", 
-                                                       #"By BEC zone" = "BEC_ZONE",
+      column(3, 
+             list(tags$div(align = 'left', 
+                           class = 'multicol', 
+                           radioButtons("SelectCategory", "Strata",
+                                        choices = list("By TSA" = "TSA_DESC", 
                                                        "By BEC subzone" = "BECsub",
                                                        "By BEC zone" = "BEC_ZONE")
-                       ), style = "font-size:100%")), align = "center"
-         ), 
-         #radioButtons(inputId = "SelectCategory", label = "Strata",
-         #               choices = c("By TSA" = "TSA_DESC", 
-         #                           #"By BEC zone" = "BEC_ZONE",
-         #                           "By BEC subzone" = "BECsub",
-         #                           "By BEC" = "BEC_ZONE"), inline = F)
-         #       
-         #), # radiobutton column
-  
-  column(3, offset = 1, selectInput(inputId = "SelectVar",
-                                    label = "Select",
-                                    choices = NULL), 
-         HTML("<font size='-1'>*only n&ge;10 are selectable.</font>")),
-  
-  column(3, #waiterOnBusy(html = spin_1()),
-         offset = 1, downloadButton("downloadReport", "Download report"), br(),
-         #radioButtons("format", "Document format", c("HTML", "PDF"), inline = TRUE)
-         radioButtons("format", "Document format", c("HTML"), inline = TRUE)
-         )
-  
-  ), # box
+                           ), style = "font-size:100%")), align = "center"
+      ), 
+      
+      column(3, offset = 1, selectInput(inputId = "SelectVar",
+                                        label = "Select",
+                                        choices = NULL), 
+             HTML("<font size='-1'>*only n&ge;10 are selectable.</font>")),
+      
+      column(3, offset = 1, downloadButton("downloadReport", "Download report"), br(),
+             radioButtons("format", "Document format", c("HTML"), inline = TRUE)
+      )
+      
+  ), # selection box
   
   column(12, 
          
-         navlistPanel(
+   navlistPanel(
            
-           #tags$style("t{color:blue;}"), 
-    
-           "Overview",
+    "Overview",
     tabPanel(title = "Overview",
-             #hr(),
              uiOutput('overview_header'),
              uiOutput("overview"),
              br(),
-             leafletOutput("plotgraph", height = "600px"),
+             withSpinner(leafletOutput("plotgraph", height = "600px")),
              br(),
              uiOutput("overviewflex"),
              br()
     ),
     
     tabPanel(title = "Summary of Key Findings",
-             uiOutput("key_finding")
+             withSpinner(uiOutput("key_finding"))
     ),
     
     "Young Stand Description",
     tabPanel(title = "Stand Summaries",
              uiOutput("young_stand_description"),
              br(),
-             uiOutput("stand_summary_flex"),
+             withSpinner(uiOutput("stand_summary_flex")),
              br(),
              div(
              plotOutput("live_sp", width = "700px"),
@@ -190,14 +138,14 @@ footer ul li a:hover {
              br(),
              uiOutput("leading_sp_flex"),
              br(),
-             div(plotOutput("spc_comp", width = "700px"), align = "center"),
+             div(withSpinner(plotOutput("spc_comp", width = "700px")), align = "center"),
              br(),
     ),
     tabPanel(title = "Residual Trees",
              h3("Post-Harvest Regenerated vs. Residual Trees"),
              uiOutput("residual"),
              br(),
-             div(plotOutput("residual_ysm", width = "600px"), align = "center"),
+             div(withSpinner(plotOutput("residual_ysm", width = "600px")), align = "center"),
              br(),
     ),
     
@@ -206,14 +154,14 @@ footer ul li a:hover {
              h3("Site Index vs. Provincial Site Productivity Layer"),
              uiOutput("site_index_pspl"),
              br(),
-             uiOutput("si_pspl_flex"),
+             withSpinner(uiOutput("si_pspl_flex")),
              br(),
     ),
     tabPanel(title = "Trends in Site Index Estimates",
              h3("Trends in Site Index Estimates over Time"),
              uiOutput("trend_si"),
              br(),
-             div(plotOutput("si_trend", width = "700px"), align = "center"),
+             div(withSpinner(plotOutput("si_trend", width = "700px")), align = "center"),
              br(),
     ),
     
@@ -224,7 +172,7 @@ footer ul li a:hover {
              br(),
              div(plotOutput("age_vs_netmer", width = "700px"),
              br(),
-             plotOutput("vol_bias", width = "700px"), align = "center"),
+             withSpinner(plotOutput("vol_bias", width = "700px")), align = "center"),
              br(),
     ),
     tabPanel(title = "Stand Age",
@@ -235,12 +183,12 @@ footer ul li a:hover {
                column(6,
                       uiOutput("age_flex1")),
                column(6,
-                      uiOutput("age_flex2"))
+                      uiOutput("age_flex2")),
              ),
              br(),
              fluidRow(
                column(12, align = "center", 
-                      plotOutput("age_diff", height = "200px", width = "400px")),
+                      withSpinner(plotOutput("age_diff", height = "200px", width = "400px")))
              ),
              br(),
     ),      
@@ -261,7 +209,7 @@ footer ul li a:hover {
                       br())
              ),
              br(),
-             div(plotOutput("pai_diff", height = "200px", width = "600px"), align = "center"),
+             div(withSpinner(plotOutput("pai_diff", height = "200px", width = "600px")), align = "center"),
              br(),
     ),  
     
@@ -270,21 +218,21 @@ footer ul li a:hover {
              h3("Quantifying Change in Growth and Mortality"),
              uiOutput("quant_coc"),
              br(),
-             div(plotOutput("coc_chart", width = "600px"), align = "center"),
+             div(withSpinner(plotOutput("coc_chart", width = "600px")), align = "center"),
              br(),
     ),
     tabPanel(title = "Current Forest Health Incidence",
              h3("Current Forest Health Incidence"),
              uiOutput("health_inci"),
              br(),
-             div(plotOutput("curr_fh_inci"), align = "center"),
+             div(withSpinner(plotOutput("curr_fh_inci")), align = "center"),
              br(),
     ),
     tabPanel(title = "Change in Forest Health Incidence",
              h3("Comparing Change in Forest Health Incidence"),
              uiOutput("comp_coc"),
              br(),
-             div(plotOutput("change_dam"), align = "center"),
+             div(withSpinner(plotOutput("change_dam")), align = "center"),
              br(),
              uiOutput("fh_trees"),
              br(),
@@ -295,7 +243,7 @@ footer ul li a:hover {
              h3("Approximating Future Forest Health Risks"),
              uiOutput("future_fh"),
              br(),
-             div(plotOutput("dam_immed", height = "300px", width = "800px"), align = "center"),
+             div(withSpinner(plotOutput("dam_immed", height = "300px", width = "800px")), align = "center"),
              br(),
              #plotOutput("dam_incr")
     ), 
@@ -305,7 +253,7 @@ footer ul li a:hover {
              h3("Will Existing Young Stands Meet Expectations at Rotation?"),
              uiOutput("tass_tsr"),
              br(),
-             plotOutput("tass_tsr_netvol", width = "800px"),
+             withSpinner(plotOutput("tass_tsr_netvol", width = "800px")),
              br(),
              fluidRow(
                column(6,
@@ -319,7 +267,7 @@ footer ul li a:hover {
              h3("YSM TASS projections vs. TSR Predicted Yield Tables"),
              uiOutput("tass_tsr_test"),
              br(),
-             uiOutput("tass_tsr_volproj"),
+             withSpinner(uiOutput("tass_tsr_volproj")),
              br(),
     ),
     
@@ -340,25 +288,6 @@ footer ul li a:hover {
                       column(6,
                              uiOutput("ysm_tables2"),
                              uiOutput("ysm_tables4")))
-             
-             #fluidRow(align = 'center',
-             #         column(6,
-             #                uiOutput("ysm_tables1")),
-             #         column(6,
-             #                uiOutput("ysm_tables2")),
-             #),
-             #br(),
-             #fluidRow(align = 'center',
-             #         column(6,
-             #                uiOutput("ysm_tables3")),
-             #         column(6,
-             #                uiOutput("ysm_tables4"))
-             #),
-             #fluidRow(align = 'center',
-             #         column(6,
-             #                uiOutput("ysm_tables5"))
-             #),
-             #plotOutput("ysm_tables"),
     ),
     tabPanel(title = "Tree Species and Damage Agents",
              uiOutput('sp_dam_header'),
@@ -373,6 +302,8 @@ footer ul li a:hover {
     ),
     tabPanel(title = "General Notes / Assumptions / References",
              h3("General Notes / Assumptions / References"),
+             textOutput("deploymentDate"),
+             br(),
              uiOutput("assumps")
     ),
     #tabPanel(title = "References",
