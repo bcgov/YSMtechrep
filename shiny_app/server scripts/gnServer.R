@@ -238,7 +238,8 @@ output$dam_table <- renderDT({
 output$deploymentDate <- renderText({
   paste0("This app was last updated on ",
          #readLines("deployment_history.txt"), '.'
-         "20 June, 2025", "."
+         "08 December, 2025", ".", 
+         "The data and code for this app are available <a href='https://github.com/bcgov/YSMtechrep' target='_blank'>here</a>."
   )
 })
 

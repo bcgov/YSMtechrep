@@ -42,8 +42,8 @@ across a number of management units in BC. This document provides a
 high-level technical summary of results compiled by FAIB for the YSM program in <b>", 
            title(),"</b>.</p>  ",
            "<p>The target population for TSA-based monitoring programs is defined as
-15-50 year old Crown forested stands in the Vegetation Resources
-Inventory (VRI) Vegcomp rank 1 layer. TFL-based monitoring programs may
+15-50 year old Crown forested stands in the <a href='https://catalogue.data.gov.bc.ca/dataset/6ba30649-14cd-44ad-a11f-794feed39f40' target='_blank'>Vegetation Resources
+Inventory (VRI) Vegcomp rank 1 layer</a>. TFL-based monitoring programs may
 use other criteria (eg., harvest history).</p>  ",
            "<p>Ground samples (dots on map, below) are established on a ", 
            "<b>",gridsize(),"</b> grid, with trees tagged in 0.04ha circular 

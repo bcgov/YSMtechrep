@@ -14,10 +14,11 @@ all tagged trees, separately for each measurement period. </p>",
                "<p>The components of change across only the last two measurements are shown 
   (figure below), representing an average of ", round(mean(Fig15_dat$year_dff),0),
                " years. The components of change include:</p>",
-               "</br><ul><li><b><i>Survivor</i></b> Trees that are alive at both measurements </li>",
-               "<li><b><i>Mortality</i></b> Trees that died between measurements </li>",
-               "<li><b><i>Ingrowth</i></b> New trees that grow into the minimum tagging limit </li>",
-               "<li><b><i>Dead</i></b> Trees that are dead standing at both measurements </li></br>"))
+               "</br><ul><li><b><i>Dead</i></b> Trees that are dead standing at both measurements </li>",
+               "<li><b><i>Harvested</i></b> Trees that were harvested between measurements </li>",
+               "<li><b><i>Ingrowth</i></b> New trees that grow into the minimum tagging limit between measurements</li>",
+               "<li><b><i>Mortality</i></b> Trees that died between measurements (not including the harvested trees)</li>",
+               "<li><b><i>Survivor</i></b> Trees that are alive at both measurements </li></ul></br>"))
   return(coctext)
 })
 
@@ -51,13 +52,35 @@ cocplot <- reactive({
   fig8 <- fig8 %>%
     mutate(value_adj = ifelse(variable == "BA", value/ratio, value))
   
+  fig8_dat_1 <- fig8_dat %>%
+    filter(!CLSTR_ID %in% remeas_plot, STOP == "S_H")
+  
+  if (nrow(fig8_dat_1) > 0){
+    
+    fig8_1 <- fig8_dat_1 %>% 
+      mutate(baha = BA_TREE*phf_coc) %>%
+      summarise(BA = sum(baha, na.rm = T)/total_remeas_plot,
+                stem = sum(phf_coc, na.rm = T)/total_remeas_plot) %>%
+      data.table
+    
+    fig8_1 <- melt(fig8_1, measure.vars = c( "stem","BA"),
+                   variable.name = "variable", value.name = "value")
+    
+    fig8_1 <- fig8_1 %>%
+      mutate(comp_chg_coc = "H",
+             value_adj = ifelse(variable == "BA", value/ratio, value)) 
+    
+    fig8 <- rbind(fig8, fig8_1)
+  }
+  
   p <- if (nrow(fig8) > 1){ ggplot(fig8, aes(x = comp_chg_coc)) +
       geom_bar(aes(y = value_adj, fill = variable, group = variable),
                stat = "identity", position = position_dodge2(), width = 0.7)  +
       labs(x = "", title = "Components of Change") + 
       scale_fill_manual(values = c("steelblue", "#B4464B"), name = NULL, labels = c("Stems/ha", "BA/ha")) +
       #scale_fill_discrete(name = "", labels = c("Stems/ha", "BA/ha")) +
-      scale_x_discrete("", labels = c("D" = "Dead", "I" = "Ingrowth", "M" = "Mortality", "S" = "Survivor")) +
+      scale_x_discrete("", labels = c("D" = "Dead", "I" = "Ingrowth", "M" = "Mortality",
+                                      "H" = "Harvested", "S" = "Survivor")) +
       scale_y_continuous(name = "Stems (#/ha)", expand = c(0, 0), 
                          limits = c(0,max(fig8$value_adj)*1.1), 
                          sec.axis = sec_axis( trans=~.*ratio, 
