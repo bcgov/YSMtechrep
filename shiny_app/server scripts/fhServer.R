@@ -73,6 +73,11 @@ cocplot <- reactive({
     fig8 <- rbind(fig8, fig8_1)
   }
   
+  fig8$comp_chg_coc <- factor(
+    fig8$comp_chg_coc,
+    levels = c("D","H", "I", "M",  "S")
+  )
+  
   p <- if (nrow(fig8) > 1){ ggplot(fig8, aes(x = comp_chg_coc)) +
       geom_bar(aes(y = value_adj, fill = variable, group = variable),
                stat = "identity", position = position_dodge2(), width = 0.7)  +
@@ -80,7 +85,7 @@ cocplot <- reactive({
       scale_fill_manual(values = c("steelblue", "#B4464B"), name = NULL, labels = c("Stems/ha", "BA/ha")) +
       #scale_fill_discrete(name = "", labels = c("Stems/ha", "BA/ha")) +
       scale_x_discrete("", labels = c("D" = "Dead", "I" = "Ingrowth", "M" = "Mortality",
-                                      "H" = "Harvested", "S" = "Survivor")) +
+                                      "H" = "Harvested", "S" = "Survivor"), drop = FALSE) +
       scale_y_continuous(name = "Stems (#/ha)", expand = c(0, 0), 
                          limits = c(0,max(fig8$value_adj)*1.1), 
                          sec.axis = sec_axis( trans=~.*ratio, 
