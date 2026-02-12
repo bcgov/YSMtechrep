@@ -302,7 +302,8 @@ ui <- dashboardPage(
     ),
     tabPanel(title = "General Notes / Assumptions / References",
              h3("General Notes / Assumptions / References"),
-             textOutput("deploymentDate"),
+             #textOutput("deploymentDate"),
+             uiOutput("deploymentDate"),
              br(),
              uiOutput("assumps")
     ),

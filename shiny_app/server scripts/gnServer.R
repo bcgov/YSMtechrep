@@ -235,18 +235,29 @@ output$dam_table <- renderDT({
 
 
 # App deployment date ----
-output$deploymentDate <- renderText({
-  paste0("This app was last updated on ",
-         #readLines("deployment_history.txt"), '.'
-         "08 December, 2025", ".", 
-         "The data and code for this app are available <a href='https://github.com/bcgov/YSMtechrep' target='_blank'>here</a>."
+#output$deploymentDate <- renderText({
+#  paste0("This app was last updated on ",
+#         #readLines("deployment_history.txt"), '.'
+#         "08 December, 2025", ". ", 
+#         "The data and code for this app are available <a href='https://github.com/bcgov/YSMtechrep' target='_blank'>here</a>."
+#  )
+#})
+
+output$deploymentDate <- renderUI({
+  HTML(
+    paste0(
+      "This app was last updated on ",
+      "08 December, 2025", ". ",
+      "The data and code for this app are available ",
+      "<a href='https://github.com/bcgov/YSMtechrep' target='_blank'>here</a>."
+    )
   )
 })
 
 
 
 assumptext <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  #req(input$SelectCategory, input$SelectVar)
   
   assumptext <- paste0("
   
@@ -382,9 +393,15 @@ approximated as having either immediate impact (@90% mortality) or incremental
 impact (@2.5% mortality/decade), and modeled as additional reduction factors. 
 The subset of damage agents estimated as having immediate or incremental impact 
 on future yields, were identified following discussions with provincial 
-government forest health specialists.</p></br>
-                       
-                       ")
+government forest health specialists.</p>
+
+<p>* A detailed technical report summarizing the history of TASS development 
+and the extensive research, expanded empirical datasets, and major structural 
+and functional updates that were required to produce the latest Version 3.0. 
+TASS III is located <a href='http://library.nrs.gov.bc.ca/digipub/TR155.pdf' target='_blank'>
+here</a>.</p>
+
+</br>")
   
   
   

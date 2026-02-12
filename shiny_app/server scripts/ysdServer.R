@@ -154,9 +154,11 @@ livespplot <- reactive({
       group_by(BY, SPC_GRP2) |>
       mutate(total = sum(PERC)) |>
       ungroup() |>
-      select(SPC_GRP2, BY, total) |>
+      #select(SPC_GRP2, BY, total) |>
+      select(SPC_GRP1, BY, total) |>
       distinct() |> 
-      ggplot(aes(x = reorder(SPC_GRP2, ifelse(BY=="BA",-total, 0)), y = total, fill = factor(BY))) +
+      #ggplot(aes(x = reorder(SPC_GRP2, ifelse(BY=="BA",-total, 0)), y = total, fill = factor(BY))) +
+      ggplot(aes(x = reorder(SPC_GRP1, ifelse(BY=="BA",-total, 0)), y = total, fill = factor(BY))) +
       geom_bar(position = position_dodge2(preserve = "single"), stat = "identity", width = 0.7) +
       labs(x = "", y = "% of Total", title = "Live Species Composition") + 
       scale_fill_manual(values = c("steelblue", "#B4464B"), name = NULL, labels = c("by BA", "by # stems")) +
