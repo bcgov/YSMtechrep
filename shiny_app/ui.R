@@ -128,8 +128,10 @@ ui <- dashboardPage(
              br(),
              plotOutput("bec_dist", width = "500px"),
              br(),
-             plotOutput("stock_table", width = "700px"), align = "center"),
+             plotOutput("stock_table", width = "700px"),
              br(),
+             plotOutput("smalltree", width = "500px"), align = "center"),
+    br(),
     ),
     
     tabPanel(title = "Leading Species",
@@ -254,6 +256,8 @@ ui <- dashboardPage(
              uiOutput("tass_tsr"),
              br(),
              withSpinner(plotOutput("tass_tsr_netvol", width = "800px")),
+             br(),
+             plotOutput("tass_tsr_netvol_sp", width = "800px"),
              br(),
              fluidRow(
                column(6,
