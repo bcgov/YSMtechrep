@@ -12,7 +12,8 @@ ysd <- reactive({
        all samples in the target population at the time of the latest measurement. 
        Compilations are for all standing trees >= 4cm DBH, except net merchantable 
        volume (i.e., PL >= 12.5cm DBH, & all other species >= 17.5cm DBH, 
-       excluding 30cm stump height, 10cm top diameter, & decay). 
+       excluding 30cm stump height, 10cm top diameter, & decay). Small trees (> 0.1m Ht and < 4cm DBH) 
+       are tallied by species and size class. 
        Species code names are listed on <b> General Notes</b>."))
   
   return(ysd)
@@ -260,7 +261,7 @@ stockplot <- reactive({
              PERC_TOT_VOL_HA = VOL_WSV_HA/sum(VOL_WSV_HA, na.rm = T),
              DBH_CLASS = round(DBH/5)*5) %>% 
       mutate(SPC_GRP1 = substr(SPECIES,1,2)) %>%
-      mutate(SPC_GRP1 = ifelse(SPECIES %in% decidspc, 'DE', SPC_GRP1))
+      mutate(SPC_GRP1 = ifelse(SPECIES %in% decidspc, 'Decid', SPC_GRP1))
     
     fig5_dat <- fig5_dat %>%
       group_by(SPC_GRP1, DBH_CLASS) %>%
@@ -278,13 +279,13 @@ stockplot <- reactive({
     
     fig5_dat <- fig5_dat %>%
       mutate(SPC_GRP2 = ifelse(order <= 7, SPC_GRP1, 'Other'),
-             SPC_GRP2 = ifelse(SPC_GRP2 == 'DE', 'Decid', SPC_GRP2),
+             SPC_GRP2 = ifelse(SPC_GRP2 == 'Decid', 'Decid', SPC_GRP2),
              DBH_CLASS_relevel = cut(DBH_CLASS, breaks = c(seq(-1, 59, 5), Inf), 
                                      labels = c(seq(0, 55, 5), "60+")))
     
-    p <- ggplot(fig5_dat, aes(x = DBH_CLASS_relevel, y = PERC_TOT_VOL_HA_SPC, fill = SPC_GRP2)) + 
+    p <- ggplot(fig5_dat, aes(x = DBH_CLASS_relevel, y = PERC_TOT_VOL_HA_SPC, fill = SPC_GRP1)) + 
       geom_bar(stat = "identity") + 
-      scale_fill_brewer(name = "", palette = "Set2") +
+      scale_fill_manual(values = tree_colors, name = NULL) +
       scale_x_discrete(drop=FALSE) +
       scale_y_continuous(expand = c(0, 0), labels = scales::percent) +
       labs(x = "DBH class (cm)", y = "% of total vol/ha",
@@ -305,5 +306,49 @@ stockplot <- reactive({
 output$stock_table <- renderPlot({
   
   stockplot()
+  
+})
+
+
+
+
+smalltrplot <- reactive({
+  req(input$SelectCategory, input$SelectVar)
+  if (!is.null(clstr_id())){
+    
+    smtr_dat <- smtr_data %>%
+      filter(CLSTR_ID %in% clstr_id()) %>%
+      mutate(SPC_GRP1 = ifelse(SPECIES %in% decidspc, 'Decid', SPECIES),
+             SPC_GRP1 = factor(SPC_GRP1, levels = species_order),
+             n = length(clstr_id)) %>%
+      pivot_longer(cols = ends_with("_HA"),
+                   names_to = "size",
+                   values_to = "sph") %>%
+      group_by(SPC_GRP1, size) %>%
+      reframe(sph = sum(sph)/length(clstr_id())) %>%
+      mutate(size = factor(size, levels = c("SMTR2_HA", "SMTR3_HA", "SMTR4_HA", "SMTR_HA"),
+                           labels = c("0.1-0.29m Ht", "0.3-1.3m Ht", ">1.3m Ht & \n<4cm DBH", "All"))) 
+    
+    p <- ggplot(smtr_dat, aes(x=size, fill=SPC_GRP1, y=sph)) + 
+      geom_bar(position='stack', stat='identity', width = 0.7) +
+      scale_fill_manual(values = tree_colors, name = NULL) +
+      scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+      labs(x='Size Class', y='Stems/ha', title = "Small Trees") +
+      theme(
+        #axis.line = element_line(colour="darkgray"), 
+        panel.grid.major.y = element_line(color = 'darkgray'), 
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        rect = element_blank()
+      ) 
+    
+  }
+  return(p)
+})
+
+
+output$smalltree <- renderPlot({
+  
+  smalltrplot()
   
 })

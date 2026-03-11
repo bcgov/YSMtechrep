@@ -115,6 +115,64 @@ output$tass_tsr_netvol <- renderPlot({
   
 })
 
+
+
+
+projvol_sp <- reactive({
+  req(input$SelectCategory, input$SelectVar)
+  volproj_sp <- volproj_sp()
+  meanage <- meanage()
+  
+  volproj_sp1 <- volproj_sp %>%
+    arrange(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, SPECIES, desc(xy), desc(rust)) %>%
+    group_by(SITE_IDENTIFIER, SPECIES, agespan) %>%
+    slice(1) %>%
+    ungroup() %>%
+    group_by(SPECIES, agespan) %>%
+    reframe(
+      meanvol_tass = sum(volTASS_adj, na.rm = T)/n_ci) %>% 
+    ungroup() %>% distinct() %>% data.table()
+  
+  p <- volproj_sp1 %>%
+    ungroup() %>%
+    ggplot() +
+    geom_col(aes(x = agespan, y = meanvol_tass, fill = SPECIES), linewidth = 1.1) +
+    scale_y_continuous(expand = c(0, 0)) +
+    scale_x_continuous(expand = c(0, 0), breaks=seq(0, 100, 10),
+                       limits = c(0, 110)) + 
+    labs(x = "Total Age (yrs)", y = "Net merch volume (m3/ha)") +
+    scale_fill_manual(values = tass_colors, name = NULL) +
+    theme(
+      axis.line = element_line(colour="darkgray"), 
+      panel.grid.major.y = element_line(color = 'darkgray'), 
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      rect = element_blank(),
+      legend.box.background = element_rect(fill = "white", color = "lightgray"),
+      legend.position = c(0.2, 0.9),
+      legend.direction = "horizontal",
+      legend.title = element_blank(),
+      plot.caption = element_text(hjust=0, size=rel(0.8))
+    )  +
+    guides(colour = guide_legend(reverse = TRUE))
+  
+  return(p)
+})
+
+
+output$tass_tsr_netvol_sp <- renderPlot({
+  
+  projvol_sp()
+  
+})
+
+
+
+
+
+
+
+
 stemrusttable <- reactive({
   req(input$SelectCategory, input$SelectVar)
   stemrustimpact <- stemrustimpact()

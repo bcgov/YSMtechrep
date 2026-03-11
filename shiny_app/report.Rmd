@@ -6,11 +6,13 @@ date: "Version 2025-12-08; Created `r Sys.Date()`"
 always_allow_html: true
 geometry: margin=1cm
 output:
+  html_document:
+    toc: true
+    toc_depth: 3 
+    toc_float: true
   pdf_document:
     keep_tex: true
     latex_engine: xelatex
-    toc: true
-  html_document:
     toc: true
 ---
 
@@ -168,6 +170,16 @@ becplot() + theme_bw(12) +
 
 ```{r, fig.width=7,fig.height=4, echo=FALSE,warning=FALSE, message = FALSE}
 stockplot() + theme_bw(12) +
+      theme(
+        panel.grid.major.y = element_line(color = 'darkgray'), 
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        rect = element_blank()
+      ) 
+```
+
+```{r, fig.width=5,fig.height=3, echo=FALSE,warning=FALSE, message = FALSE}
+smalltrplot() + theme_bw(12) +
       theme(
         panel.grid.major.y = element_line(color = 'darkgray'), 
         panel.grid.major.x = element_blank(),

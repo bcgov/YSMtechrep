@@ -51,12 +51,14 @@ library(reshape2)
 sample_data <- readRDS("data/sample_data.rds")
 spcs_data <- readRDS("data/spcs_data.rds")
 siteage_data <- readRDS("data/siteage_data.rds")
+smtr_data <- readRDS("data/smtr_data.rds")
 SI_data <- readRDS("data/SI_data.rds")
 tree_fh_data <- readRDS("data/Tree_FH_data.rds")
 regen_data <- readRDS("data/regen_data.rds")
 vegcomp_pspl_sample <- readRDS("data/vegcomp_pspl_sample.rds")
 ysm_msyt_vdyp_volume <-readRDS("data/ysm_msyt_vdyp_volume.rds")
 tsr_tass_volproj <-readRDS("data/tsr_tass_volproj.rds")
+tass_sp <-readRDS("data/tass_sp.rds")
 
 
 # lookups 
@@ -108,8 +110,27 @@ theme_set(theme_bw(15, base_family = 'Arial'))
 
 
 # colour palettes for plots
+tree_colors <- c("BA" = "#99600F", "BG" = "#B3823E", "BL" = "#CCAA7A",
+                 "HM" = "#54990F", "HW" = "#78B33E", "YC" = "#990F26", "HR" = "#B33E52",
+                 "JR" = "#A6763D", "UP" = "#FB6A4A",
+                 "CW" = "#CC7A88", "TW" = "#E6B8BF", "DE" = "#F3C300", "Decid" = "#F3C300", "FD" = "#AA4499",
+                 "LA" = "#FDBF6F", "LW" = "#FFCC80", "LT" = "#F39C12",
+                 "PA" = "#0F8299", "PL" = "#3E9FB3", "PW" = "#7ABECC", "PY" = "#B8DEE6",
+                 "SB" = "#3D0F99", "SE" = "#653EB3", "SS" = "#967ACC", "SW" = "#C7B8E6",
+                 "XC" = "#9E9E9E", "Other" = "#9E9E9E")
+
+species_order <- sort(names(tree_colors))
+
+
+tass_colors <- c("Acb"= "#E0B200", "At"= "#FFD84D",  "Ba" = "#99600F",  "Bl"= "#CCAA7A",  
+                 "Cwc" = "#CC7A88", "Cwi" = "#E6B8BF", "Dr" = "#F2A900", "Ep"= "#C79E00" , 
+                 "Fdc" = "#AA4499" ,"Fdi" = "#DD77CC",
+                 "Hm"  = "#54990F", "Hwc" = "#78B33E" ,"Hwi" = "#99DD55",
+                 "Lw"  = "#FFCC80" ,"Pli"  = "#3E9FB3","Pw"  = "#7ABECC" ,"Py"  = "#B8DEE6",
+                 "Sb" = "#3D0F99" ,"Se" = "#653EB3" , "Ss"= "#967ACC",  "Sw"= "#C7B8E6")
 
 # common parameters for plots
+
 
 # 5. extra UI components  ----------------------------------------------------------
 

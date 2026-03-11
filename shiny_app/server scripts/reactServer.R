@@ -858,6 +858,53 @@ volproj <- reactive({
 })
 
 
+
+
+
+volproj_sp <- reactive({
+  
+  req(input$SelectCategory, input$SelectVar)
+  input$genearate
+  
+  risk_vol <- risk_vol()
+  meanage <- meanage()
+  
+  year100_immed <- year100_immed()
+  year100_inc<- year100_inc()
+  year100_comb<- year100_comb()
+  
+  
+  temp <- setDT(tass_sp) %>%
+    filter(CLSTR_ID %in% clstr_id()) %>%
+    arrange(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, SPECIES, desc(xy), desc(rust), desc(TASS_ver)) %>%
+    group_by(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, SPECIES, rust, agespan) %>%
+    slice(1) %>%
+    mutate(rust = ifelse(!is.na(volTASS) & is.na(rust), "N", rust))
+  
+  temp1 <- temp %>%
+    group_by(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, SPECIES, agespan) %>%
+    mutate(n = n()) %>% 
+    filter(n == 1) %>% 
+    mutate(rust = "Y")
+  
+  temp2 <- rbind(temp, temp1)
+  
+  volproj_sp <- temp2 %>%
+    filter(CLSTR_ID %in% clstr_id()) %>%
+    arrange(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, SPECIES, desc(xy), desc(rust), desc(TASS_ver)) %>%
+    group_by(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, SPECIES, rust, agespan) %>%
+    slice(1) %>%
+    mutate(volTASS_adj = volTASS*(1- year100_immed/100)*
+             (1-max(agespan - meanage, 0)*0.25/100*sum(risk_vol[risk_vol$mort_flag==2,]$volperc)),
+           n_si = length(unique(clstr_id())),
+           n_ci = length(unique(clstr_id())))
+  
+  return(volproj_sp)
+})
+
+
+
+
 stemrustimpact <- reactive({
   
   req(input$SelectCategory, input$SelectVar)

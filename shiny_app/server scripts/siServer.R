@@ -96,7 +96,7 @@ siplot <- reactive({
               aes(x = mean_agebh, y = mean_si, 
                   group =SPECIES, color = SPECIES)) + 
     geom_point(size = 4) + geom_line(linewidth = 1.5)  +
-    scale_color_brewer(name = "", palette = "Set2") +
+    scale_color_manual(values = tree_colors, name = NULL) +
     geom_text(data = fig7_lab, aes(label = nobs, col = SPECIES),
               vjust = -1, 
               position = position_dodge(0.9), show.legend = FALSE) +
