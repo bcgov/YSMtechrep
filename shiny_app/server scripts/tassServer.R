@@ -169,6 +169,60 @@ output$tass_tsr_netvol_sp <- renderPlot({
 
 
 
+projvol_sp_prop <- reactive({
+  req(input$SelectCategory, input$SelectVar)
+  volproj_sp <- volproj_sp()
+  meanage <- meanage()
+  
+  volproj_sp1 <- volproj_sp %>%
+    arrange(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, SPECIES, desc(xy), desc(rust)) %>%
+    group_by(SITE_IDENTIFIER, SPECIES, agespan) %>%
+    slice(1) %>%
+    ungroup() %>%
+    group_by(SPECIES, agespan) %>%
+    reframe(
+      meanvol_tass = sum(volTASS_adj, na.rm = T)/n_ci) %>% 
+    ungroup() %>% distinct() %>% data.table()
+  
+  p <- volproj_sp1 %>%
+    ungroup() %>%
+    group_by(agespan) %>%
+    mutate(pct = meanvol_tass / sum(meanvol_tass)) %>%
+    ggplot(aes(x = agespan, y = pct, fill = SPECIES)) +
+    geom_col(position = "fill", linewidth = 1.1) +
+    geom_text(
+      aes(label = ifelse(pct >= 0.05, scales::percent(pct, accuracy = 1), "")),
+      stat = "identity",
+      position = position_fill(vjust = 0.5),
+      size = 5
+    ) +
+    scale_y_continuous(expand = c(0, 0),
+                       labels = scales::percent) +
+    scale_x_continuous(expand = c(0, 0), limits = c(0, 110), breaks=seq(0, 100, 10)) + 
+    labs(x = "Total Age (yrs)", y = NULL) +
+    scale_fill_manual(values = tass_colors, name = NULL) +
+    theme(
+      axis.line = element_line(colour="darkgray"), 
+      panel.grid.major.y = element_line(color = 'darkgray'), 
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      rect = element_blank(),
+      legend.position = "none",
+      plot.caption = element_text(hjust=0, size=rel(0.8))
+    )  +
+    guides(colour = guide_legend(reverse = TRUE))
+  
+  return(p)
+})
+
+
+output$tass_tsr_netvol_sp_prop <- renderPlot({
+  
+  projvol_sp_prop()
+  
+})
+
+
 
 
 
