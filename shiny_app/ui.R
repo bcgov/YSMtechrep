@@ -130,6 +130,8 @@ ui <- dashboardPage(
              br(),
              plotOutput("stock_table", width = "700px"),
              br(),
+             plotOutput("stock_table_stem", width = "700px"),
+             br(),
              plotOutput("smalltree", width = "500px"), align = "center"),
     br(),
     ),
@@ -247,7 +249,6 @@ ui <- dashboardPage(
              br(),
              div(withSpinner(plotOutput("dam_immed", height = "300px", width = "800px")), align = "center"),
              br(),
-             #plotOutput("dam_incr")
     ), 
     
     "YSM TASS Projection",
@@ -258,6 +259,8 @@ ui <- dashboardPage(
              withSpinner(plotOutput("tass_tsr_netvol", width = "800px")),
              br(),
              plotOutput("tass_tsr_netvol_sp", width = "800px"),
+             br(),
+             plotOutput("tass_tsr_netvol_sp_prop", width = "800px"),
              br(),
              fluidRow(
                column(6,
