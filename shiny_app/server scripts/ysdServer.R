@@ -188,23 +188,6 @@ becplot <- reactive({
   req(input$SelectCategory, input$SelectVar)
   if (!is.null(clstr_id())){
     
-    #figdata <- sample_data %>%
-    #  filter(CLSTR_ID %in% clstr_id())
-    #
-    #p <- ggplot(figdata, aes(x=fct_infreq(factor(BEClabel)))) +
-    #  geom_bar(stat="count", width=0.5, fill="steelblue") +
-    #  scale_x_discrete(guide = guide_axis(angle = -45)) +
-    #  scale_y_continuous(expand = c(0, 0), 
-    #                     label = ~ scales::comma(.x, accuracy = 1)) +
-    #  labs(x = "", y = "# of YSM samples",
-    #       title = "YSM Sample Distribution by BEC subzone/variant")  + 
-    #  theme(
-    #    panel.grid.major.x = element_blank(),
-    #    panel.grid.minor.x = element_blank(),
-    #    panel.grid.major.y = element_line(colour="darkgray"),
-    #    rect = element_blank()
-    #  )
-    
     figdata <- sample_data %>%
       filter(CLSTR_ID %in% clstr_id()) %>%
       pull(BEClabel)

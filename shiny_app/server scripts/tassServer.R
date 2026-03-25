@@ -71,7 +71,6 @@ projvol <- reactive({
   
   p <- volproj1 %>%
     ungroup() %>%
-    #filter(rust == "Y") %>%
     mutate(l95_tsr = ifelse(l95_tsr < -10, NA, l95_tsr),
            u95_tsr = ifelse(l95_tsr < -10, NA, u95_tsr),
            l95_tass = ifelse(l95_tass < -10, NA, l95_tass),

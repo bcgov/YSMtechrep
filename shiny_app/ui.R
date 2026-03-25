@@ -249,7 +249,6 @@ ui <- dashboardPage(
              br(),
              div(withSpinner(plotOutput("dam_immed", height = "300px", width = "800px")), align = "center"),
              br(),
-             #plotOutput("dam_incr")
     ), 
     
     "YSM TASS Projection",
