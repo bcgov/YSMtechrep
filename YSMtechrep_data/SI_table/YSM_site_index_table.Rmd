@@ -1,0 +1,294 @@
+---
+title: "Estimation of site index for YSM samples"
+output:
+  html_document:
+    self_contained: true
+author: Hyeyoung Woo
+date: 18 March, 2026
+---
+
+```{r setup, echo=FALSE, warning=FALSE}
+suppressMessages(library(data.table))
+suppressMessages(library(dplyr))
+#suppressMessages(library(ggplot2))
+suppressMessages(library(tidyverse))
+suppressMessages(library(openxlsx))
+suppressMessages(library(htmlwidgets))
+
+comp_table <- read.table(text = "
+source target value IDsource IDtarget
+CONV_EQN CONV_EQN 1275 0 6
+CONV_EQN_SUB CONV_EQN 43 1 6
+DEFAULT_SI15 CONV_EQN 4 2 6
+GROUND_PLOT CONV_EQN 1 3 6
+LEAD_SPECIES CONV_EQN 163 4 6
+PSPL_SI CONV_EQN 261 5 6
+CONV_EQN CONV_EQN_SUB 0 0 7
+CONV_EQN_SUB CONV_EQN_SUB 7 1 7
+DEFAULT_SI15 CONV_EQN_SUB 0 2 7
+GROUND_PLOT CONV_EQN_SUB 0 3 7
+LEAD_SPECIES CONV_EQN_SUB 13 4 7
+PSPL_SI CONV_EQN_SUB 2 5 7
+CONV_EQN DEFAULT15 0 0 8
+CONV_EQN_SUB DEFAULT15 0 1 8
+DEFAULT_SI15 DEFAULT15 36 2 8
+GROUND_PLOT DEFAULT15 0 3 8
+LEAD_SPECIES DEFAULT15 2 4 8
+PSPL_SI DEFAULT15 0 5 8
+CONV_EQN GROUND_SI_SUIT_NULL 0 0 9
+CONV_EQN_SUB GROUND_SI_SUIT_NULL 0 1 9
+DEFAULT_SI15 GROUND_SI_SUIT_NULL 16 2 9
+GROUND_PLOT GROUND_SI_SUIT_NULL 514 3 9
+LEAD_SPECIES GROUND_SI_SUIT_NULL 9 4 9
+PSPL_SI GROUND_SI_SUIT_NULL 237 5 9
+CONV_EQN GROUND_SI_SUIT_NULL_CONV_EQN 271 0 10
+CONV_EQN_SUB GROUND_SI_SUIT_NULL_CONV_EQN 0 1 10
+DEFAULT_SI15 GROUND_SI_SUIT_NULL_CONV_EQN 1 2 10
+GROUND_PLOT GROUND_SI_SUIT_NULL_CONV_EQN 3 3 10
+LEAD_SPECIES GROUND_SI_SUIT_NULL_CONV_EQN 81 4 10
+PSPL_SI GROUND_SI_SUIT_NULL_CONV_EQN 236 5 10
+CONV_EQN GROUND_TLSO 0 0 11
+CONV_EQN_SUB GROUND_TLSO 0 1 11
+DEFAULT_SI15 GROUND_TLSO 0 2 11
+GROUND_PLOT GROUND_TLSO 1928 3 11
+LEAD_SPECIES GROUND_TLSO 0 4 11
+PSPL_SI GROUND_TLSO 0 5 11
+CONV_EQN GROUND_TLSOX 0 0 12
+CONV_EQN_SUB GROUND_TLSOX 0 1 12
+DEFAULT_SI15 GROUND_TLSOX 0 2 12
+GROUND_PLOT GROUND_TLSOX 16 3 12
+LEAD_SPECIES GROUND_TLSOX 0 4 12
+PSPL_SI GROUND_TLSOX 0 5 12
+CONV_EQN LEAD_SPECIES 0 0 13
+CONV_EQN_SUB LEAD_SPECIES 0 1 13
+DEFAULT_SI15 LEAD_SPECIES 4 2 13
+GROUND_PLOT LEAD_SPECIES 0 3 13
+LEAD_SPECIES LEAD_SPECIES 259 4 13
+PSPL_SI LEAD_SPECIES 0 5 13
+CONV_EQN PSPL_SI 0 0 14
+CONV_EQN_SUB PSPL_SI 0 1 14
+DEFAULT_SI15 PSPL_SI 0 2 14
+GROUND_PLOT PSPL_SI 2 3 14
+LEAD_SPECIES PSPL_SI 0 4 14
+PSPL_SI PSPL_SI 450 5 14
+CONV_EQN PSPL_SI_SUB 0 0 15
+CONV_EQN_SUB PSPL_SI_SUB 0 1 15
+DEFAULT_SI15 PSPL_SI_SUB 3 2 15
+GROUND_PLOT PSPL_SI_SUB 0 3 15
+LEAD_SPECIES PSPL_SI_SUB 25 4 15
+PSPL_SI PSPL_SI_SUB 53 5 15
+CONV_EQN PSPL_SP_CONV_EQN 0 0 16
+CONV_EQN_SUB PSPL_SP_CONV_EQN 0 1 16
+DEFAULT_SI15 PSPL_SP_CONV_EQN 3 2 16
+GROUND_PLOT PSPL_SP_CONV_EQN 0 3 16
+LEAD_SPECIES PSPL_SP_CONV_EQN 3 4 16
+PSPL_SI PSPL_SP_CONV_EQN 0 5 16
+", header = TRUE, stringsAsFactors = FALSE)
+```
+
+
+Estimation of site index for YSM samples involves integrating multiple data sources and methods. The basic strategy is as follows:
+
+*	Use ground-measured site index where available  
+*	Apply site index conversion equations as needed  
+*	Incorporate PSPL site index  
+*	Use substitutes when necessary, including:  
+    -  Average of known values  
+    -  Leading species  
+    -  Default values  
+
+Following these steps, the source of site index is classified according to the hierarchy below.  
+
+
+**1.	GROUND_TLSO**  
+ISMC-compiled site index based on T, L, S, and O trees  
+
+*  Use only records with `SUIT_SI = 'Y'`  
+*  Exclude trees that should not be considered suitable as site trees `SUIT_SI = 'N'`;  
+    -  if `AGE_BH > 0` and `AGE_BH < 5` or `AGE_BH > 150`   
+    -  if `HEIGHT > 0` and `HEIGHT <= 1.5`   
+
+
+**2.	GROUND_TLSOX**  
+ISMC-compiled site index, based on T, L, S, O, and X trees   
+
+*  Approximately 50–60 trees with `TH_TREE = 'X'` were sampled in YSM plots  
+*  These represent _"Additional X trees may also be selected in a non-standard manner at the discretion of the field crew"_.  
+*  They are intended to represent age, height, and SI characteristics of species that may be:  
+    -  neither leading nor secondary species,  
+    -  outside the plot, or  
+    -  lower in the diameter ranking.  
+
+
+**3.	CONV_EQN**  
+Site index derived using site index conversion equations.  
+
+*  Use the conversion equations available in the [FAIB PSPL repository](https://github.com/bcgov/FAIB_PSPL/tree/main/05_site_index_conversions).  
+*  These equations were converted from *SIndex*, with additional species substitutions incorporated and approved by Gord Nigh.    
+
+```{r, echo=F}
+spec_match <- c("BA" = "BG", "BA" = "BL", "BL" = "BA", "BL" = "BG", "BG" = "BA",
+                  "DR" = "FD", "PY" = "FD", "SS" = "PW", "LT" = "LW", "LW" = "LT", 
+                  "HM" = "HW", "HW" = "HM", "PA" = "PL", "PL" = "PA",
+                  "SW" = "SX", "SW" = "SE", "SE" = "SW")
+  
+knitr::kable(data.table(t(spec_match)),format = "markdown")
+```
+
+
+**4.	GROUND_SI_SUIT_NULL**  
+Site index derived from the compiled output when suitability is not assessed under earlier standards.  
+
+*  In ISMC-compiled site tree, `SUIT_SI` is `NULL` and the trees are `SUIT_HT = 'Y'` and `SUIT_AGE = 'Y'`, and `CROWN_CLASS_CODE = 'D'` or `'C'` and no broken top   
+
+
+**5.	GROUND_SI_SUIT_NULL_CONV_EQN**  
+Apply the site index conversion equations (described in 3.) to GROUND_SI_SUIT_NULL values  
+
+
+**6.	PSPL_SP**  
+PSPL-derived site index  
+
+*  [PSPL version 7](https://github.com/bcgov/FAIB_PSPL/tree/main/03_pspl_mean_values) 
+*  For the species where PSPL is not available, species substitutions are incorporated (**PSPL_SI_SUB**).  
+
+
+**7.	PSPL_SP_CONV_EQN**  
+Apply site index conversion equations to PSPL_SP  
+
+
+**8.	LEAD_SPECIES**  
+Use the site index of the leading species when none of the above sources are available for the species  
+
+
+**9.	DEFAULT_SI15**  
+Use a default site index value of 15 when none of the above sources are available
+
+
+
+When multiple site index values are available for the same site and species due to repeated visits and measurements, the following procedure is applied.  
+
+  
+*  For each species in each sample visit, compute a site index using the ground-measurement prioritization steps described above.  
+*  When multiple visits produce more than one SI estimate for a species, the estimate closest to 50 years at breast height (BH) is prioritized, with preference given to ground-based sources (1-5 above). The selection follows these rules:  
+    -  Closeness to age 50 BH is defined as the absolute difference from 50 years BH.  
+    -  If two estimates are equally close, the older age is preferred (e.g., if visit 1 = 48 years and visit 2 = 52 years, the 52-year estimate is selected).  
+    -  If the estimate closest to age 50 BH has a ground-based source (1-5 above), it is selected.  
+    -  If not, the next closest estimate to age 50 BH with a ground-based source (1-5 above) is selected, checking sequentially (third closest, fourth closest, etc.).  
+    -  If no ground-based SI exists for that species across any visits, the estimate closest to age 50 BH is used as a last resort (6-9 above).
+
+
+
+### Data source 
+
+**Site index conversion equation parameter**   
+
+-  [FAIB PSPL repository](https://github.com/bcgov/FAIB_PSPL/tree/main/05_site_index_conversions)  
+-  [Download TIPSY 44 version (incomplete)](//objectstore3.nrs.bcgov/s164/S63016/!Workgrp/Inventory/Compilation/ismc/external_inputs/si_conv_eqns/conv_eqn_tipsy44.xlsx) - IDIR access required  
+
+
+**PSPL 7 overlay on ground samples**  
+
+-  [Access to folder](//objectstore3.nrs.bcgov/s164/S63016/!Workgrp/Inventory/Compilation/ismc/external_inputs/spatial_overlay/pspl_overlay) - IDIR access required  
+
+
+**SIndexR**  
+
+-  [Download SIndexR 2.0](//objectstore3.nrs.bcgov/s164/S63016/!Workgrp/Inventory/Site Productivity/SIndexR/SIndexR_2.0.tar.gz) - IDIR access required  
+
+
+Based on the list above, the site index of all species in the YSM samples is reclassified as below.  
+
+-  Left: Site index sources used in the current TASS projection (20250514 compilation)  
+-  Right: Reclassified site index sources  
+
+
+```{r, echo = F, results='asis', message=FALSE, warning=FALSE, width = 800}
+suppressWarnings(library(networkD3))
+
+#colnames(comp_table) <- c("source", "target", "value")
+comp_table <- comp_table %>% filter(value != 0)
+comp_table$target <- paste(comp_table$target, " ", sep="")
+
+nodes <- data.frame(name=c(as.character(comp_table$source), as.character(comp_table$target)) %>% unique())
+
+comp_table$IDsource=match(comp_table$source, nodes$name)-1
+comp_table$IDtarget=match(comp_table$target, nodes$name)-1
+
+ColourScal ='d3.scaleOrdinal() .range(["#FDE725FF","#B4DE2CFF","#6DCD59FF","#35B779FF","#1F9E89FF","#26828EFF","#31688EFF","#3E4A89FF","#482878FF","#440154FF"])'
+
+sankeyNetwork(Links = comp_table, Nodes = nodes,
+              Source = "IDsource", Target = "IDtarget",
+              Value = "value", NodeID = "name",
+              sinksRight=F, 
+              #colourScale=ColourScal, 
+              nodeWidth=40, fontSize=13, nodePadding=20)
+
+```
+
+
+### Example code
+
+R code and functions used to generate the site index table for YSM samples are archived  [here](https://github.com/hyewoo/ysm_functions/blob/main/siteindextable_functions.r). Note that the functions require data in a specific format.
+
+
+```{r eval=F}
+source("https://raw.githubusercontent.com/hyewoo/ysm_functions/refs/heads/main/siteindextable_functions.r")
+
+library(data.table)
+library(dplyr)
+library(tidyverse)
+library(SIndexR) 
+
+# 1 TLSO site trees
+tlsotrees <- select_sitetrees(tree_ysm,"TLSO", suit = "Y")
+si_tls0 <- compute_ground_si(tlsotrees,"GROUND_TLSO")
+
+# 2 TLSOX
+tlsoxtrees <- select_sitetrees(tree_ysm,"TLSOX", suit = "Y")
+si_tls0x <- compute_ground_si(tlsoxtrees,"GROUND_TLSOX")
+
+# merge
+si <- plotspc_ysm %>%
+  left_join(si_tls0, by = c('MGMT_UNIT', 'SITE_IDENTIFIER', 'VISIT_NUMBER', 'SPECIES', 'BEC_ZONE')) %>%
+  left_join(si_tls0x, by = c('MGMT_UNIT', 'SITE_IDENTIFIER', 'VISIT_NUMBER', 'SPECIES', 'BEC_ZONE'), suffix=c("","_x"))
+
+si <- si %>%
+  mutate(
+    si_grd = coalesce(si_grd, si_grd_x),
+    si_src = coalesce(si_src, si_src_x)
+  )
+
+# 3 conversion
+si <- apply_conv(si,"CONV_EQN")
+
+# 4 relaxed suitability trees
+suit_trees <- select_sitetrees(tree_ysm,"TLSOX", suit = "N")
+si_suit <- compute_ground_si(suit_trees,"GROUND_SI_SUIT_NULL")
+
+si <- si %>%
+  left_join(si_suit, by = c('MGMT_UNIT', 'SITE_IDENTIFIER', 'VISIT_NUMBER', 'SPECIES', 'BEC_ZONE')) %>%
+  mutate(
+    si_grd = coalesce(si_grd.x, si_grd.y),
+    si_src = coalesce(si_src.x, si_src.y)
+  )
+
+# 5 conversion again
+si <- apply_conv(si,"GROUND_SI_SUIT_NULL_CONV_EQN")
+
+# 6 substitution species
+si <- apply_species_substitution(si) 
+
+# 7 PSPL
+si <- fill_pspl(si, pspl)
+
+# 8 PSPL conversion
+si <- apply_conv(si,"PSPL_SP_CONV_EQN")
+
+# 9 lead species rule
+si <- apply_lead_species_rule(si)
+
+# 10 default
+si <- apply_default_rule(si)
+
+```
