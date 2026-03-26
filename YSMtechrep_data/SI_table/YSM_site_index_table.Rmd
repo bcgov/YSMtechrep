@@ -1,8 +1,6 @@
 ---
 title: "Estimation of site index for YSM samples"
-output:
-  html_document:
-    self_contained: true
+output: github_document
 author: Hyeyoung Woo
 date: 18 March, 2026
 ---
