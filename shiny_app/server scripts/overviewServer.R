@@ -129,6 +129,13 @@ plotgraph <- reactive({
       lat1 = as.numeric(st_bbox(aoimap)[2])
       lng2 = as.numeric(st_bbox(aoimap)[3])
       lat2 = as.numeric(st_bbox(aoimap)[4])
+    } else if (input$SelectCategory == "manual"){
+      aoimap <- tsa_sp 
+      
+      lng1 = as.numeric(st_bbox(aoimap)[1])
+      lat1 = as.numeric(st_bbox(aoimap)[2])
+      lng2 = as.numeric(st_bbox(aoimap)[3])
+      lat2 = as.numeric(st_bbox(aoimap)[4])
     }
     
     

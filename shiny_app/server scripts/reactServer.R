@@ -8,60 +8,120 @@ title <- reactive({
   req(input$SelectCategory, input$SelectVar)
   title <- ifelse(input$SelectCategory == "TSA_DESC",
                   as.character(input$SelectVar),
-                  paste0(input$SelectVar, " zone"))
+                  ifelse(input$SelectCategory == "manual",
+                         "Selected", 
+                         paste0(input$SelectVar, " zone")))
   return(title)
 })
 
+#site_id <- reactive({
+#  
+#  req(input$SelectCategory, input$SelectVar)
+#  input$genearate
+#  
+#  if (input$SelectCategory == "TSA_DESC"){
+#    site_id <- sample_data %>% 
+#      filter(TSA_filter == "Y") %>% 
+#      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+#      pull(SITE_IDENTIFIER)
+#  } else if (input$SelectCategory == "BECsub"){
+#    site_id <- sample_data %>% 
+#      filter(BEC_filter == "Y") %>% 
+#      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+#      pull(SITE_IDENTIFIER)
+#  } else if (input$SelectCategory == "BEC_ZONE"){
+#    site_id <- sample_data %>% 
+#      filter(BEC_filter == "Y") %>% 
+#      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+#      pull(SITE_IDENTIFIER)
+#  } else if (input$SelectCategory == "manual"){
+#    site_id <- unlist(strsplit(input$site_list, "[^[:alnum:]_]+"))
+#    site_id <- trimws(site_id)
+#    site_id <- site_id[nzchar(site_id)]
+#    site_id <- unique(site_id)
+#  }
+#  
+#  return(site_id)
+#  
+#})
+
 site_id <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
-  input$genearate
+  req(input$SelectCategory)
   
-  if (input$SelectCategory == "TSA_DESC"){
-    site_id <- sample_data %>% 
-      filter(TSA_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      pull(SITE_IDENTIFIER)
-  } else if (input$SelectCategory == "BECsub"){
-    site_id <- sample_data %>% 
-      filter(BEC_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      pull(SITE_IDENTIFIER)
-  } else if (input$SelectCategory == "BEC_ZONE"){
-    site_id <- sample_data %>% 
-      filter(BEC_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      pull(SITE_IDENTIFIER)
+  if (input$SelectCategory == "manual") {
+    
+    req(input$site_list)
+    
+    site_id <- unlist(strsplit(input$site_list, "[^[:alnum:]_]+"))
+    site_id <- trimws(site_id)
+    site_id <- site_id[nzchar(site_id)]
+    site_id <- unique(site_id)
+    
+  } else {
+    
+    req(input$SelectVar)
+    
+    if (input$SelectCategory == "TSA_DESC") {
+      site_id <- sample_data %>% 
+        filter(TSA_filter == "Y") %>% 
+        filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+        pull(SITE_IDENTIFIER)
+      
+    } else if (input$SelectCategory %in% c("BECsub", "BEC_ZONE")) {
+      site_id <- sample_data %>% 
+        filter(BEC_filter == "Y") %>% 
+        filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+        pull(SITE_IDENTIFIER)
+    }
   }
   
-  return(site_id)
-  
+  site_id
 })
+
+#selected_sites <- reactive({
+#  req(input$SelectCategory, input$SelectVar)
+#  if (input$input_mode == "select") {
+#    return(site_id())
+#  } else {
+#    # split by comma or newline, trim whitespace
+#    sites <- unlist(strsplit(input$site_list, "[,\\n]"))
+#    sites <- trimws(sites)
+#    sites[nzchar(sites)]
+#  }
+#})
 
 clstr_id <- reactive({
   
   req(input$SelectCategory, input$SelectVar)
   input$genearate
   
-  if (input$SelectCategory == "TSA_DESC"){
-    clstr_id <- sample_data %>% 
-      filter(TSA_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      filter(LAST_MSMT == "Y") %>%
-      pull(CLSTR_ID)
-  } else if (input$SelectCategory == "BECsub"){
-    clstr_id <- sample_data %>% 
-      filter(BEC_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      filter(LAST_MSMT == "Y") %>%
-      pull(CLSTR_ID)
-  } else if (input$SelectCategory == "BEC_ZONE"){
-    clstr_id <- sample_data %>% 
-      filter(BEC_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      filter(LAST_MSMT == "Y") %>%
-      pull(CLSTR_ID)
-  }
+  selected_sites <- site_id()
+  
+  clstr_id <- sample_data %>% 
+    filter(SITE_IDENTIFIER %in% selected_sites) %>% 
+    filter(LAST_MSMT == "Y") %>%
+    pull(CLSTR_ID)
+  
+  #if (input$SelectCategory == "TSA_DESC"){
+  #  clstr_id <- sample_data %>% 
+  #    filter(TSA_filter == "Y") %>% 
+  #    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+  #    filter(LAST_MSMT == "Y") %>%
+  #    pull(CLSTR_ID)
+  #} else if (input$SelectCategory == "BECsub"){
+  #  clstr_id <- sample_data %>% 
+  #    filter(BEC_filter == "Y") %>% 
+  #    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+  #    filter(LAST_MSMT == "Y") %>%
+  #    pull(CLSTR_ID)
+  #} else if (input$SelectCategory == "BEC_ZONE"){
+  #  clstr_id <- sample_data %>% 
+  #    filter(BEC_filter == "Y") %>% 
+  #    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+  #    filter(LAST_MSMT == "Y") %>%
+  #    pull(CLSTR_ID)
+  #}
 
   return(clstr_id)
   
@@ -72,22 +132,28 @@ clstr_id_all <- reactive({
   req(input$SelectCategory, input$SelectVar)
   input$genearate
   
-  if (input$SelectCategory == "TSA_DESC"){
-    clstr_id_all <- sample_data %>% 
-      filter(TSA_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      pull(CLSTR_ID)
-  } else if (input$SelectCategory == "BECsub"){
-    clstr_id_all <- sample_data %>% 
-      filter(BEC_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      pull(CLSTR_ID)
-  } else if (input$SelectCategory == "BEC_ZONE"){
-    clstr_id_all <- sample_data %>% 
-      filter(BEC_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      pull(CLSTR_ID)
-  }
+  selected_sites <- site_id()
+  
+  clstr_id_all <- sample_data %>% 
+    filter(SITE_IDENTIFIER %in% selected_sites) %>% 
+    pull(CLSTR_ID)
+  
+  #if (input$SelectCategory == "TSA_DESC"){
+  #  clstr_id_all <- sample_data %>% 
+  #    filter(TSA_filter == "Y") %>% 
+  #    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+  #    pull(CLSTR_ID)
+  #} else if (input$SelectCategory == "BECsub"){
+  #  clstr_id_all <- sample_data %>% 
+  #    filter(BEC_filter == "Y") %>% 
+  #    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+  #    pull(CLSTR_ID)
+  #} else if (input$SelectCategory == "BEC_ZONE"){
+  #  clstr_id_all <- sample_data %>% 
+  #    filter(BEC_filter == "Y") %>% 
+  #    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+  #    pull(CLSTR_ID)
+  #}
   
   return(clstr_id_all)
   
@@ -97,36 +163,45 @@ clstr_id_all <- reactive({
 clstr_id_last2 <- reactive({
   
   req(input$SelectCategory, input$SelectVar)
-  input$genearate
   
-  if (input$SelectCategory == "TSA_DESC"){
-    clstr_id_last2 <- sample_data %>% 
-      filter(TSA_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      group_by(SITE_IDENTIFIER) %>%
-      filter(n() > 1) %>% 
-      arrange(VISIT_NUMBER) %>% 
-      slice_tail(n = 2) %>%
-      pull(CLSTR_ID)
-  } else if (input$SelectCategory == "BECsub"){
-    clstr_id_last2 <- sample_data %>% 
-      filter(BEC_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      group_by(SITE_IDENTIFIER) %>%
-      filter(n() > 1) %>% 
-      arrange(VISIT_NUMBER) %>% 
-      slice_tail(n = 2) %>%
-      pull(CLSTR_ID)
-  } else if (input$SelectCategory == "BEC_ZONE"){
-    clstr_id_last2 <- sample_data %>% 
-      filter(BEC_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      group_by(SITE_IDENTIFIER) %>%
-      filter(n() > 1) %>% 
-      arrange(VISIT_NUMBER) %>% 
-      slice_tail(n = 2) %>%
-      pull(CLSTR_ID)
-  }
+  selected_sites <- site_id()
+  
+  clstr_id_last2 <- sample_data %>% 
+    filter(SITE_IDENTIFIER %in% selected_sites) %>% 
+    group_by(SITE_IDENTIFIER) %>%
+    filter(n() > 1) %>% 
+    arrange(VISIT_NUMBER) %>% 
+    slice_tail(n = 2) %>%
+    pull(CLSTR_ID)
+  
+  #if (input$SelectCategory == "TSA_DESC"){
+  #  clstr_id_last2 <- sample_data %>% 
+  #    filter(TSA_filter == "Y") %>% 
+  #    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+  #    group_by(SITE_IDENTIFIER) %>%
+  #    filter(n() > 1) %>% 
+  #    arrange(VISIT_NUMBER) %>% 
+  #    slice_tail(n = 2) %>%
+  #    pull(CLSTR_ID)
+  #} else if (input$SelectCategory == "BECsub"){
+  #  clstr_id_last2 <- sample_data %>% 
+  #    filter(BEC_filter == "Y") %>% 
+  #    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+  #    group_by(SITE_IDENTIFIER) %>%
+  #    filter(n() > 1) %>% 
+  #    arrange(VISIT_NUMBER) %>% 
+  #    slice_tail(n = 2) %>%
+  #    pull(CLSTR_ID)
+  #} else if (input$SelectCategory == "BEC_ZONE"){
+  #  clstr_id_last2 <- sample_data %>% 
+  #    filter(BEC_filter == "Y") %>% 
+  #    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+  #    group_by(SITE_IDENTIFIER) %>%
+  #    filter(n() > 1) %>% 
+  #    arrange(VISIT_NUMBER) %>% 
+  #    slice_tail(n = 2) %>%
+  #    pull(CLSTR_ID)
+  #}
   
   return(clstr_id_last2)
   
@@ -518,7 +593,6 @@ si_bias <- reactive({
 remeas_plot <- reactive({
   
   req(input$SelectCategory, input$SelectVar)
-  input$genearate
   
 remeas_plot <- sample_data %>% 
   filter(SITE_IDENTIFIER %in% site_id()) %>%
