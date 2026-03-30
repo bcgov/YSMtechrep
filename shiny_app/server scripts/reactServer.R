@@ -56,7 +56,7 @@ site_id <- reactive({
     site_id <- unlist(strsplit(input$site_list, "[^[:alnum:]_]+"))
     site_id <- trimws(site_id)
     site_id <- site_id[nzchar(site_id)]
-    site_id <- unique(site_id)
+    site_id <- unique(as.numeric(site_id))
     
   } else {
     
@@ -170,7 +170,7 @@ clstr_id_last2 <- reactive({
     filter(SITE_IDENTIFIER %in% selected_sites) %>% 
     group_by(SITE_IDENTIFIER) %>%
     filter(n() > 1) %>% 
-    arrange(VISIT_NUMBER) %>% 
+    arrange(VISIT_NUMBER, .by_group = TRUE) %>% 
     slice_tail(n = 2) %>%
     pull(CLSTR_ID)
   
