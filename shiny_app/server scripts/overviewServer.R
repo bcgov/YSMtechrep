@@ -5,37 +5,81 @@
 ###############################################.
 
 output$overview_header <- renderUI({
+  req(input$SelectCategory, site_id())
   
   HTML(paste0("<h3>", title()," Young Stand Monitoring Program</h3>"))
   
 })
 
 gridsize <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
+  
   gridsize <- sample_data %>% 
     filter(SITE_IDENTIFIER %in% site_id()) %>% 
-    select(GRID_SIZE) 
+    select(GRID_SIZE) %>% 
+    mutate(GRID_SIZE = ifelse(GRID_SIZE == "5km X 10km", "10km X 5km", GRID_SIZE))
   
   gridsize <- names(table(gridsize)[which.max(table(gridsize))])
   return(gridsize)
 })
 
+
+gridsize_all <- reactive({
+  req(input$SelectCategory)
+  
+  gridsize_all <- sample_data %>% 
+    filter(SITE_IDENTIFIER %in% site_id()) %>% 
+    select(GRID_SIZE) %>% 
+    mutate(GRID_SIZE = ifelse(GRID_SIZE == "5km X 10km", "10km X 5km", GRID_SIZE))
+  
+  gridsize_all <- data.frame(table(gridsize_all))
+  
+  return(gridsize_all)
+})
+
+
 additionlaphrase <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
+  
   mgmt <- sample_data %>% 
     filter(SITE_IDENTIFIER %in% site_id()) %>% 
     distinct(MGMT_UNIT) 
   mgmts <- paste(mgmt$MGMT_UNIT, collapse = "; ")
   
-  additionlaphrase <- ifelse(input$SelectCategory %in% c("BECsub", "BEC_ZONE"),
+  additionlaphrase <- ifelse(input$SelectCategory %in% c("BECsub", "BEC_ZONE", "manual"),
                              paste0("Sampled mangement units intersecting with the ",
                                     title(), " include: ", mgmts, "."), 
                              "")
   return(additionlaphrase)
 })
 
+additionlaphrase2 <- reactive({
+  req(input$SelectCategory)
+  
+  additionlaphrase2 <- ifelse(input$SelectCategory %in% c("manual") && nrow(gridsize_all()) > 1,
+                             paste0("The selected samples are on different grid sizes; the
+                                    summary results should be interpreted with caution."), 
+                             "")
+ 
+  return(additionlaphrase2)
+})
+
+
+additionlaphrase3 <- reactive({
+  req(input$SelectCategory)
+  
+  additionlaphrase3 <- ifelse(input$SelectCategory %in% c("manual") && length(site_id_ignored()) > 0,
+                              paste0("Some sites in the list are not part of the 
+                                     YSM sample and have been excluded from the summary. 
+                                     The selected sites are: \n ", 
+                                     paste0(setdiff(site_id(), site_id_ignored()), collapse = ",")), 
+                              "")
+  
+  return(additionlaphrase3)
+})
+
 overview <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   
   text <- paste0("<p>Young Stand Monitoring (YSM) programs have been established 
 across a number of management units in BC. This document provides a 
@@ -49,6 +93,10 @@ use other criteria (eg., harvest history).</p>  ",
            "<b>",gridsize(),"</b> grid, with trees tagged in 0.04ha circular 
            monitoring plots with a planned
 five-year re-measurement cycle.</p>  ",
+           "<p style='color:red;'>", 
+           additionlaphrase2(),"</p>",
+           "<p style='color:red;'>", 
+           additionlaphrase3(),"</p>",
            "<p>At each 5-year visit, previously unsampled grid points that now
            exceed the minimum 15year limit will have new recruitment ground
            samples established. In addition, samples that age-out of the
@@ -71,7 +119,7 @@ output$overview <- renderUI({
 })
 
 plotgraph <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   if(!is.null(site_id())){
     
     location <- sample_data %>% 
@@ -186,7 +234,7 @@ output$plotgraph <- renderLeaflet({
 
 
 flex <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   
   if(!is.null(site_id())){
     
@@ -219,7 +267,7 @@ output$overviewflex <- renderUI({
 })
 
 max_row <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   projectiontable <- projectiontable()
   prjtab_70 <- projectiontable %>% filter(AGE >=70, AGE <100)
   max_row = which.max(abs(prjtab_70$meanvoldiff/prjtab_70$meanvol_tass*100))
@@ -228,7 +276,7 @@ max_row <- reactive({
 
 
 maxvoldiff <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   projectiontable <- projectiontable()
   max_row <- max_row()
   maxvoldiff = projectiontable$percvoldiff[max_row]
@@ -236,7 +284,7 @@ maxvoldiff <- reactive({
 })
 
 ageatmaxvoldiff <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   projectiontable <- projectiontable()
   max_row <- max_row()
   maxvoldiff = projectiontable$AGE[max_row]
@@ -244,7 +292,7 @@ ageatmaxvoldiff <- reactive({
 })
 
 Significant <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   projectiontable <- projectiontable()
   max_row <- max_row()
   Significant = ifelse(projectiontable$pval[max_row] <0.05, "Yes", "No")
@@ -253,7 +301,7 @@ Significant <- reactive({
 
 
 TSRbias1 <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   projectiontable <- projectiontable()
   max_row <- max_row()
   TSRbias1 = ifelse(projectiontable$meanvoldiff[max_row] < 0, "Conservative", "Optimistic")
@@ -261,7 +309,7 @@ TSRbias1 <- reactive({
 })
 
 TSRbias2 <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   Significant <- Significant()
   TSRbias1 <- TSRbias1()
   TSRbias2 = ifelse(Significant == "No", "No", TSRbias1)
@@ -270,7 +318,7 @@ TSRbias2 <- reactive({
 
 
 text_key <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   
   projectiontable <- projectiontable()
   prjtab_70 <- projectiontable %>% filter(AGE >=70, AGE <100)
