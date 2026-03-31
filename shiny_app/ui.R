@@ -113,7 +113,7 @@ ui <- dashboardPage(
                textAreaInput("site_list", 
                              "Enter Site IDs (comma or line separated):",
                              placeholder = "e.g. 2095167, 2097163, 2095157",
-                             rows = 2)
+                             rows = 3)
              )
       ),
       
@@ -294,6 +294,8 @@ ui <- dashboardPage(
              br(),
              plotOutput("tass_tsr_netvol_sp_prop", width = "800px"),
              br(),
+             #plotOutput("tass_tsr_netvol_sp_prop_2", width = "800px"),
+             #br(),
              fluidRow(
                column(6,
                       uiOutput("tasstable_flex")),

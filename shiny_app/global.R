@@ -83,25 +83,49 @@ decidspc <- c('A','AC','ACT','ACB','AT',
 #3. lists for filter dropdowns ------------------------------------------------------
 
 # for TSA selection
-tsa_list <- sort(unique(sample_data %>% 
-                          filter(TSA_filter == "Y") %>% 
-                          group_by(TSA_DESC) %>% 
-                          filter(n() > 10) %>% 
-                          pull(TSA_DESC)))
+#tsa_list <- sort(unique(sample_data %>% 
+#                          filter(TSA_filter == "Y") %>% 
+#                          group_by(TSA_DESC) %>% 
+#                          filter(n() > 10) %>% 
+#                          pull(TSA_DESC)))
+
+tsa_list <- sample_data %>%
+  filter(TSA_filter == "Y") %>%
+  count(TSA_DESC) %>%
+  filter(n > 10) %>%
+  pull(TSA_DESC) %>%
+  sort() %>%
+  unique()
 
 # for BEC subzone selection
-bec_list <- sort(unique(sample_data %>% 
-                          filter(BEC_filter == "Y") %>% 
-                          group_by(BECsub) %>% 
-                          filter(n() > 10) %>% 
-                          pull(BECsub)))
+#bec_list <- sort(unique(sample_data %>% 
+#                          filter(BEC_filter == "Y") %>% 
+#                          group_by(BECsub) %>% 
+#                          filter(n() > 10) %>% 
+#                          pull(BECsub)))
+
+bec_list <- sample_data %>%
+  filter(BEC_filter == "Y") %>%
+  count(BECsub) %>%
+  filter(n > 10) %>%
+  pull(BECsub) %>%
+  sort() %>%
+  unique()
 
 # for BEC selection
-beczone_list <- sort(unique(sample_data %>% 
-                          filter(BEC_filter == "Y") %>% 
-                          group_by(BEC_ZONE) %>% 
-                          filter(n() > 10) %>% 
-                          pull(BEC_ZONE)))
+#beczone_list <- sort(unique(sample_data %>% 
+#                          filter(BEC_filter == "Y") %>% 
+#                          group_by(BEC_ZONE) %>% 
+#                          filter(n() > 10) %>% 
+#                          pull(BEC_ZONE)))
+
+beczone_list <- sample_data %>%
+  filter(BEC_filter == "Y") %>%
+  count(BEC_ZONE) %>%
+  filter(n > 10) %>%
+  pull(BEC_ZONE) %>%
+  sort() %>%
+  unique()
 
 
 # 4. chart themes  ----------------------------------------------------------------

@@ -11,18 +11,6 @@ output$overview_header <- renderUI({
   
 })
 
-gridsize <- reactive({
-  req(input$SelectCategory)
-  
-  gridsize <- sample_data %>% 
-    filter(SITE_IDENTIFIER %in% site_id()) %>% 
-    select(GRID_SIZE) %>% 
-    mutate(GRID_SIZE = ifelse(GRID_SIZE == "5km X 10km", "10km X 5km", GRID_SIZE))
-  
-  gridsize <- names(table(gridsize)[which.max(table(gridsize))])
-  return(gridsize)
-})
-
 
 gridsize_all <- reactive({
   req(input$SelectCategory)
@@ -35,6 +23,35 @@ gridsize_all <- reactive({
   gridsize_all <- data.frame(table(gridsize_all))
   
   return(gridsize_all)
+})
+
+gridsize <- reactive({
+  req(input$SelectCategory)
+  
+  gridsize <- sample_data %>% 
+    filter(SITE_IDENTIFIER %in% site_id()) %>% 
+    select(GRID_SIZE) %>% 
+    mutate(GRID_SIZE = ifelse(GRID_SIZE == "5km X 10km", "10km X 5km", GRID_SIZE))
+  
+  gridsize <- names(table(gridsize)[which.max(table(gridsize))])
+  
+  #gridtable <- sample_data %>% 
+  #  filter(SITE_IDENTIFIER %in% site_id()) %>% 
+  #  select(GRID_SIZE) %>% 
+  #  mutate(GRID_SIZE = ifelse(GRID_SIZE == "5km X 10km", "10km X 5km", GRID_SIZE)) %>% 
+  #  table() %>% data.frame()
+  #
+  #if(length(gridtable$GRID_SIZE) == 1) gridsize <- gridtable$GRID_SIZE
+  #
+  #if("20km X 20km" %in% gridtable$GRID_SIZE & length(gridtable$GRID_SIZE) == 2) {
+  #  gridsize <- gridtable[gridtable$GRID_SIZE != "20km X 20km", ]$GRID_SIZE
+  #}
+  #
+  #if(length(gridtable$GRID_SIZE) > 2) {
+  #  gridsize <- gridtable$GRID_SIZE[which.max(gridtable$Freq)]
+  #}
+  
+  return(gridsize)
 })
 
 
@@ -56,8 +73,9 @@ additionlaphrase <- reactive({
 additionlaphrase2 <- reactive({
   req(input$SelectCategory)
   
-  additionlaphrase2 <- ifelse(input$SelectCategory %in% c("manual") && nrow(gridsize_all()) > 1,
-                             paste0("The selected samples are on different grid sizes; the
+  additionlaphrase2 <- ifelse(input$SelectCategory %in% c("BECsub", "BEC_ZONE", "manual") && 
+                                nrow(gridsize_all()) > 2,
+                             paste0("The samples may be from different grid sizes; the
                                     summary results should be interpreted with caution."), 
                              "")
  
@@ -72,7 +90,7 @@ additionlaphrase3 <- reactive({
                               paste0("Some sites in the list are not part of the 
                                      YSM sample and have been excluded from the summary. 
                                      The selected sites are: \n ", 
-                                     paste0(setdiff(site_id(), site_id_ignored()), collapse = ",")), 
+                                     paste0(setdiff(site_id(), site_id_ignored()), collapse = ", ")), 
                               "")
   
   return(additionlaphrase3)
