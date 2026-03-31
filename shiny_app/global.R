@@ -67,9 +67,12 @@ damcd<-readRDS("data/damcd.rds")
 
 
 # shapefiles (for map) 
-tsa_sp <- st_transform(st_read("data/tsa_sp.shp"),4326)
-becmap <- st_transform(st_read("data/becmap.shp"),4326)
-beczonemap <- st_transform(st_read("data/beczone_lowres1000.shp"),4326)
+tsa_sp <- st_transform(st_read("data/tsa_sp.shp") %>%
+                         dplyr::mutate(across(where(~ inherits(.x, "IDate")), ~ as.Date(.x))),4326)
+becmap <- st_transform(st_read("data/becmap.shp") %>%
+                         dplyr::mutate(across(where(~ inherits(.x, "IDate")), ~ as.Date(.x))),4326)
+beczonemap <- st_transform(st_read("data/beczone_lowres1000.shp") %>%
+                             dplyr::mutate(across(where(~ inherits(.x, "IDate")), ~ as.Date(.x))),4326)
 
 
 # SPCD for deciduous 
