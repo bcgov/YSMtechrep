@@ -85,12 +85,6 @@ decidspc <- c('A','AC','ACT','ACB','AT',
 #3. lists for filter dropdowns ------------------------------------------------------
 
 # for TSA selection
-#tsa_list <- sort(unique(sample_data %>% 
-#                          filter(TSA_filter == "Y") %>% 
-#                          group_by(TSA_DESC) %>% 
-#                          filter(n() > 10) %>% 
-#                          pull(TSA_DESC)))
-
 tsa_list <- sample_data %>%
   filter(TSA_filter == "Y") %>%
   count(TSA_DESC) %>%
@@ -100,12 +94,6 @@ tsa_list <- sample_data %>%
   unique()
 
 # for BEC subzone selection
-#bec_list <- sort(unique(sample_data %>% 
-#                          filter(BEC_filter == "Y") %>% 
-#                          group_by(BECsub) %>% 
-#                          filter(n() > 10) %>% 
-#                          pull(BECsub)))
-
 bec_list <- sample_data %>%
   filter(BEC_filter == "Y") %>%
   count(BECsub) %>%
@@ -115,12 +103,6 @@ bec_list <- sample_data %>%
   unique()
 
 # for BEC selection
-#beczone_list <- sort(unique(sample_data %>% 
-#                          filter(BEC_filter == "Y") %>% 
-#                          group_by(BEC_ZONE) %>% 
-#                          filter(n() > 10) %>% 
-#                          pull(BEC_ZONE)))
-
 beczone_list <- sample_data %>%
   filter(BEC_filter == "Y") %>%
   count(BEC_ZONE) %>%
@@ -131,6 +113,8 @@ beczone_list <- sample_data %>%
 
 
 # 4. chart themes  ----------------------------------------------------------------
+
+# common parameters for plots
 theme_set(theme_bw(15, base_family = 'Arial'))
 #theme_set(theme_bw(15) + theme(panel.grid.major = element_line(colour = "gray")))
 
@@ -155,7 +139,6 @@ tass_colors <- c("Acb"= "#E0B200", "At"= "#FFD84D",  "Ba" = "#99600F",  "Bl"= "#
                  "Lw"  = "#FFCC80" ,"Pli"  = "#3E9FB3","Pw"  = "#7ABECC" ,"Py"  = "#B8DEE6",
                  "Sb" = "#3D0F99" ,"Se" = "#653EB3" , "Ss"= "#967ACC",  "Sw"= "#C7B8E6")
 
-# common parameters for plots
 
 
 # 5. extra UI components  ----------------------------------------------------------
@@ -182,6 +165,13 @@ waiter_html <- function(x){
 }
 
 br2 <- function() tagList(br(), br())
+
+# --- Extract legend from p1 ---
+g_legend <- function(a.gplot){
+  tmp <- ggplotGrob(a.gplot)
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  tmp$grobs[[leg]]
+}
 
 ## custom progress function
 #myProgress <- function(total, labels) {

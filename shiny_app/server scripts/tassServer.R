@@ -248,7 +248,6 @@ projvol_sp_prop_2 <- reactive({
   
   df <- projvol_sp_data()
   
-  # --- Original bar plot ---
   p1 <- df %>%
     ggplot(aes(x = agespan, y = meanvol_tass, fill = SPECIES)) +
     geom_col(linewidth = 1.1) +
@@ -256,13 +255,14 @@ projvol_sp_prop_2 <- reactive({
     scale_x_continuous(breaks = c(60, 70, 80, 90, 100)) +
     labs(x = "Total Age (yrs)", y = "Net merch volume (m3/ha)") +
     scale_fill_manual(values = tass_colors, name = NULL) +
+    guides(fill = guide_legend(ncol = 2)) + 
     theme(
       axis.line = element_line(colour="darkgray"),
       panel.grid.major.y = element_line(color = 'darkgray'),
       panel.grid.major.x = element_blank(),
       panel.grid.minor.x = element_blank(),
-      legend.position = "top",
-      legend.direction = "horizontal",
+      legend.position = "left",
+      legend.direction = "vertical",
       plot.margin = margin(5, 5, 5, 5)
     )
   
@@ -304,17 +304,15 @@ projvol_sp_prop_2 <- reactive({
   
   # --- Arrange plots with equal widths ---
   plots <- gridExtra::arrangeGrob(
-    p1, p2,
-    ncol = 2,
-    widths = c(1, 1)  # ✅ equal widths
+    ggplotGrob(p1),
+    ggplotGrob(p2),
+    ncol = 2
   )
   
-  # --- Stack legend on top ---
-  p <- gridExtra::grid.arrange(
-    legend,
-    plots,
-    nrow = 2,
-    heights = c(0.1, 0.9)   # 10% legend, 90% plots
+  p <- grid.arrange(
+    plots, legend,
+    ncol = 2,
+    widths = c(0.8, 0.2)
   )
   
   return(p)
