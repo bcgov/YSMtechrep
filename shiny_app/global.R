@@ -67,9 +67,12 @@ damcd<-readRDS("data/damcd.rds")
 
 
 # shapefiles (for map) 
-tsa_sp <- st_transform(st_read("data/tsa_sp.shp"),4326)
-becmap <- st_transform(st_read("data/becmap.shp"),4326)
-beczonemap <- st_transform(st_read("data/beczone_lowres1000.shp"),4326)
+tsa_sp <- st_transform(st_read("data/tsa_sp.shp") %>%
+  dplyr::mutate(across(where(inherits, "IDate"), as.Date)),4326)
+becmap <- st_transform(st_read("data/becmap.shp") %>%
+  dplyr::mutate(across(where(inherits, "IDate"), as.Date)),4326)
+beczonemap <- st_transform(st_read("data/beczone_lowres1000.shp") %>%
+  dplyr::mutate(across(where(inherits, "IDate"), as.Date)),4326)
 
 
 # SPCD for deciduous 
@@ -92,7 +95,7 @@ decidspc <- c('A','AC','ACT','ACB','AT',
 tsa_list <- sample_data %>%
   filter(TSA_filter == "Y") %>%
   count(TSA_DESC) %>%
-  filter(n > 10) %>%
+  filter(n >= 10) %>%
   pull(TSA_DESC) %>%
   sort() %>%
   unique()
@@ -107,7 +110,7 @@ tsa_list <- sample_data %>%
 bec_list <- sample_data %>%
   filter(BEC_filter == "Y") %>%
   count(BECsub) %>%
-  filter(n > 10) %>%
+  filter(n >= 10) %>%
   pull(BECsub) %>%
   sort() %>%
   unique()
@@ -122,7 +125,7 @@ bec_list <- sample_data %>%
 beczone_list <- sample_data %>%
   filter(BEC_filter == "Y") %>%
   count(BEC_ZONE) %>%
-  filter(n > 10) %>%
+  filter(n >= 10) %>%
   pull(BEC_ZONE) %>%
   sort() %>%
   unique()
