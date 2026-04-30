@@ -157,10 +157,12 @@ ui <- dashboardPage(
              br(),
              div(
              plotOutput("live_sp", width = "700px"),
+               #plotlyOutput("live_sp", width = "700px"),
              br(),
              plotOutput("bec_dist", width = "500px"),
              br(),
              plotOutput("stock_table", width = "700px"),
+             #plotlyOutput("stock_table_plotly", width = "700px"),
              br(),
              plotOutput("stock_table_stem", width = "700px"),
              br(),

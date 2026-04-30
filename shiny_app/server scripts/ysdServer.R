@@ -147,34 +147,81 @@ livespplot <- reactive({
     
     spc_summary <- rbind(spc_ba, spc_stem) 
     
+    #spc_summary <- spc_summary %>% 
+    #  filter(!(SPC_GRP1 == "" & PERC == 0)) %>% 
+    #  arrange(BY, order)
+    #
+    #livespplot <- spc_summary |>
+    #  group_by(BY, SPC_GRP2) |>
+    #  mutate(total = sum(PERC)) |>
+    #  ungroup() |>
+    #  #select(SPC_GRP2, BY, total) |>
+    #  select(SPC_GRP1, BY, total) |>
+    #  distinct() |> 
+    #  #ggplot(aes(x = reorder(SPC_GRP2, ifelse(BY=="BA",-total, 0)), y = total, fill = factor(BY))) +
+    #  ggplot(aes(x = reorder(SPC_GRP1, ifelse(BY=="BA",-total, 0)), y = total, fill = factor(BY))) +
+    #  geom_bar(position = position_dodge2(preserve = "single"), stat = "identity", width = 0.7) +
+    #  labs(x = "", y = "% of Total", title = "Live Species Composition") + 
+    #  scale_fill_manual(values = c("steelblue", "#B4464B"), name = NULL, labels = c("by BA", "by # stems")) +
+    #  scale_y_continuous(expand = c(0, 0),limits = c(0, round(max(spc_summary$PERC, na.rm = T),-1)+5)) +
+    #  theme(
+    #    axis.line = element_line(colour="darkgray"), 
+    #    panel.grid.major.y = element_line(color = 'darkgray'), 
+    #    panel.grid.major.x = element_blank(),
+    #    panel.grid.minor.x = element_blank(),
+    #    rect = element_blank()
+    #  ) 
+    
+    
     spc_summary <- spc_summary %>% 
       filter(!(SPC_GRP1 == "" & PERC == 0)) %>% 
-      arrange(BY, order)
+      arrange(BY, order) %>%
+      group_by(BY, SPC_GRP2) %>%
+      mutate(total = sum(PERC)) %>%
+      ungroup() %>%
+      select(SPC_GRP1, BY, total) %>%
+      distinct() %>%
+      mutate(SPC_GRP1 = reorder(SPC_GRP1, ifelse(BY=="BA",-total, 0)),
+             BY = as.factor(BY))
     
-    livespplot <- spc_summary |>
-      group_by(BY, SPC_GRP2) |>
-      mutate(total = sum(PERC)) |>
-      ungroup() |>
-      #select(SPC_GRP2, BY, total) |>
-      select(SPC_GRP1, BY, total) |>
-      distinct() |> 
-      #ggplot(aes(x = reorder(SPC_GRP2, ifelse(BY=="BA",-total, 0)), y = total, fill = factor(BY))) +
-      ggplot(aes(x = reorder(SPC_GRP1, ifelse(BY=="BA",-total, 0)), y = total, fill = factor(BY))) +
-      geom_bar(position = position_dodge2(preserve = "single"), stat = "identity", width = 0.7) +
-      labs(x = "", y = "% of Total", title = "Live Species Composition") + 
-      scale_fill_manual(values = c("steelblue", "#B4464B"), name = NULL, labels = c("by BA", "by # stems")) +
-      scale_y_continuous(expand = c(0, 0),limits = c(0, round(max(spc_summary$PERC, na.rm = T),-1)+5)) +
-      theme(
-        axis.line = element_line(colour="darkgray"), 
-        panel.grid.major.y = element_line(color = 'darkgray'), 
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor.x = element_blank(),
-        rect = element_blank()
-      ) 
     
   }
   
-  return(livespplot)
+  
+  
+  p <- spc_summary %>%
+    ggplot(aes(x = SPC_GRP1, y = total, fill = BY,
+               text = paste0(
+                 "Species: ", SPC_GRP1,
+                 "<br>Value: ", round(total, 1),
+                 "<br>Type: ", BY
+               ))) +
+    geom_bar(
+      position = position_dodge2(preserve = "single"),
+      stat = "identity",
+      width = 0.7
+    ) +
+    labs(x = "", y = "% of Total", title = "Live Species Composition") + 
+    scale_fill_manual(
+      values = c("steelblue", "#B4464B"),
+      name = NULL,
+      labels = c("by BA", "by # stems")
+    ) +
+    scale_y_continuous(
+      expand = c(0, 0)
+    ) +
+    theme(
+      axis.line = element_line(colour = "darkgray"), 
+      panel.grid.major.y = element_line(color = 'darkgray'), 
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      rect = element_blank()
+    )
+  
+  #livespplot <- ggplotly(p, tooltip = "text")
+  #return(livespplot)
+  
+  return(p)
 })
 
 
@@ -183,6 +230,13 @@ output$live_sp <- renderPlot({
   livespplot()
   
   })
+
+
+#output$live_sp <- renderPlotly({
+#  
+#  livespplot()
+#  
+#})
 
 becplot <- reactive({
   req(input$SelectCategory, input$SelectVar)
@@ -210,7 +264,7 @@ becplot <- reactive({
     #p <- ggplot(data.frame(rev(sort(table(figdata)))), aes(x = figdata, y = Freq)) +
     p <- ggplot(figdata1, aes(x = figdata, y = Freq)) +
       geom_bar(stat="identity", width=0.5, fill="steelblue") +
-      scale_x_discrete(guide = guide_axis(angle = -45)) +
+      scale_x_discrete(guide = guide_axis(angle = -90)) +
       scale_y_continuous(expand = c(0, 0),
                          breaks = integer_breaks()) +
       labs(x = "", y = "# of YSM samples",
@@ -293,6 +347,74 @@ output$stock_table <- renderPlot({
 })
 
 
+#stockplot_plotly <- reactive({
+#  req(input$SelectCategory, input$SelectVar)
+#  if (!is.null(clstr_id())){
+#    
+#    fig5_dat <- tree_fh_data %>%
+#      filter(CLSTR_ID %in% clstr_id(), DAM_NUM == 1, LV_D == "L") %>%
+#      mutate(VOL_WSV_HA = VOL_WSV*PHF_TREE,
+#             PERC_TOT_VOL_HA = VOL_WSV_HA/sum(VOL_WSV_HA, na.rm = T),
+#             DBH_CLASS = round(DBH/5)*5) %>% 
+#      mutate(SPC_GRP1 = substr(SPECIES,1,2)) %>%
+#      mutate(SPC_GRP1 = ifelse(SPECIES %in% decidspc, 'Decid', SPC_GRP1))
+#    
+#    fig5_dat <- fig5_dat %>%
+#      group_by(SPC_GRP1, DBH_CLASS) %>%
+#      summarise(PERC_TOT_VOL_HA_SPC = sum(PERC_TOT_VOL_HA, na.rm = T)) %>%
+#      ungroup()
+#    
+#    fig5_dat_label <- fig5_dat %>%
+#      group_by(SPC_GRP1) %>%
+#      summarize(TOT_VOL_HA = sum(PERC_TOT_VOL_HA_SPC, na.rm = T)) %>%
+#      arrange(desc(TOT_VOL_HA)) %>%
+#      mutate(order = row_number())
+#    
+#    fig5_dat <- fig5_dat %>%
+#      left_join(fig5_dat_label, by = "SPC_GRP1")
+#    
+#    db_levels <- c("0", "5", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60+") 
+#    
+#    fig5_dat <- fig5_dat %>%
+#      mutate(SPC_GRP2 = ifelse(order <= 7, SPC_GRP1, 'Other'),
+#             SPC_GRP2 = ifelse(SPC_GRP2 == 'Decid', 'Decid', SPC_GRP2),
+#             SPC_GRP1 = factor(SPC_GRP1, levels = rev(unique(SPC_GRP1))),
+#             DBH_CLASS_relevel = cut(DBH_CLASS, breaks = c(seq(-1, 59, 5), Inf), 
+#                                     labels = c(seq(0, 55, 5), "60+")),
+#             DBH_CLASS_relevel = factor(DBH_CLASS_relevel, levels = db_levels),
+#             PERC_TOT_VOL_HA_SPC = round(PERC_TOT_VOL_HA_SPC,3)) %>%
+#      select(DBH_CLASS_relevel, PERC_TOT_VOL_HA_SPC, SPC_GRP1)
+#    
+#    fig5_plotly <- plot_ly(
+#      data = fig5_dat,
+#      x = ~DBH_CLASS_relevel,
+#      y = ~PERC_TOT_VOL_HA_SPC,
+#      color = ~SPC_GRP1,
+#      colors = tree_colors,
+#      type = "bar",
+#      hovertext = ~paste0(
+#        "DBH: ", DBH_CLASS_relevel,
+#        "<br>Species: ", SPC_GRP1,
+#        "<br>Value: ", scales::percent(PERC_TOT_VOL_HA_SPC, accuracy = 0.1)
+#      ),
+#      hoverinfo = "text"
+#    ) %>%
+#      layout(
+#        barmode = "stack",
+#        title = "Stock Table - live trees",
+#        xaxis = list(title = "DBH class (cm)", categoryorder = "array",
+#                     categoryarray = db_levels),
+#        yaxis = list(
+#          title = "% of total vol/ha",
+#          tickformat = ".0%"
+#        )
+#      )
+#    
+#  }
+#  return(fig5_plotly)
+#})
+
+
 
 stockplot_stem <- reactive({
   req(input$SelectCategory, input$SelectVar)
@@ -350,6 +472,101 @@ output$stock_table_stem <- renderPlot({
   stockplot_stem()
   
 })
+
+
+
+fig5_dat <- reactive({
+  req(input$SelectCategory, input$SelectVar)
+  if (!is.null(clstr_id())){
+    
+  fig5_dat <- tree_fh_data %>%
+    filter(CLSTR_ID %in% clstr_id(), DAM_NUM == 1, LV_D == "L") %>%
+    mutate(VOL_WSV_HA = VOL_WSV*PHF_TREE,
+           PERC_TOT_VOL_HA = VOL_WSV_HA/sum(VOL_WSV_HA, na.rm = T),
+           PERC_TOT_STEMS_HA = PHF_TREE/sum(PHF_TREE, na.rm = T),
+           DBH_CLASS = round(DBH/5)*5,
+           DBH_CLASS_relevel = cut(DBH_CLASS, breaks = c(seq(-1, 59, 5), Inf), 
+                                   labels = c(seq(0, 55, 5), "60+")),
+           DBH_CLASS_relevel = factor(DBH_CLASS_relevel, levels = db_levels)
+    ) %>% 
+    mutate(SPC_GRP1 = substr(SPECIES,1,2)) %>%
+    mutate(SPC_GRP1 = ifelse(SPECIES %in% decidspc, 'Decid', SPC_GRP1))
+  
+  fig5_dat1 <- fig5_dat %>%
+    group_by(SPC_GRP1, DBH_CLASS_relevel) %>%
+    summarise(PERC_TOT_VOL_HA_SPC = sum(PERC_TOT_VOL_HA, na.rm = T),
+              PERC_TOT_STEMS_HA_SPC = sum(PERC_TOT_STEMS_HA, na.rm = T)) %>%
+    ungroup()
+  
+  fig5_dat_label <- fig5_dat1 %>%
+    group_by(SPC_GRP1) %>%
+    summarize(TOT_VOL_HA = sum(PERC_TOT_VOL_HA_SPC, na.rm = T),
+              TOT_STEMS_HA = sum(PERC_TOT_STEMS_HA_SPC, na.rm = T),
+              .groups = "drop") 
+  
+  fig5_dat1 <- fig5_dat1 %>%
+    left_join(fig5_dat_label, by = "SPC_GRP1")
+  
+  fig5_dat1_full <- fig5_dat1 %>%
+    complete(
+      SPC_GRP1,
+      DBH_CLASS_relevel,
+      fill = list(
+        PERC_TOT_VOL_HA_SPC = 0,
+        PERC_TOT_STEMS_HA_SPC = 0
+      )
+    )
+  
+  fig5_dat1_full <- fig5_dat1_full %>%
+    mutate(SPC_GRP1 = factor(SPC_GRP1, levels = rev(unique(SPC_GRP1))),
+           PERC_TOT_VOL_HA_SPC = round(PERC_TOT_VOL_HA_SPC,3),
+           PERC_TOT_STEMS_HA_SPC = round(PERC_TOT_STEMS_HA_SPC,3)) %>%
+    select(DBH_CLASS_relevel, PERC_TOT_VOL_HA_SPC, PERC_TOT_STEMS_HA_SPC, SPC_GRP1)
+  
+  }
+  return(fig5_dat1_full)
+})
+
+
+#stockplot_plotly <- reactive({
+#  
+#  fig5_dat <- fig5_dat()
+#  
+#  db_levels <- c("0", "5", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60+") 
+#  
+#  fig5_plotly <- plot_ly(
+#    data = fig5_dat,
+#    x = ~DBH_CLASS_relevel,
+#    y = ~PERC_TOT_VOL_HA_SPC,
+#    color = ~SPC_GRP1,
+#    colors = tree_colors,
+#    type = "bar",
+#    hovertext = ~paste0(
+#      "DBH: ", DBH_CLASS_relevel,
+#      "<br>Species: ", SPC_GRP1,
+#      "<br>Value: ", scales::percent(PERC_TOT_VOL_HA_SPC, accuracy = 0.1)
+#    ),
+#    hoverinfo = "text"
+#  ) %>%
+#    layout(
+#      barmode = "stack",
+#      title = "Stock Table - live trees",
+#      xaxis = list(title = "DBH class (cm)", categoryorder = "array",
+#                   categoryarray = db_levels),
+#      yaxis = list(
+#        title = "% of total vol/ha",
+#        tickformat = ".0%"
+#      )
+#    )
+#})
+#
+#
+#
+#output$stock_table_plotly <- renderPlotly({
+#  
+#  stockplot_plotly()
+#  
+#})
 
 
 

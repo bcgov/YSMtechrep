@@ -18,7 +18,8 @@ gridsize_all <- reactive({
   gridsize_all <- sample_data %>% 
     filter(SITE_IDENTIFIER %in% site_id()) %>% 
     select(GRID_SIZE) %>% 
-    mutate(GRID_SIZE = ifelse(GRID_SIZE == "5km X 10km", "10km X 5km", GRID_SIZE))
+    mutate(GRID_SIZE = ifelse(GRID_SIZE == "5km X 10km", "10km X 5km", GRID_SIZE),
+           GRID_SIZE = ifelse(GRID_SIZE == "4km X 4km", "4km X 8km", GRID_SIZE))
   
   gridsize_all <- data.frame(table(gridsize_all))
   
@@ -31,7 +32,8 @@ gridsize <- reactive({
   gridsize <- sample_data %>% 
     filter(SITE_IDENTIFIER %in% site_id()) %>% 
     select(GRID_SIZE) %>% 
-    mutate(GRID_SIZE = ifelse(GRID_SIZE == "5km X 10km", "10km X 5km", GRID_SIZE))
+    mutate(GRID_SIZE = ifelse(GRID_SIZE == "5km X 10km", "10km X 5km", GRID_SIZE),
+           GRID_SIZE = ifelse(GRID_SIZE == "4km X 4km", "4km X 8km", GRID_SIZE))
   
   gridsize <- names(table(gridsize)[which.max(table(gridsize))])
   

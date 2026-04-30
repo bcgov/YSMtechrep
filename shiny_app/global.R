@@ -21,7 +21,7 @@ library(shinydashboard)
 library(shinycssloaders)
 library(data.table)
 library(ggplot2)
-#library(plotly)
+library(plotly)
 library(dplyr)
 options(dplyr.summarize.inform = FALSE)
 library(sf)
@@ -80,6 +80,8 @@ decidspc <- c('A','AC','ACT','ACB','AT',
               'MB','MV','KC','RA','V','VB','VP','VV',
               'W','WB','WP','WT','ZH','XH','XC')
 
+
+db_levels <- c("0", "5", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60+") 
 
 
 #3. lists for filter dropdowns ------------------------------------------------------
