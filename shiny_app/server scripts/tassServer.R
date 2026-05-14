@@ -309,11 +309,29 @@ projvol_sp_prop_2 <- reactive({
     ncol = 2
   )
   
+  ## Add overall title
+  #title <- grid::textGrob(
+  #  "Species Composition in TASS projected Mean",
+  #  gp = grid::gpar(fontsize = 16, fontface = "bold")
+  #)
+  
   p <- grid.arrange(
     plots, legend,
     ncol = 2,
     widths = c(0.8, 0.2)
   )
+  
+  #p <- gridExtra::arrangeGrob(
+  #  title,
+  #  gridExtra::arrangeGrob(
+  #    plots, legend,
+  #    ncol = 2,
+  #    widths = c(0.8, 0.2)
+  #  ),
+  #  ncol = 1,
+  #  heights = c(0.08, 0.92)
+  #)
+  
   
   return(p)
   

@@ -124,7 +124,7 @@ theme_set(theme_bw(15, base_family = 'Arial'))
 # colour palettes for plots
 tree_colors <- c("BA" = "#99600F", "BG" = "#B3823E", "BL" = "#CCAA7A",
                  "HM" = "#54990F", "HW" = "#78B33E", "YC" = "#990F26", "HR" = "#B33E52",
-                 "JR" = "#A6763D", "UP" = "#FB6A4A",
+                 "JR" = "#A6763D", "UP" = "#FB6A4A", "EP" = "#C79E00",
                  "CW" = "#CC7A88", "TW" = "#E6B8BF", "DE" = "#F3C300", "Decid" = "#F3C300", "FD" = "#AA4499",
                  "LA" = "#FDBF6F", "LW" = "#FFCC80", "LT" = "#F39C12",
                  "PA" = "#0F8299", "PL" = "#3E9FB3", "PW" = "#7ABECC", "PY" = "#B8DEE6",

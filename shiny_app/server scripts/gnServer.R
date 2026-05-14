@@ -247,7 +247,7 @@ output$deploymentDate <- renderUI({
   HTML(
     paste0(
       "This app was last updated on ",
-      "08 December, 2025", ". ",
+      "14 May, 2026", ". ",
       "The data and code for this app are available ",
       "<a href='https://github.com/bcgov/YSMtechrep' target='_blank'>here</a>."
     )
