@@ -76,7 +76,7 @@ site_id <- reactive({
     }
   }
   
-  site_id
+  return(site_id)
 })
 
 
@@ -220,9 +220,6 @@ clstr_id_last2 <- reactive({
 # Subset data using the features
 summary_data <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
-  
   summary_data<-spcs_data %>% 
     filter(CLSTR_ID %in% clstr_id(), UTIL == 4) %>%
     mutate(SPC_GRP1 = substr(SPECIES,1,2)) %>%
@@ -249,8 +246,6 @@ summary_data <- reactive({
 
 summary_si <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
   
   summary_si <- spcs_data %>% 
     filter(CLSTR_ID %in% clstr_id(), UTIL == 4) %>%
@@ -293,8 +288,6 @@ decid_vol <- reactive({
 
 LD_dat <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
   
   LD_dat <- spcs_data %>%
     filter(CLSTR_ID %in% clstr_id(), UTIL == 4) %>%
@@ -326,9 +319,6 @@ LD_dat <- reactive({
 
 correct_ls <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
-  
   LD_dat <- LD_dat()
   
   #correct <- round(sum(LD_dat$SPC_GRP1 == LD_dat$SPC_GRP_VRI)/nrow(LD_dat)*100, 0)
@@ -340,9 +330,6 @@ correct_ls <- reactive({
 
 
 Fig11_dat <- reactive({
-  
-  req(input$SelectCategory)
-  input$genearate
   
   ysm_spc <- spcs_data %>% 
     filter(CLSTR_ID %in% clstr_id(), UTIL == 4, !(SPECIES %in% c('', NA)))
@@ -408,8 +395,6 @@ Fig11_dat <- reactive({
 
 percoverlap <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
   
   Fig11_dat <- Fig11_dat()
   
@@ -436,8 +421,6 @@ percoverlap <- reactive({
 
 fig6_dat <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
   
   fig6_dat <- tree_fh_data %>%
     filter(CLSTR_ID %in% clstr_id(), DAM_NUM==1, LV_D == "L") %>%
@@ -457,8 +440,6 @@ fig6_dat <- reactive({
 
 fig6_max <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
   
   fig6_dat <- fig6_dat()
   
@@ -491,8 +472,6 @@ fig6_sum <- reactive({
 
 si_dat <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
   
   si_dat_1 <- SI_data %>%
     filter(CLSTR_ID %in% clstr_id(), !is.na(ratio)) %>%
@@ -578,8 +557,6 @@ si_dat <- reactive({
 
 si_bias <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
   
   si_dat <- si_dat()
   
@@ -601,8 +578,6 @@ si_bias <- reactive({
 
 remeas_plot <- reactive({
   
-  req(input$SelectCategory)
-  
 remeas_plot <- sample_data %>% 
   filter(SITE_IDENTIFIER %in% site_id()) %>%
   group_by(SITE_IDENTIFIER) %>%
@@ -620,9 +595,6 @@ return(remeas_plot)
 
 total_remeas_plot <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
-  
   remeas_plot <- remeas_plot()
   
   total_remeas_plot <- length(remeas_plot)
@@ -634,9 +606,6 @@ total_remeas_plot <- reactive({
 
 
 fig10_dat_final <- reactive({
-  
-  req(input$SelectCategory)
-  input$genearate
   
   fig8_dat <- fig8_dat()
   
@@ -761,9 +730,6 @@ fig10_dat_final <- reactive({
 
 risk_vol <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
-  
   volsum_num <- tree_fh_data %>%
     filter(CLSTR_ID %in% clstr_id(), DAM_NUM==1, LV_D=="L", S_F == "S") %>%
     reframe(volsum = sum(vol_ha, na.rm = T)) %>%
@@ -795,9 +761,6 @@ risk_vol <- reactive({
 
 max_measyear <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
-  
   maxyear <- sample_data %>%
     filter(CLSTR_ID %in% clstr_id_all()) %>%
     summarize(maxyear = max(MEAS_YR)) %>%
@@ -810,8 +773,6 @@ max_measyear <- reactive({
 
 year100_immed <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
   
   risk_vol <- risk_vol()
   
@@ -825,9 +786,6 @@ year100_immed <- reactive({
 
 year100_inc <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
-  
   risk_vol <- risk_vol()
   
   year100_inc<- round(sum(risk_vol[risk_vol$mort_flag==2,]$year100)*100,1)
@@ -838,9 +796,6 @@ year100_inc <- reactive({
 
 
 year100_comb <- reactive({
-  
-  req(input$SelectCategory)
-  input$genearate
   
   risk_vol <- risk_vol()
   year100_immed <- year100_immed()
@@ -857,9 +812,6 @@ year100_comb <- reactive({
 
 meanage <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
-  
   meanage = ysm_msyt_vdyp_volume %>%
     filter(CLSTR_ID %in% clstr_id()) %>%
     summarize(meanage = mean(ref_age_adj)) %>%
@@ -871,9 +823,6 @@ meanage <- reactive({
 
 
 volproj <- reactive({
-  
-  req(input$SelectCategory)
-  input$genearate
   
   risk_vol <- risk_vol()
   meanage <- meanage()
@@ -946,9 +895,6 @@ volproj <- reactive({
 
 volproj_sp <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
-  
   risk_vol <- risk_vol()
   meanage <- meanage()
   
@@ -990,9 +936,6 @@ volproj_sp <- reactive({
 
 stemrustimpact <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
-  
   volproj <- volproj()
   
   stemrustimpact <- volproj %>%
@@ -1025,9 +968,6 @@ stemrustimpact <- reactive({
 
 
 projectiontable <- reactive({
-  
-  req(input$SelectCategory)
-  input$genearate
   
   #risk_vol <- risk_vol()
   #meanage <- meanage()
@@ -1084,9 +1024,6 @@ projectiontable <- reactive({
 
 Fig14_dat <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
-  
   Fig14_dat <- ysm_msyt_vdyp_volume %>%
     filter(CLSTR_ID %in% clstr_id()) %>%
     select(CLSTR_ID, ref_age_adj) 
@@ -1113,9 +1050,6 @@ Fig14_dat <- reactive({
 
 age_p <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
-  
   Fig14_dat <- Fig14_dat()
   
   age_p <- t.test(Fig14_dat$age_diff)$p.value
@@ -1127,9 +1061,6 @@ age_p <- reactive({
 
 
 Fig15_dat <- reactive({
-  
-  req(input$SelectCategory)
-  input$genearate
   
   comp_dat <- ysm_msyt_vdyp_volume %>%
     filter(SITE_IDENTIFIER %in% site_id()) %>%
@@ -1165,9 +1096,6 @@ Fig15_dat <- reactive({
 
 test1 <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
-  
   Fig15_dat <- Fig15_dat()
   
   if(nrow(Fig15_dat) > 0 & all(!is.na(Fig15_dat$grdnv_pai)) & 
@@ -1184,9 +1112,6 @@ test1 <- reactive({
 
 test2 <- reactive({
   
-  req(input$SelectCategory)
-  input$genearate
-  
   Fig15_dat <- Fig15_dat()
   
   if(nrow(Fig15_dat) > 0 & all(!is.na(Fig15_dat$grdnv_pai)) & 
@@ -1202,9 +1127,6 @@ test2 <- reactive({
 })
 
 test1_comment <- reactive({
-  
-  req(input$SelectCategory)
-  input$genearate
   
   if (total_remeas_plot() > 0){
     
@@ -1229,9 +1151,6 @@ test1_comment <- reactive({
 })
 
 test2_comment <- reactive({
-  
-  req(input$SelectCategory)
-  input$genearate
   
   if (total_remeas_plot() > 0){
   test2 <- test2()

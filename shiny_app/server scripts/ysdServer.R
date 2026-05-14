@@ -6,7 +6,7 @@
 #Subsetting by domain 
   
 ysd <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   
   ysd <-  HTML(paste0("Stand summaries (all species combined) are compiled and summarized for 
        all samples in the target population at the time of the latest measurement. 
@@ -27,7 +27,7 @@ output$young_stand_description <- renderUI({
 })
 
 summaryflex <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   if(!is.null(clstr_id())){
     
     summary_data <- summary_data()
@@ -111,7 +111,7 @@ output$stand_summary_flex <- renderUI({
 
 
 livespplot <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   if (!is.null(clstr_id())){
     
     summary_data <- summary_data()
@@ -239,7 +239,7 @@ output$live_sp <- renderPlot({
 #})
 
 becplot <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   if (!is.null(clstr_id())){
     
     figdata <- sample_data %>%
@@ -289,7 +289,7 @@ output$bec_dist <- renderPlot({
 })
 
 stockplot <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   if (!is.null(clstr_id())){
     
     fig5_dat <- tree_fh_data %>%
@@ -348,7 +348,7 @@ output$stock_table <- renderPlot({
 
 
 #stockplot_plotly <- reactive({
-#  req(input$SelectCategory, input$SelectVar)
+#  req(input$SelectCategory)
 #  if (!is.null(clstr_id())){
 #    
 #    fig5_dat <- tree_fh_data %>%
@@ -417,7 +417,7 @@ output$stock_table <- renderPlot({
 
 
 stockplot_stem <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   if (!is.null(clstr_id())){
     
     fig5_stem_dat <- tree_fh_data %>%
@@ -476,7 +476,7 @@ output$stock_table_stem <- renderPlot({
 
 
 fig5_dat <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   if (!is.null(clstr_id())){
     
   fig5_dat <- tree_fh_data %>%
@@ -571,7 +571,7 @@ fig5_dat <- reactive({
 
 
 smalltrplot <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   if (!is.null(clstr_id())){
     
     smtr_dat <- smtr_data %>%

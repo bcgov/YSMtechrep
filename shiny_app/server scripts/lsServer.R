@@ -6,7 +6,7 @@
 #Subsetting by domain 
 
 lstext <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   
   lstext <- HTML("<p>Leading species (by basal area) is compared between YSM & VRI where the 
        <i>‘correct leading species classification rate’</i> is a percent of all YSM samples 
@@ -27,7 +27,7 @@ output$leading_sp <- renderUI({
 })
 
 lsflex <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   
   if(!is.null(clstr_id())){
     
@@ -69,7 +69,7 @@ output$leading_sp_flex <- renderUI({
 })
 
 spcomp <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   Fig11_dat <- Fig11_dat()
   
   percoverlap <- percoverlap()

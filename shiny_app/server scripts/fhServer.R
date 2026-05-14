@@ -5,7 +5,7 @@
 ###############################################.
 
 coctext <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   Fig15_dat <- Fig15_dat()
   
   coctext <- HTML(paste0("<p>Growth and mortality of the n=", "<b>", total_remeas_plot(), 
@@ -31,7 +31,7 @@ output$quant_coc <- renderUI({
 })
 
 cocplot <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   fig8_dat <- fig8_dat()
   remeas_plot <- remeas_plot()
   total_remeas_plot <- total_remeas_plot()
@@ -127,7 +127,7 @@ output$coc_chart <- renderPlot({
 
 
 curfhtext <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   curfhtext <- HTML("All tagged trees are assessed for up to five forest health damage agents
 per tree. The mean incidence and 95% confidence intervals by damage
 agent (expressed as a percent of total live stems/ha of all unique damage
@@ -153,7 +153,7 @@ output$health_inci <- renderUI({
 
 
 curfhplot <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   # *compute incidence percent by agent by sample;
   ### Total stems/ha within a plot & average stems/ha of all plots
   #FH_dat <- tree_fh_data  %>%
@@ -343,7 +343,7 @@ output$curr_fh_inci <- renderPlot({
 
 
 fhcoctext1 <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   Fig15_dat <- Fig15_dat()
   
   fhcoctext1 <- HTML(paste0("Change in forest health incidence of the (n=","<b>",
@@ -365,7 +365,7 @@ output$comp_coc <- renderUI({
 
 
 fhcocplot <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   fig10_dat_final <- fig10_dat_final()
   
   p <- if (nrow(fig10_dat_final) > 0) {
@@ -415,7 +415,7 @@ output$change_dam <- renderPlot({
 })
 
 fhcoctext2 <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   
   fhcoctext2 <- HTML("All trees that were alive at the beginning of the period, have either
 survived or died between measurements. The table below summarizes
@@ -436,7 +436,7 @@ output$fh_trees <- renderUI({
 
 
 fhcocflex <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   fig10_dat_final <- fig10_dat_final()
   
   if (nrow(fig10_dat_final) > 0){
@@ -560,7 +560,7 @@ output$fh_trees_flex <- renderUI({
 
 
 fufhtext <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   
   year100_immed <- year100_immed()
   year100_inc <- year100_inc()
@@ -612,7 +612,7 @@ output$future_fh <- renderUI({
 
 
 fufhplot1 <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   risk_vol <- risk_vol()
   
   fig16 <- if (sum(risk_vol$mort_flag == 1) > 0) {
@@ -657,7 +657,7 @@ fufhplot1 <- reactive({
   
 
 fufhplot2 <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   risk_vol <- risk_vol()
   
   fig17 <- if (sum(risk_vol$mort_flag == 2) > 0) {

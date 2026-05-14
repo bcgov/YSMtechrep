@@ -5,7 +5,8 @@
 ###############################################.
 
 projtext <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  
+  req(input$SelectCategory)
   
   projtext <- "<p>To assess if young stands will meet future volume expectations, 
   each YSM tree list is projected in TASS from its latest measurement date to 
@@ -43,7 +44,7 @@ output$tass_tsr <- renderUI({
 
 
 projvol <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  
   volproj <- volproj()
   meanage <- meanage()
   
@@ -118,7 +119,7 @@ output$tass_tsr_netvol <- renderPlot({
 
 
 projvol_sp <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  
   volproj_sp <- volproj_sp()
   meanage <- meanage()
   
@@ -169,7 +170,7 @@ output$tass_tsr_netvol_sp <- renderPlot({
 
 
 projvol_sp_prop <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  
   volproj_sp <- volproj_sp()
   meanage <- meanage()
   
@@ -224,7 +225,6 @@ output$tass_tsr_netvol_sp_prop <- renderPlot({
 
 
 projvol_sp_data <- reactive({
-  req(input$SelectCategory, input$SelectVar)
   
   volproj_sp <- volproj_sp()
   
@@ -348,7 +348,7 @@ output$tass_tsr_netvol_sp_prop_2 <- renderPlot({
 
 
 stemrusttable <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   stemrustimpact <- stemrustimpact()
   
   tasstable <- stemrustimpact %>%
@@ -371,7 +371,7 @@ output$tasstable_flex <- renderUI({
 })
 
 cumimptable <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   volproj <- volproj()
   
   volproj1 <- volproj %>%
@@ -424,7 +424,7 @@ output$culmtable_flex <- renderUI({
 
 
 yieldtext <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   projectiontable <- projectiontable()
   prjtab_70 <- projectiontable %>% filter(AGE >=70, AGE <100)
   
@@ -464,7 +464,7 @@ output$tass_tsr_test <- renderUI({
 })
 
 yieldtable <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   projectiontable <- projectiontable() %>%
     select(n, meanvol_tsr, meanvol_tass, meanvoldiff, pval, percvoldiff)
   

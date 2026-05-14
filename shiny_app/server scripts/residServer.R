@@ -6,7 +6,7 @@
 #Subsetting by domain 
 
 residtext <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   residtext <- HTML("Young stands may include older residual trees which have important 
        ecological, management, and growth implications. Residual trees are 
        identified in the field using standard measurement protocols. 
@@ -27,7 +27,7 @@ output$residual <- renderUI({
 
 
 residplot <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   
   fig6_dat <- fig6_dat()
   fig6_max <- fig6_max()
