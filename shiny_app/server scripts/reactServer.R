@@ -5,63 +5,132 @@
 ###############################################.
 # Define subsetting feature by domain 
 title <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   title <- ifelse(input$SelectCategory == "TSA_DESC",
                   as.character(input$SelectVar),
-                  paste0(input$SelectVar, " zone"))
+                  ifelse(input$SelectCategory == "manual",
+                         "Selected Sites", 
+                         paste0(input$SelectVar, " zone")))
   return(title)
 })
 
+#site_id <- reactive({
+#  
+#  req(input$SelectCategory, input$SelectVar)
+#  input$genearate
+#  
+#  if (input$SelectCategory == "TSA_DESC"){
+#    site_id <- sample_data %>% 
+#      filter(TSA_filter == "Y") %>% 
+#      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+#      pull(SITE_IDENTIFIER)
+#  } else if (input$SelectCategory == "BECsub"){
+#    site_id <- sample_data %>% 
+#      filter(BEC_filter == "Y") %>% 
+#      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+#      pull(SITE_IDENTIFIER)
+#  } else if (input$SelectCategory == "BEC_ZONE"){
+#    site_id <- sample_data %>% 
+#      filter(BEC_filter == "Y") %>% 
+#      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+#      pull(SITE_IDENTIFIER)
+#  } else if (input$SelectCategory == "manual"){
+#    site_id <- unlist(strsplit(input$site_list, "[^[:alnum:]_]+"))
+#    site_id <- trimws(site_id)
+#    site_id <- site_id[nzchar(site_id)]
+#    site_id <- unique(site_id)
+#  }
+#  
+#  return(site_id)
+#  
+#})
+
 site_id <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
-  input$genearate
+  req(input$SelectCategory)
   
-  if (input$SelectCategory == "TSA_DESC"){
-    site_id <- sample_data %>% 
-      filter(TSA_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      pull(SITE_IDENTIFIER)
-  } else if (input$SelectCategory == "BECsub"){
-    site_id <- sample_data %>% 
-      filter(BEC_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      pull(SITE_IDENTIFIER)
-  } else if (input$SelectCategory == "BEC_ZONE"){
-    site_id <- sample_data %>% 
-      filter(BEC_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      pull(SITE_IDENTIFIER)
+  if (input$SelectCategory == "manual") {
+    
+    req(input$site_list)
+    
+    site_id <- unlist(strsplit(input$site_list, "[^[:alnum:]_]+"))
+    site_id <- trimws(site_id)
+    site_id <- site_id[nzchar(site_id)]
+    site_id <- unique(as.numeric(site_id))
+    
+  } else {
+    
+    req(input$SelectVar)
+    
+    if (input$SelectCategory == "TSA_DESC") {
+      site_id <- sample_data %>% 
+        filter(TSA_filter == "Y") %>% 
+        filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+        pull(SITE_IDENTIFIER)
+      
+    } else if (input$SelectCategory %in% c("BECsub", "BEC_ZONE")) {
+      site_id <- sample_data %>% 
+        filter(BEC_filter == "Y") %>% 
+        filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+        pull(SITE_IDENTIFIER)
+    }
   }
   
-  return(site_id)
+  site_id
+})
+
+
+site_id_ignored <- reactive({
+  
+  req(input$SelectCategory)
+  site_id_ignored <- setdiff(site_id(), unique(sample_data$SITE_IDENTIFIER))
+  return(site_id_ignored)
   
 })
 
+#selected_sites <- reactive({
+#  req(input$SelectCategory, input$SelectVar)
+#  if (input$input_mode == "select") {
+#    return(site_id())
+#  } else {
+#    # split by comma or newline, trim whitespace
+#    sites <- unlist(strsplit(input$site_list, "[,\\n]"))
+#    sites <- trimws(sites)
+#    sites[nzchar(sites)]
+#  }
+#})
+
 clstr_id <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
-  if (input$SelectCategory == "TSA_DESC"){
-    clstr_id <- sample_data %>% 
-      filter(TSA_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      filter(LAST_MSMT == "Y") %>%
-      pull(CLSTR_ID)
-  } else if (input$SelectCategory == "BECsub"){
-    clstr_id <- sample_data %>% 
-      filter(BEC_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      filter(LAST_MSMT == "Y") %>%
-      pull(CLSTR_ID)
-  } else if (input$SelectCategory == "BEC_ZONE"){
-    clstr_id <- sample_data %>% 
-      filter(BEC_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      filter(LAST_MSMT == "Y") %>%
-      pull(CLSTR_ID)
-  }
+  selected_sites <- site_id()
+  
+  clstr_id <- sample_data %>% 
+    filter(SITE_IDENTIFIER %in% selected_sites) %>% 
+    filter(LAST_MSMT == "Y") %>%
+    pull(CLSTR_ID)
+  
+  #if (input$SelectCategory == "TSA_DESC"){
+  #  clstr_id <- sample_data %>% 
+  #    filter(TSA_filter == "Y") %>% 
+  #    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+  #    filter(LAST_MSMT == "Y") %>%
+  #    pull(CLSTR_ID)
+  #} else if (input$SelectCategory == "BECsub"){
+  #  clstr_id <- sample_data %>% 
+  #    filter(BEC_filter == "Y") %>% 
+  #    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+  #    filter(LAST_MSMT == "Y") %>%
+  #    pull(CLSTR_ID)
+  #} else if (input$SelectCategory == "BEC_ZONE"){
+  #  clstr_id <- sample_data %>% 
+  #    filter(BEC_filter == "Y") %>% 
+  #    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+  #    filter(LAST_MSMT == "Y") %>%
+  #    pull(CLSTR_ID)
+  #}
 
   return(clstr_id)
   
@@ -69,25 +138,31 @@ clstr_id <- reactive({
 
 clstr_id_all <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
-  if (input$SelectCategory == "TSA_DESC"){
-    clstr_id_all <- sample_data %>% 
-      filter(TSA_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      pull(CLSTR_ID)
-  } else if (input$SelectCategory == "BECsub"){
-    clstr_id_all <- sample_data %>% 
-      filter(BEC_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      pull(CLSTR_ID)
-  } else if (input$SelectCategory == "BEC_ZONE"){
-    clstr_id_all <- sample_data %>% 
-      filter(BEC_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      pull(CLSTR_ID)
-  }
+  selected_sites <- site_id()
+  
+  clstr_id_all <- sample_data %>% 
+    filter(SITE_IDENTIFIER %in% selected_sites) %>% 
+    pull(CLSTR_ID)
+  
+  #if (input$SelectCategory == "TSA_DESC"){
+  #  clstr_id_all <- sample_data %>% 
+  #    filter(TSA_filter == "Y") %>% 
+  #    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+  #    pull(CLSTR_ID)
+  #} else if (input$SelectCategory == "BECsub"){
+  #  clstr_id_all <- sample_data %>% 
+  #    filter(BEC_filter == "Y") %>% 
+  #    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+  #    pull(CLSTR_ID)
+  #} else if (input$SelectCategory == "BEC_ZONE"){
+  #  clstr_id_all <- sample_data %>% 
+  #    filter(BEC_filter == "Y") %>% 
+  #    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+  #    pull(CLSTR_ID)
+  #}
   
   return(clstr_id_all)
   
@@ -96,37 +171,46 @@ clstr_id_all <- reactive({
 
 clstr_id_last2 <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
-  input$genearate
+  req(input$SelectCategory)
   
-  if (input$SelectCategory == "TSA_DESC"){
-    clstr_id_last2 <- sample_data %>% 
-      filter(TSA_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      group_by(SITE_IDENTIFIER) %>%
-      filter(n() > 1) %>% 
-      arrange(VISIT_NUMBER) %>% 
-      slice_tail(n = 2) %>%
-      pull(CLSTR_ID)
-  } else if (input$SelectCategory == "BECsub"){
-    clstr_id_last2 <- sample_data %>% 
-      filter(BEC_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      group_by(SITE_IDENTIFIER) %>%
-      filter(n() > 1) %>% 
-      arrange(VISIT_NUMBER) %>% 
-      slice_tail(n = 2) %>%
-      pull(CLSTR_ID)
-  } else if (input$SelectCategory == "BEC_ZONE"){
-    clstr_id_last2 <- sample_data %>% 
-      filter(BEC_filter == "Y") %>% 
-      filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
-      group_by(SITE_IDENTIFIER) %>%
-      filter(n() > 1) %>% 
-      arrange(VISIT_NUMBER) %>% 
-      slice_tail(n = 2) %>%
-      pull(CLSTR_ID)
-  }
+  selected_sites <- site_id()
+  
+  clstr_id_last2 <- sample_data %>% 
+    filter(SITE_IDENTIFIER %in% selected_sites) %>% 
+    group_by(SITE_IDENTIFIER) %>%
+    filter(n() > 1) %>% 
+    arrange(VISIT_NUMBER, .by_group = TRUE) %>% 
+    slice_tail(n = 2) %>%
+    pull(CLSTR_ID)
+  
+  #if (input$SelectCategory == "TSA_DESC"){
+  #  clstr_id_last2 <- sample_data %>% 
+  #    filter(TSA_filter == "Y") %>% 
+  #    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+  #    group_by(SITE_IDENTIFIER) %>%
+  #    filter(n() > 1) %>% 
+  #    arrange(VISIT_NUMBER) %>% 
+  #    slice_tail(n = 2) %>%
+  #    pull(CLSTR_ID)
+  #} else if (input$SelectCategory == "BECsub"){
+  #  clstr_id_last2 <- sample_data %>% 
+  #    filter(BEC_filter == "Y") %>% 
+  #    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+  #    group_by(SITE_IDENTIFIER) %>%
+  #    filter(n() > 1) %>% 
+  #    arrange(VISIT_NUMBER) %>% 
+  #    slice_tail(n = 2) %>%
+  #    pull(CLSTR_ID)
+  #} else if (input$SelectCategory == "BEC_ZONE"){
+  #  clstr_id_last2 <- sample_data %>% 
+  #    filter(BEC_filter == "Y") %>% 
+  #    filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+  #    group_by(SITE_IDENTIFIER) %>%
+  #    filter(n() > 1) %>% 
+  #    arrange(VISIT_NUMBER) %>% 
+  #    slice_tail(n = 2) %>%
+  #    pull(CLSTR_ID)
+  #}
   
   return(clstr_id_last2)
   
@@ -136,7 +220,7 @@ clstr_id_last2 <- reactive({
 # Subset data using the features
 summary_data <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   summary_data<-spcs_data %>% 
@@ -165,7 +249,7 @@ summary_data <- reactive({
 
 summary_si <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   summary_si <- spcs_data %>% 
@@ -209,7 +293,7 @@ decid_vol <- reactive({
 
 LD_dat <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   LD_dat <- spcs_data %>%
@@ -242,7 +326,7 @@ LD_dat <- reactive({
 
 correct_ls <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   LD_dat <- LD_dat()
@@ -257,7 +341,7 @@ correct_ls <- reactive({
 
 Fig11_dat <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   ysm_spc <- spcs_data %>% 
@@ -324,7 +408,7 @@ Fig11_dat <- reactive({
 
 percoverlap <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   Fig11_dat <- Fig11_dat()
@@ -352,7 +436,7 @@ percoverlap <- reactive({
 
 fig6_dat <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   fig6_dat <- tree_fh_data %>%
@@ -373,7 +457,7 @@ fig6_dat <- reactive({
 
 fig6_max <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   fig6_dat <- fig6_dat()
@@ -407,7 +491,7 @@ fig6_sum <- reactive({
 
 si_dat <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   si_dat_1 <- SI_data %>%
@@ -494,7 +578,7 @@ si_dat <- reactive({
 
 si_bias <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   si_dat <- si_dat()
@@ -517,8 +601,7 @@ si_bias <- reactive({
 
 remeas_plot <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
-  input$genearate
+  req(input$SelectCategory)
   
 remeas_plot <- sample_data %>% 
   filter(SITE_IDENTIFIER %in% site_id()) %>%
@@ -537,7 +620,7 @@ return(remeas_plot)
 
 total_remeas_plot <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   remeas_plot <- remeas_plot()
@@ -552,7 +635,7 @@ total_remeas_plot <- reactive({
 
 fig10_dat_final <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   fig8_dat <- fig8_dat()
@@ -678,7 +761,7 @@ fig10_dat_final <- reactive({
 
 risk_vol <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   volsum_num <- tree_fh_data %>%
@@ -712,7 +795,7 @@ risk_vol <- reactive({
 
 max_measyear <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   maxyear <- sample_data %>%
@@ -727,7 +810,7 @@ max_measyear <- reactive({
 
 year100_immed <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   risk_vol <- risk_vol()
@@ -742,7 +825,7 @@ year100_immed <- reactive({
 
 year100_inc <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   risk_vol <- risk_vol()
@@ -756,7 +839,7 @@ year100_inc <- reactive({
 
 year100_comb <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   risk_vol <- risk_vol()
@@ -774,7 +857,7 @@ year100_comb <- reactive({
 
 meanage <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   meanage = ysm_msyt_vdyp_volume %>%
@@ -789,7 +872,7 @@ meanage <- reactive({
 
 volproj <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   risk_vol <- risk_vol()
@@ -863,7 +946,7 @@ volproj <- reactive({
 
 volproj_sp <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   risk_vol <- risk_vol()
@@ -907,7 +990,7 @@ volproj_sp <- reactive({
 
 stemrustimpact <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   volproj <- volproj()
@@ -943,7 +1026,7 @@ stemrustimpact <- reactive({
 
 projectiontable <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   #risk_vol <- risk_vol()
@@ -1001,7 +1084,7 @@ projectiontable <- reactive({
 
 Fig14_dat <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   Fig14_dat <- ysm_msyt_vdyp_volume %>%
@@ -1030,7 +1113,7 @@ Fig14_dat <- reactive({
 
 age_p <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   Fig14_dat <- Fig14_dat()
@@ -1045,7 +1128,7 @@ age_p <- reactive({
 
 Fig15_dat <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   comp_dat <- ysm_msyt_vdyp_volume %>%
@@ -1082,7 +1165,7 @@ Fig15_dat <- reactive({
 
 test1 <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   Fig15_dat <- Fig15_dat()
@@ -1101,7 +1184,7 @@ test1 <- reactive({
 
 test2 <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   Fig15_dat <- Fig15_dat()
@@ -1120,7 +1203,7 @@ test2 <- reactive({
 
 test1_comment <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   if (total_remeas_plot() > 0){
@@ -1147,7 +1230,7 @@ test1_comment <- reactive({
 
 test2_comment <- reactive({
   
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   input$genearate
   
   if (total_remeas_plot() > 0){

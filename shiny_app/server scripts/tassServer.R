@@ -223,6 +223,127 @@ output$tass_tsr_netvol_sp_prop <- renderPlot({
 
 
 
+projvol_sp_data <- reactive({
+  req(input$SelectCategory, input$SelectVar)
+  
+  volproj_sp <- volproj_sp()
+  
+  volproj_sp1 <- volproj_sp %>%
+    arrange(SITE_IDENTIFIER, VISIT_NUMBER, CLSTR_ID, SPECIES, desc(xy), desc(rust)) %>%
+    group_by(SITE_IDENTIFIER, SPECIES, agespan) %>%
+    slice(1) %>%
+    ungroup() %>%
+    group_by(SPECIES, agespan) %>%
+    reframe(meanvol_tass = sum(volTASS_adj, na.rm = TRUE)/n_ci) %>% 
+    ungroup() %>% 
+    distinct() %>%
+    filter(agespan %in% c(60, 70, 80, 90, 100))  
+  
+  return(volproj_sp1)
+})
+
+
+projvol_sp_prop_2 <- reactive({
+  
+  
+  df <- projvol_sp_data()
+  
+  p1 <- df %>%
+    ggplot(aes(x = agespan, y = meanvol_tass, fill = SPECIES)) +
+    geom_col(linewidth = 1.1) +
+    scale_y_continuous(expand = c(0, 0)) +
+    scale_x_continuous(breaks = c(60, 70, 80, 90, 100)) +
+    labs(x = "Total Age (yrs)", y = "Net merch volume (m3/ha)") +
+    scale_fill_manual(values = tass_colors, name = NULL) +
+    guides(fill = guide_legend(ncol = 2)) + 
+    theme(
+      axis.line = element_line(colour="darkgray"),
+      panel.grid.major.y = element_line(color = 'darkgray'),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      legend.position = "left",
+      legend.direction = "vertical",
+      plot.margin = margin(5, 5, 5, 5)
+    )
+  
+  # --- Proportional bar plot ---
+  p2 <- df %>%
+    group_by(agespan) %>%
+    mutate(pct = meanvol_tass / sum(meanvol_tass)) %>%
+    ggplot(aes(x = agespan, y = pct, fill = SPECIES)) +
+    geom_col(position = "fill", linewidth = 1.1) +
+    geom_text(
+      aes(label = ifelse(pct >= 0.05, scales::percent(pct, accuracy = 1), "")),
+      position = position_fill(vjust = 0.5),
+      size = 5
+    ) +
+    scale_y_continuous(labels = scales::percent, expand = c(0, 0)) +
+    scale_x_continuous(breaks = c(60, 70, 80, 90, 100)) +
+    labs(x = "Total Age (yrs)", y = NULL) +
+    scale_fill_manual(values = tass_colors, name = NULL) +
+    theme(
+      axis.line = element_line(colour="darkgray"),
+      panel.grid.major.y = element_line(color = 'darkgray'),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      legend.position = "none",
+      plot.margin = margin(5, 5, 5, 5)
+    )
+  
+  # --- Extract legend from p1 ---
+  g_legend <- function(a.gplot){
+    tmp <- ggplotGrob(a.gplot)
+    leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+    tmp$grobs[[leg]]
+  }
+  
+  legend <- g_legend(p1)
+  
+  # --- Remove legend from p1 ---
+  p1 <- p1 + theme(legend.position = "none")
+  
+  # --- Arrange plots with equal widths ---
+  plots <- gridExtra::arrangeGrob(
+    ggplotGrob(p1),
+    ggplotGrob(p2),
+    ncol = 2
+  )
+  
+  ## Add overall title
+  #title <- grid::textGrob(
+  #  "Species Composition in TASS projected Mean",
+  #  gp = grid::gpar(fontsize = 16, fontface = "bold")
+  #)
+  
+  p <- grid.arrange(
+    plots, legend,
+    ncol = 2,
+    widths = c(0.8, 0.2)
+  )
+  
+  #p <- gridExtra::arrangeGrob(
+  #  title,
+  #  gridExtra::arrangeGrob(
+  #    plots, legend,
+  #    ncol = 2,
+  #    widths = c(0.8, 0.2)
+  #  ),
+  #  ncol = 1,
+  #  heights = c(0.08, 0.92)
+  #)
+  
+  
+  return(p)
+  
+})
+
+
+output$tass_tsr_netvol_sp_prop_2 <- renderPlot({
+  
+  projvol_sp_prop_2()
+  
+})
+
 
 
 

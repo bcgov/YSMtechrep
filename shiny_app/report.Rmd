@@ -1,7 +1,7 @@
 ---
 title: "`r title()` Young Stand Monitoring Program"
 author: "Forest Analysis and Inventory Branch"
-date: "Version 2025-12-08; Created `r Sys.Date()`"
+date: "Version 2026-05-14; Created `r Sys.Date()`"
 #runtime: shiny
 always_allow_html: true
 geometry: margin=1cm
@@ -77,6 +77,10 @@ prjtab_70 <- projectiontable %>% filter(AGE >=70, AGE <100)
   Significant = ifelse(prjtab_70$pval[max_row] <0.05, "Yes", "No")
   TSRbias1 = ifelse(prjtab_70$meanvoldiff[max_row] < 0, "Conservative", "Optimistic")
   TSRbias2 = ifelse(Significant == "No", "No", TSRbias1)
+
+  stemrustimpact100 <- stemrustimpact() %>%
+    filter(AGE == 100) %>% mutate(rustimpact100 = round((N-Y)/N*100,1)) %>% pull(rustimpact100)
+  
   
 ```
 
@@ -120,7 +124,7 @@ prjtab_70 <- projectiontable %>% filter(AGE >=70, AGE <100)
 8. For YSM measurements since 2017, the impact from stem rusts can be 
     directly modeled in TASS using GRIM / CRIME. The volume impact of TASS YSM 
     projections by age 100 (in addition to default OAFs) is: 
-    **`r colorize(year100_inc(), "red")`** `r colorize("(% of m^3^/ha)", "red")`
+    **`r colorize(stemrustimpact100, "red")`** `r colorize("(% of m^3^/ha)", "red")`
     
 9. To address forest health risks from all other damage agents, an 
     interim simplistic approach is applied to estimate future impacts of all 
@@ -147,14 +151,15 @@ prjtab_70 <- projectiontable %>% filter(AGE >=70, AGE <100)
 
 ```{r, fig.width=6,fig.height=3, echo=FALSE,warning=FALSE, message = FALSE}
 summaryflex()
-livespplot() + theme_bw(12) +
-      theme(
-        axis.line = element_line(colour="darkgray"), 
-        panel.grid.major.y = element_line(color = 'darkgray'), 
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor.x = element_blank(),
-        rect = element_blank()
-      ) 
+#livespplot() + theme_bw(12) +
+#      theme(
+#        axis.line = element_line(colour="darkgray"), 
+#        panel.grid.major.y = element_line(color = 'darkgray'), 
+#        panel.grid.major.x = element_blank(),
+#        panel.grid.minor.x = element_blank(),
+#        rect = element_blank()
+#      ) 
+livespplot()
 ```
 
 ```{r, fig.width=5,fig.height=3, echo=FALSE,warning=FALSE, message = FALSE}
@@ -170,6 +175,16 @@ becplot() + theme_bw(12) +
 
 ```{r, fig.width=7,fig.height=4, echo=FALSE,warning=FALSE, message = FALSE}
 stockplot() + theme_bw(12) +
+      theme(
+        panel.grid.major.y = element_line(color = 'darkgray'), 
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        rect = element_blank()
+      ) 
+```
+
+```{r, fig.width=7,fig.height=4, echo=FALSE,warning=FALSE, message = FALSE}
+stockplot_stem() + theme_bw(12) +
       theme(
         panel.grid.major.y = element_line(color = 'darkgray'), 
         panel.grid.major.x = element_blank(),
@@ -498,6 +513,9 @@ cumimptable()
 :::
 :::
 
+```{r, echo=FALSE, warning=FALSE, message = FALSE, fig.height=3.5, fig.width=9}
+grid::grid.draw(projvol_sp_prop_2())
+```
 
 ## Test to compare YSM TASS projections against TSR Predicted Yield Tables
 

@@ -83,16 +83,48 @@ ui <- dashboardPage(
                            radioButtons("SelectCategory", "Strata",
                                         choices = list("By TSA" = "TSA_DESC", 
                                                        "By BEC subzone" = "BECsub",
-                                                       "By BEC zone" = "BEC_ZONE")
+                                                       "By BEC zone" = "BEC_ZONE",
+                                                       "Enter list manually" = "manual")
                            ), style = "font-size:100%")), align = "center"
       ), 
       
-      column(3, offset = 1, selectInput(inputId = "SelectVar",
-                                        label = "Select",
-                                        choices = NULL), 
-             HTML("<font size='-1'>*only n&ge;10 are selectable.</font>")),
       
-      column(3, offset = 1, downloadButton("downloadReport", "Download report"), br(),
+      ## NEW: mode selection
+      #column(2,
+      #       radioButtons("input_mode", "Selection mode",
+      #                    choices = c("Select from list" = "select",
+      #                                "Enter list manually" = "manual"))
+      #),
+      
+      # Dropdown (shown when "select")
+      column(4, offset = 1,
+             # Dropdown
+             conditionalPanel(
+               condition = "input.SelectCategory != 'manual'",
+               selectInput(inputId = "SelectVar",
+                           label = "Select",
+                           choices = NULL),
+               HTML("<font size='-1'>*only n&ge;10 are selectable.</font>")
+             ),
+             
+             # Manual input
+             conditionalPanel(
+               condition = "input.SelectCategory == 'manual'",
+               textAreaInput("site_list", 
+                             "Enter Site IDs (comma or line separated):",
+                             placeholder = "e.g. 2095167, 2097163, 2095157",
+                             rows = 3)
+             )
+      ),
+      
+      
+      #column(3, offset = 1, selectInput(inputId = "SelectVar",
+      #                                  label = "Select",
+      #                                  choices = NULL), 
+      #       HTML("<font size='-1'>*only n&ge;10 are selectable.</font>")
+      #       ),
+      
+      column(2, offset = 1, downloadButton("downloadReport", "Download report"), br(),
              radioButtons("format", "Document format", c("HTML"), inline = TRUE)
       )
       
@@ -125,10 +157,12 @@ ui <- dashboardPage(
              br(),
              div(
              plotOutput("live_sp", width = "700px"),
+               #plotlyOutput("live_sp", width = "700px"),
              br(),
              plotOutput("bec_dist", width = "500px"),
              br(),
              plotOutput("stock_table", width = "700px"),
+             #plotlyOutput("stock_table_plotly", width = "700px"),
              br(),
              plotOutput("stock_table_stem", width = "700px"),
              br(),
@@ -258,10 +292,10 @@ ui <- dashboardPage(
              br(),
              withSpinner(plotOutput("tass_tsr_netvol", width = "800px")),
              br(),
-             plotOutput("tass_tsr_netvol_sp", width = "800px"),
-             br(),
-             plotOutput("tass_tsr_netvol_sp_prop", width = "800px"),
-             br(),
+             #plotOutput("tass_tsr_netvol_sp", width = "800px"),
+             #br(),
+             #plotOutput("tass_tsr_netvol_sp_prop", width = "800px"),
+             #br(),
              fluidRow(
                column(6,
                       uiOutput("tasstable_flex")),
@@ -269,11 +303,13 @@ ui <- dashboardPage(
                       uiOutput("culmtable_flex"))
              ),
              br(),
+             plotOutput("tass_tsr_netvol_sp_prop_2", width = "800px", height = "300px"),
+             br(),
     ),
     tabPanel(title = "YSM TASS projections vs. TSR Predicted Yield Tables",
              h3("YSM TASS projections vs. TSR Predicted Yield Tables"),
              uiOutput("tass_tsr_test"),
-             br(),
+             #br(),
              withSpinner(uiOutput("tass_tsr_volproj")),
              br(),
     ),
