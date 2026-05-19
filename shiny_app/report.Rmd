@@ -54,7 +54,7 @@ library(shiny)
 `r htmltopdf(overview())`
 
 ```{r plotgraph, fig.width=8, echo=FALSE, fig.align='center'}
-plotgraph()
+plotgraph_report()
 ```
 
 <br>
