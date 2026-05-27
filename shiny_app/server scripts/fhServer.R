@@ -595,7 +595,7 @@ fufhtext <- reactive({
   For the first group, 90% of the current measured incidence is assumed to 
   cause immediate mortality (left graph). For the second group, the impact 
   is modeled as a product of the current measured incidence times a mortality 
-  rate of 2.5% volume loss per decade (right graph).
+  rate of 2.5% whole stem volume loss per decade (right graph).
   Their combined impact is applied as an additional reduction factor to 
   each YSM TASS projection up to rotation age.</p>", "<p>", phrase, "</p>"))
   return(fufhtext)

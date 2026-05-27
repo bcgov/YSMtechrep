@@ -325,7 +325,7 @@ stockplot <- reactive({
       scale_fill_manual(values = tree_colors, name = NULL) +
       scale_x_discrete(drop=FALSE) +
       scale_y_continuous(expand = c(0, 0), labels = scales::percent) +
-      labs(x = "DBH class (cm)", y = "% of total vol/ha",
+      labs(x = "DBH class (cm)", y = "% of whole stem vol/ha",
            title = "Stock Table - live trees") +
       theme(
         #axis.line = element_line(colour="darkgray"), 

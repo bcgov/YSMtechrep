@@ -65,7 +65,7 @@ ysmtsr <- reactive({
               col="red", linewidth = 1.2) +
     scale_x_continuous(expand = c(0, 0), limits = c(0, 60))+ 
     scale_y_continuous(expand = c(0.01, 0), limits = c(-0.01, NA)) + 
-    labs(x = "Total Age (yrs)", y = "Net Merch Volume (m3/ha)",
+    labs(x = "Total Age (yrs)", y = expression("Net Merch Vol. (m"^3*"/ha)"),
          title = "YSM Sample Remeasurements vs Average of TSR Yield Tables",
          subtitle = "(Spatially matched to each YSM location)") +
     #theme_bw() + 
@@ -113,7 +113,7 @@ ysmtsrbias <- reactive({
                        values = c("Managed" =16, "AGGREGATE" =15, "VDYP" = 17, "VDYP-fill_missed_tsr" = 18), drop = FALSE) +
     scale_x_continuous(expand = c(0, 0), limits = c(0, 60))+ 
     #scale_y_continuous(expand = c(0.01, 0), limits = c(-0.01, NA))+ 
-    labs(x = "Total Age (yrs)", y = "Predicted - Actual (m3/ha)",
+    labs(x = "Total Age (yrs)", y = expression("Predicted - Actual Net Merch Vol. (m"^3*"/ha)"),
          title = "Total volume bias at each YSM location",
          subtitle = "(Predicted TSR yield table volume - Actual YSM volume)") +
     #theme_bw() + 
@@ -274,7 +274,7 @@ paitext <- reactive({
   test1_comment <- test1_comment()
   test2_comment <- test2_comment()
   
-  paitext <- HTML( paste0("<p>Periodic annual increment (PAI) in units of m<sup>3</sup>/ha/yr, is computed from
+  paitext <- HTML( paste0("<p>Periodic annual increment (PAI) of net merchantable volume (m<sup>3</sup>/ha/yr) is computed from
 all re-measured YSM ground samples, and compared against predicted PAI
 from TSR yield tables and from YSM TASS projections, separately over the
 same re-measurement period. Paired T-tests check for significant
@@ -485,7 +485,7 @@ tassdiff <- reactive({
       xlim(-1, 2) +
       ylim(floor(min(d$y1, d$y2)/5)*5, ceiling(max(d$y1, d$y2)/5)*5) +
       coord_flip() +
-      labs(x = "", y = expression(m^3~"/ha/yr"),
+      labs(x = "", y = expression("PAI (m"^3*"/ha/yr)"),
            title = "PAI Mean Difference & 95% CI") +
       theme(
         legend.position = "left",
