@@ -323,14 +323,31 @@ ui <- dashboardPage(
              h3("Total number of YSM samples by:"),
              br(),
              
-             fluidRow(align = 'center',
-                      column(6,
-                             uiOutput("ysm_tables1"),
-                             uiOutput("ysm_tables3"),
-                             uiOutput("ysm_tables5")),
-                      column(6,
-                             uiOutput("ysm_tables2"),
-                             uiOutput("ysm_tables4")))
+             #fluidRow(align = 'center',
+             #         column(6,
+             #                uiOutput("ysm_tables1"),
+             #                uiOutput("ysm_tables3"),
+             #                uiOutput("ysm_tables6")),
+             #         column(6,
+             #                uiOutput("ysm_tables2"),
+             #                uiOutput("ysm_tables4"),
+             #                uiOutput("ysm_tables5")))
+             tagList(
+               fluidRow(
+                 column(6, uiOutput("ysm_tables1")),
+                 column(6, uiOutput("ysm_tables2"))
+               ),
+               
+               fluidRow(
+                 column(6, uiOutput("ysm_tables3")),
+                 column(6, uiOutput("ysm_tables4"))
+               ),
+               
+               fluidRow(
+                 column(6, uiOutput("ysm_tables6")),
+                 column(6, uiOutput("ysm_tables5"))
+               )
+             )
     ),
     tabPanel(title = "Tree Species and Damage Agents",
              uiOutput('sp_dam_header'),

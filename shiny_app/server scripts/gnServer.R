@@ -185,6 +185,48 @@ output$ysm_tables5 <- renderUI({
 
 
 
+t6 <- reactive({
+  req(input$SelectCategory)
+  
+  smtr_table <- sample_data %>%
+    filter(CLSTR_ID %in% clstr_id()) %>%
+    select(CLSTR_ID) %>%
+    left_join(smtr_data  %>%
+                filter(CLSTR_ID %in% clstr_id())  %>%
+                group_by(CLSTR_ID) %>%
+                arrange(desc(SMTR_HA)) %>%
+                slice_head(n = 1) %>% data.table(), by = "CLSTR_ID") %>%
+    mutate(occupancy = case_when(is.na(SPECIES) ~ "Not Measured",
+                                 SMTR_HA == 0 ~ "Empty",
+                                 TRUE ~ "Measured")) %>%
+    mutate(occupancy = factor(occupancy,
+                              levels = c("Measured", "Empty", "Not Measured")))
+  
+  
+  t6 <- proc_freq(smtr_table, "occupancy",
+                  include.row_percent = F,
+                  include.column_percent = F,
+                  include.table_percent = F) 
+  
+  t6 <- t6 %>%
+    add_header_lines(values = "Availability of small tree data in YSM plots", top = T) %>%
+    delete_rows(i = 2, part = "header") %>%
+    merge_at(i = 1, j = 1:3, part = "header") %>%
+    bold(part = 'header', bold = TRUE) %>%
+    autofit()
+  
+  return(t6)
+})
+
+
+
+output$ysm_tables6 <- renderUI({
+  
+  htmltools_value(t6())
+  
+})
+
+
 output$sp_dam_header <- renderUI({
   
   HTML(paste0("<h3>Tree Species and Damage Agents Recorded from YSM Samples in ", title(),"</h3>"))
