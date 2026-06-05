@@ -188,19 +188,30 @@ output$ysm_tables5 <- renderUI({
 t6 <- reactive({
   req(input$SelectCategory)
   
-  smtr_table <- sample_data %>%
+  #smtr_table <- sample_data %>%
+  #  filter(CLSTR_ID %in% clstr_id()) %>%
+  #  select(CLSTR_ID) %>%
+  #  left_join(smtr_data  %>%
+  #              filter(CLSTR_ID %in% clstr_id())  %>%
+  #              group_by(CLSTR_ID) %>%
+  #              arrange(desc(SMTR_HA)) %>%
+  #              slice_head(n = 1) %>% data.table(), by = "CLSTR_ID") %>%
+  #  mutate(occupancy = case_when(is.na(SPECIES) ~ "Not Measured",
+  #                               SMTR_HA == 0 ~ "Empty",
+  #                               TRUE ~ "Measured")) %>%
+  #  mutate(occupancy = factor(occupancy,
+  #                            levels = c("Measured", "Empty", "Not Measured")))
+  
+  smtr_table <- smtr_data %>%
     filter(CLSTR_ID %in% clstr_id()) %>%
-    select(CLSTR_ID) %>%
-    left_join(smtr_data  %>%
-                filter(CLSTR_ID %in% clstr_id())  %>%
-                group_by(CLSTR_ID) %>%
-                arrange(desc(SMTR_HA)) %>%
-                slice_head(n = 1) %>% data.table(), by = "CLSTR_ID") %>%
-    mutate(occupancy = case_when(is.na(SPECIES) ~ "Not Measured",
-                                 SMTR_HA == 0 ~ "Empty",
-                                 TRUE ~ "Measured")) %>%
+    group_by(CLSTR_ID) %>%
+    arrange(desc(SMTR_HA)) %>%
+    slice_head(n = 1)  %>%
+    mutate(occupancy = case_when(SMTR_HA_TOT == 0 ~ "Empty",
+                                 is.na(SPECIES) ~ "Not Measured",
+                                 TRUE ~ "Treed")) %>%
     mutate(occupancy = factor(occupancy,
-                              levels = c("Measured", "Empty", "Not Measured")))
+                              levels = c("Treed", "Empty", "Not Measured"))) %>% data.table()
   
   
   t6 <- proc_freq(smtr_table, "occupancy",
@@ -209,7 +220,7 @@ t6 <- reactive({
                   include.table_percent = F) 
   
   t6 <- t6 %>%
-    add_header_lines(values = "Availability of small tree data in YSM plots", top = T) %>%
+    add_header_lines(values = "YSM Plot Occupancy \nof trees <4cm DBH", top = T) %>%
     delete_rows(i = 2, part = "header") %>%
     merge_at(i = 1, j = 1:3, part = "header") %>%
     bold(part = 'header', bold = TRUE) %>%
