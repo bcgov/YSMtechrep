@@ -533,7 +533,7 @@ yieldtable()
 ```{r, include=T, echo=F,warning=FALSE, message = FALSE}
 t1()
 t3()
-t5()
+t6()
 ```
 :::
 
@@ -541,6 +541,7 @@ t5()
 ```{r, include=T, echo=F, warning=FALSE, message = FALSE}
 t2()
 t4()
+t5()
 ```
 :::
 :::
