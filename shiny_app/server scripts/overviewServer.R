@@ -253,6 +253,154 @@ output$plotgraph <- renderLeaflet({
 })
 
 
+plotgraph_report <- reactive({
+  req(input$SelectCategory)
+  
+  if(!is.null(site_id())){
+    
+  
+    location <- sample_data %>% 
+      filter(SITE_IDENTIFIER %in% site_id()) %>% 
+      group_by(SITE_IDENTIFIER) %>% 
+      mutate(visit_num = length(VISIT_NUMBER),
+             visit_year = paste0(MEAS_YR, collapse  = ',')) %>%
+      select(SITE_IDENTIFIER, SAMPLE_ESTABLISHMENT_TYPE, visit_num, visit_year, BECsub,
+             MGMT_UNIT, TSA_DESC, BEC_ZONE, BEC_SBZ, BEC_VAR, GRID_SIZE,
+             BC_ALBERS_X, BC_ALBERS_Y, Latitude, Longitude) %>% 
+      distinct() %>%
+      left_join(LD_dat() %>% 
+                  filter(CLSTR_ID %in% clstr_id()) %>%
+                  select(SITE_IDENTIFIER, SPECIES),
+                by = "SITE_IDENTIFIER") %>%
+      left_join(ysm_msyt_vdyp_volume %>% 
+                  filter(CLSTR_ID %in% clstr_id()) %>%
+                  select(SITE_IDENTIFIER, grdnv),
+                by = "SITE_IDENTIFIER") 
+    
+    location <- st_as_sf(x = location,                         
+                         coords = c("Longitude", "Latitude"),
+                         crs = 4326)
+    
+    if(input$SelectCategory == "TSA_DESC"){
+      
+      aoimap <- tsa_sp %>%
+        filter(TSA_NUMBER %in% substr(unique(sample_data[sample_data$SITE_IDENTIFIER %in% site_id(),]$MGMT_UNIT), 4, 5))
+      
+      lng1 = as.numeric(st_bbox(aoimap)[1])
+      lat1 = as.numeric(st_bbox(aoimap)[2])
+      lng2 = as.numeric(st_bbox(aoimap)[3])
+      lat2 = as.numeric(st_bbox(aoimap)[4])
+      
+    } else if (input$SelectCategory == "BECsub"){
+      aoimap <- becmap %>%
+        filter(BECsub %in% sample_data[sample_data$SITE_IDENTIFIER %in% site_id(),]$BECsub)
+      
+      lng1 = as.numeric(st_bbox(aoimap)[1])
+      lat1 = as.numeric(st_bbox(aoimap)[2])
+      lng2 = as.numeric(st_bbox(aoimap)[3])
+      lat2 = as.numeric(st_bbox(aoimap)[4])
+      
+    } else if (input$SelectCategory == "BEC_ZONE"){
+      aoimap <- beczonemap %>%
+        filter(ZONE %in% sample_data[sample_data$SITE_IDENTIFIER %in% site_id(),]$BEC_ZONE)
+      
+      lng1 = as.numeric(st_bbox(aoimap)[1])
+      lat1 = as.numeric(st_bbox(aoimap)[2])
+      lng2 = as.numeric(st_bbox(aoimap)[3])
+      lat2 = as.numeric(st_bbox(aoimap)[4])
+    } else if (input$SelectCategory == "manual"){
+      aoimap <- tsa_sp 
+      
+      lng1 = as.numeric(st_bbox(aoimap)[1])
+      lat1 = as.numeric(st_bbox(aoimap)[2])
+      lng2 = as.numeric(st_bbox(aoimap)[3])
+      lat2 = as.numeric(st_bbox(aoimap)[4])
+    }
+    
+    
+    if(input$SelectCategory  == "manual"){
+      
+      plotgraph <- leaflet() %>% 
+        addTiles() %>% 
+        addProviderTiles("Esri.WorldImagery", group = "Satellite view") %>%
+        addProviderTiles("Esri.WorldTerrain", group = "Terrain only") %>%
+        addProviderTiles("Esri.WorldTopoMap", group = "Base map") %>%
+        setMaxBounds(lng1 = -142,
+                     lat1 = 46, 
+                     lng2 = -112,
+                     lat2 =  62) %>%
+        fitBounds(lng1 = lng1, lat1 = lat1, lng2 = lng2, lat2 = lat2) %>%
+        addLayersControl(
+          baseGroups = c("Base map", "Terrain only", "Satellite view"),
+          options = layersControlOptions(collapsed = FALSE),
+        ) %>%
+        addCircleMarkers(data = location,
+                         radius = 5, stroke = FALSE, fillOpacity = 1,
+                         popup = paste(sep = "<br/>",
+                                       paste(paste("<b>Management unit</b> - ", location$MGMT_UNIT, "<br/>"),
+                                             paste("<b>Sample ID</b> - ", location$SITE_IDENTIFIER, "<br/>"),
+                                             paste("<b>Sample type</b> - ", location$SAMPLE_ESTABLISHMENT_TYPE, "<br/>"),
+                                             #paste("<b>BEC zone</b> - ", location$BEC_ZONE, "<br/>"), 
+                                             #paste("<b>BEC subzone</b> - ", location$BEC_SBZ, "<br/>"),
+                                             #paste("<b>BEC variant</b> - ", location$BEC_VAR, "<br/>"), 
+                                             paste0("<b>BEC/subzone/variant</b>: ", location$BEC_ZONE, "/",
+                                                    location$BEC_SBZ, "/",ifelse(is.na(location$BEC_VAR), "-", 
+                                                                                 location$BEC_VAR),"<br/>"), 
+                                             paste("<b># of measures</b> - ", location$visit_num, "<br/>"),
+                                             paste("<b>Visited year</b> - ",location$visit_year, "<br/>"),
+                                             paste("<b>Leading species</b>: ",location$SPECIES, "<br/>"),
+                                             #paste("<b>Stand age</b>: ",location$ref_age_adj, "(yrs)<br/>"),
+                                             paste("<b>Live net volume</b>: ",round(location$grdnv, 1), 
+                                                   "(cubic m/ha)<br/>")
+                                       )
+                         )
+        )   
+      
+    } else {
+      
+    plotgraph <- leaflet() %>% 
+      addTiles() %>% 
+      addProviderTiles("Esri.WorldImagery", group = "Satellite view") %>%
+      addProviderTiles("Esri.WorldTerrain", group = "Terrain only") %>%
+      addProviderTiles("Esri.WorldTopoMap", group = "Base map") %>%
+      setMaxBounds(lng1 = -142,
+                   lat1 = 46, 
+                   lng2 = -112,
+                   lat2 =  62) %>%
+      fitBounds(lng1 = lng1, lat1 = lat1, lng2 = lng2, lat2 = lat2) %>%
+      addLayersControl(
+        baseGroups = c("Base map", "Terrain only", "Satellite view"),
+        options = layersControlOptions(collapsed = FALSE),
+      ) %>%
+      addPolygons(data = aoimap, stroke = TRUE, color = "#3c8dbc", weight = 2,
+                  opacity = 0.9, fill = TRUE, fillOpacity = 0.2) %>%
+      addCircleMarkers(data = location,
+                       radius = 5, stroke = FALSE, fillOpacity = 1,
+                       popup = paste(sep = "<br/>",
+                                     paste(paste("<b>Management unit</b> - ", location$MGMT_UNIT, "<br/>"),
+                                           paste("<b>Sample ID</b> - ", location$SITE_IDENTIFIER, "<br/>"),
+                                           paste("<b>Sample type</b> - ", location$SAMPLE_ESTABLISHMENT_TYPE, "<br/>"),
+                                           #paste("<b>BEC zone</b> - ", location$BEC_ZONE, "<br/>"), 
+                                           #paste("<b>BEC subzone</b> - ", location$BEC_SBZ, "<br/>"),
+                                           #paste("<b>BEC variant</b> - ", location$BEC_VAR, "<br/>"), 
+                                           paste0("<b>BEC/subzone/variant</b>: ", location$BEC_ZONE, "/",
+                                                  location$BEC_SBZ, "/",ifelse(is.na(location$BEC_VAR), "-", 
+                                                                               location$BEC_VAR),"<br/>"), 
+                                           paste("<b># of measures</b> - ", location$visit_num, "<br/>"),
+                                           paste("<b>Visited year</b> - ",location$visit_year, "<br/>"),
+                                           paste("<b>Leading species</b>: ",location$SPECIES, "<br/>"),
+                                           #paste("<b>Stand age</b>: ",location$ref_age_adj, "(yrs)<br/>"),
+                                           paste("<b>Live net volume</b>: ",round(location$grdnv, 1), 
+                                                 "(cubic m/ha)<br/>")
+                                     )
+                       )
+      )   
+  }
+  }
+  return(plotgraph)
+})
+
+
 flex <- reactive({
   req(input$SelectCategory)
   

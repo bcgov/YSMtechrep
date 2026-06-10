@@ -5,7 +5,7 @@
 ###############################################.
 
 curvoltext <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   
   curvoltext <- paste0("<p>Field measured YSM volumes are compared to predicted volumes developed 
   for FAIB’s TSR analysis. FAIB’s TSR yield table development process has three 
@@ -45,7 +45,7 @@ output$comp_curr_vol <- renderUI({
 
 
 ysmtsr <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   Fig12_dat <- ysm_msyt_vdyp_volume %>%
     filter(CLSTR_ID %in% clstr_id_all())
   
@@ -65,7 +65,7 @@ ysmtsr <- reactive({
               col="red", linewidth = 1.2) +
     scale_x_continuous(expand = c(0, 0), limits = c(0, 60))+ 
     scale_y_continuous(expand = c(0.01, 0), limits = c(-0.01, NA)) + 
-    labs(x = "Total Age (yrs)", y = "Net Merch Volume (m3/ha)",
+    labs(x = "Total Age (yrs)", y = expression("Net Merch Vol. (m"^3*"/ha)"),
          title = "YSM Sample Remeasurements vs Average of TSR Yield Tables",
          subtitle = "(Spatially matched to each YSM location)") +
     #theme_bw() + 
@@ -88,7 +88,7 @@ output$age_vs_netmer <- renderPlot({
 })
 
 ysmtsrbias <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   Fig13_dat <- ysm_msyt_vdyp_volume %>%
     filter(CLSTR_ID %in% clstr_id()) %>%
     mutate(grdnv = ifelse(is.na(grdnv), 0, grdnv),
@@ -113,7 +113,7 @@ ysmtsrbias <- reactive({
                        values = c("Managed" =16, "AGGREGATE" =15, "VDYP" = 17, "VDYP-fill_missed_tsr" = 18), drop = FALSE) +
     scale_x_continuous(expand = c(0, 0), limits = c(0, 60))+ 
     #scale_y_continuous(expand = c(0.01, 0), limits = c(-0.01, NA))+ 
-    labs(x = "Total Age (yrs)", y = "Predicted - Actual (m3/ha)",
+    labs(x = "Total Age (yrs)", y = expression("Predicted - Actual Net Merch Vol. (m"^3*"/ha)"),
          title = "Total volume bias at each YSM location",
          subtitle = "(Predicted TSR yield table volume - Actual YSM volume)") +
     #theme_bw() + 
@@ -138,7 +138,7 @@ output$vol_bias <- renderPlot({
 
 
 agetext <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   
   agetext <- HTML(paste0("<p>TSR uses the RESULTS age (for managed stands) or VRI age (for unmanaged
 stands) as the starting age in timber supply forecasts. This reference
@@ -164,7 +164,7 @@ output$age_comp <- renderUI({
 })
 
 ageflex1 <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   Fig14_dat <- Fig14_dat()
   
   ### Age summary table
@@ -193,7 +193,7 @@ output$age_flex1 <- renderUI({
 })
 
 ageflex2 <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   Fig14_dat <- Fig14_dat()
   
   ### T test table
@@ -228,7 +228,7 @@ output$age_flex2 <- renderUI({
 
 
 ageplot <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   Fig14_dat <- Fig14_dat()
   
   all_test<-t.test(Fig14_dat$age_diff)
@@ -270,11 +270,11 @@ output$age_diff <- renderPlot({
 })
 
 paitext <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   test1_comment <- test1_comment()
   test2_comment <- test2_comment()
   
-  paitext <- HTML( paste0("<p>Periodic annual increment (PAI) in units of m<sup>3</sup>/ha/yr, is computed from
+  paitext <- HTML( paste0("<p>Periodic annual increment (PAI) of net merchantable volume (m<sup>3</sup>/ha/yr) is computed from
 all re-measured YSM ground samples, and compared against predicted PAI
 from TSR yield tables and from YSM TASS projections, separately over the
 same re-measurement period. Paired T-tests check for significant
@@ -301,7 +301,7 @@ output$pai_comp <- renderUI({
 
 
 tsrpai1 <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   Fig15_dat <- Fig15_dat()
   
   ### TSR PAI summary table
@@ -332,7 +332,7 @@ output$tsr_pai_flex1 <- renderUI({
 })
 
 tsrpai2 <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   Fig15_dat <- Fig15_dat()
   
   ### T test table
@@ -373,7 +373,7 @@ output$tsr_pai_flex2 <- renderUI({
 
 
 tasspai1 <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   Fig15_dat <- Fig15_dat()
   
   ### TASS PAI summary table
@@ -405,7 +405,7 @@ output$tass_pai_flex1 <- renderUI({
 })
 
 tasspai2 <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   Fig15_dat <- Fig15_dat()
   
   ### T test table
@@ -444,7 +444,7 @@ output$tass_pai_flex2 <- renderUI({
 
 
 tassdiff <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   Fig15_dat <- Fig15_dat()
   
   if (nrow(Fig15_dat) > 1){
@@ -485,7 +485,7 @@ tassdiff <- reactive({
       xlim(-1, 2) +
       ylim(floor(min(d$y1, d$y2)/5)*5, ceiling(max(d$y1, d$y2)/5)*5) +
       coord_flip() +
-      labs(x = "", y = expression(m^3~"/ha/yr"),
+      labs(x = "", y = expression("PAI (m"^3*"/ha/yr)"),
            title = "PAI Mean Difference & 95% CI") +
       theme(
         legend.position = "left",

@@ -6,7 +6,7 @@
 #Subsetting by domain 
 
 sitext <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   sitext <- HTML("Site index (SI) is an estimate of a stand's potential productivity by species. 
 Predicted SI is from the Provincial site productivity layer (PSPL v7.0) that uses 
 either ecological mapping plus SIBEC tables or SI biophysical model where no 
@@ -29,7 +29,7 @@ output$site_index_pspl <- renderUI({
 })
 
 siflex <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   si_dat <- si_dat()
   
   si_flex <- flextable(si_dat) %>% 
@@ -50,7 +50,7 @@ output$si_pspl_flex <- renderUI({
 
 
 sitrendtext <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   
   sitrendtext <- HTML("The average site index vs. breast height age from all valid site trees 
        is plotted for each species and sample measurement (graph below; joined 
@@ -69,7 +69,7 @@ output$trend_si <- renderUI({
 })
 
 siplot <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   si_dat <- si_dat()
   
   fig7_dat <- SI_data %>%

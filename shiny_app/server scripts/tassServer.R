@@ -5,7 +5,8 @@
 ###############################################.
 
 projtext <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  
+  req(input$SelectCategory)
   
   projtext <- "<p>To assess if young stands will meet future volume expectations, 
   each YSM tree list is projected in TASS from its latest measurement date to 
@@ -43,7 +44,7 @@ output$tass_tsr <- renderUI({
 
 
 projvol <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  
   volproj <- volproj()
   meanage <- meanage()
   
@@ -88,7 +89,7 @@ projvol <- reactive({
     scale_y_continuous(expand = c(0, 0)) +
     scale_x_continuous(expand = c(0, 0), breaks=seq(0, 100, 10),
                        limits = c(0, 110)) + 
-    labs(x = "Total Age (yrs)", y = "Net merch volume (m3/ha)*",
+    labs(x = "Total Age (yrs)", y = expression("Net Merch Vol. (m"^3*"/ha)*"),
          caption = "* Net merchantable volume includes all species (deciduous+conifer), but excludes the modeled residual component in YSM TASS projections.
 ") +
     theme(
@@ -118,7 +119,7 @@ output$tass_tsr_netvol <- renderPlot({
 
 
 projvol_sp <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  
   volproj_sp <- volproj_sp()
   meanage <- meanage()
   
@@ -139,7 +140,7 @@ projvol_sp <- reactive({
     scale_y_continuous(expand = c(0, 0)) +
     scale_x_continuous(expand = c(0, 0), breaks=seq(0, 100, 10),
                        limits = c(0, 110)) + 
-    labs(x = "Total Age (yrs)", y = "Net merch volume (m3/ha)") +
+    labs(x = "Total Age (yrs)", y = expression("Net Merch Vol. (m"^3*"/ha)")) +
     scale_fill_manual(values = tass_colors, name = NULL) +
     theme(
       axis.line = element_line(colour="darkgray"), 
@@ -169,7 +170,7 @@ output$tass_tsr_netvol_sp <- renderPlot({
 
 
 projvol_sp_prop <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  
   volproj_sp <- volproj_sp()
   meanage <- meanage()
   
@@ -224,7 +225,6 @@ output$tass_tsr_netvol_sp_prop <- renderPlot({
 
 
 projvol_sp_data <- reactive({
-  req(input$SelectCategory, input$SelectVar)
   
   volproj_sp <- volproj_sp()
   
@@ -253,7 +253,7 @@ projvol_sp_prop_2 <- reactive({
     geom_col(linewidth = 1.1) +
     scale_y_continuous(expand = c(0, 0)) +
     scale_x_continuous(breaks = c(60, 70, 80, 90, 100)) +
-    labs(x = "Total Age (yrs)", y = "Net merch volume (m3/ha)") +
+    labs(x = "Total Age (yrs)", y = expression("Net Merch Vol. (m"^3*"/ha)")) +
     scale_fill_manual(values = tass_colors, name = NULL) +
     guides(fill = guide_legend(ncol = 2)) + 
     theme(
@@ -348,7 +348,7 @@ output$tass_tsr_netvol_sp_prop_2 <- renderPlot({
 
 
 stemrusttable <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   stemrustimpact <- stemrustimpact()
   
   tasstable <- stemrustimpact %>%
@@ -371,7 +371,7 @@ output$tasstable_flex <- renderUI({
 })
 
 cumimptable <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   volproj <- volproj()
   
   volproj1 <- volproj %>%
@@ -424,7 +424,7 @@ output$culmtable_flex <- renderUI({
 
 
 yieldtext <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   projectiontable <- projectiontable()
   prjtab_70 <- projectiontable %>% filter(AGE >=70, AGE <100)
   
@@ -437,7 +437,7 @@ yieldtext <- reactive({
   TSRbias2 = ifelse(Significant == "No", "No", TSRbias1)
   
   yieldtext <- HTML( paste0("<p>TSR MSYTs are evaluated against YSM TASS projections, using paired t-tests 
-of the volume differences (TSR-YSM) projected from 60 & 100 years. 
+of the net merchantable volume differences (TSR-YSM) projected from 60 & 100 years. 
 Highlighted fields (table below) indicate significant differences at alpha = 
 0.05. Overall percent differences are computed as (TSR-YSM)/YSM, and the 
 age at maximum percent volume difference is identified (table below). 
@@ -464,7 +464,7 @@ output$tass_tsr_test <- renderUI({
 })
 
 yieldtable <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   projectiontable <- projectiontable() %>%
     select(n, meanvol_tsr, meanvol_tass, meanvoldiff, pval, percvoldiff)
   

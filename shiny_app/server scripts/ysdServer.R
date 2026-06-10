@@ -6,7 +6,7 @@
 #Subsetting by domain 
   
 ysd <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   
   ysd <-  HTML(paste0("Stand summaries (all species combined) are compiled and summarized for 
        all samples in the target population at the time of the latest measurement. 
@@ -27,7 +27,7 @@ output$young_stand_description <- renderUI({
 })
 
 summaryflex <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   if(!is.null(clstr_id())){
     
     summary_data <- summary_data()
@@ -111,7 +111,7 @@ output$stand_summary_flex <- renderUI({
 
 
 livespplot <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   if (!is.null(clstr_id())){
     
     summary_data <- summary_data()
@@ -239,7 +239,7 @@ output$live_sp <- renderPlot({
 #})
 
 becplot <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   if (!is.null(clstr_id())){
     
     figdata <- sample_data %>%
@@ -289,7 +289,7 @@ output$bec_dist <- renderPlot({
 })
 
 stockplot <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   if (!is.null(clstr_id())){
     
     fig5_dat <- tree_fh_data %>%
@@ -325,7 +325,7 @@ stockplot <- reactive({
       scale_fill_manual(values = tree_colors, name = NULL) +
       scale_x_discrete(drop=FALSE) +
       scale_y_continuous(expand = c(0, 0), labels = scales::percent) +
-      labs(x = "DBH class (cm)", y = "% of total vol/ha",
+      labs(x = "DBH class (cm)", y = "% of whole stem vol/ha",
            title = "Stock Table - live trees") +
       theme(
         #axis.line = element_line(colour="darkgray"), 
@@ -348,7 +348,7 @@ output$stock_table <- renderPlot({
 
 
 #stockplot_plotly <- reactive({
-#  req(input$SelectCategory, input$SelectVar)
+#  req(input$SelectCategory)
 #  if (!is.null(clstr_id())){
 #    
 #    fig5_dat <- tree_fh_data %>%
@@ -417,7 +417,7 @@ output$stock_table <- renderPlot({
 
 
 stockplot_stem <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   if (!is.null(clstr_id())){
     
     fig5_stem_dat <- tree_fh_data %>%
@@ -476,7 +476,7 @@ output$stock_table_stem <- renderPlot({
 
 
 fig5_dat <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   if (!is.null(clstr_id())){
     
   fig5_dat <- tree_fh_data %>%
@@ -571,26 +571,37 @@ fig5_dat <- reactive({
 
 
 smalltrplot <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   if (!is.null(clstr_id())){
+    
+    n_clstr <- smtr_data %>%
+      filter(CLSTR_ID %in% clstr_id(),
+             !is.na(SMTR_HA_TOT)) %>%
+      distinct(CLSTR_ID) %>%
+      nrow()
     
     smtr_dat <- smtr_data %>%
       filter(CLSTR_ID %in% clstr_id()) %>%
-      mutate(SPC_GRP1 = ifelse(SPECIES %in% decidspc, 'Decid', SPECIES),
-             SPC_GRP1 = factor(SPC_GRP1, levels = species_order),
-             n = length(clstr_id)) %>%
+      mutate(across(
+        c(SMTR_HA, SMTR2_HA, SMTR3_HA, SMTR4_HA),
+        ~ ifelse(SMTR_HA_TOT == 0 & is.na(.), 0, .)
+      ),
+      SPC_GRP1 = ifelse(SPECIES %in% decidspc, 'Decid', SPECIES),
+      SPC_GRP1 = factor(SPC_GRP1, levels = species_order),
+      n = n_clstr) %>%
       pivot_longer(cols = ends_with("_HA"),
                    names_to = "size",
                    values_to = "sph") %>%
       group_by(SPC_GRP1, size) %>%
-      reframe(sph = sum(sph)/length(clstr_id())) %>%
+      reframe(sph = sum(sph)/n_clstr) %>%
       mutate(size = factor(size, levels = c("SMTR2_HA", "SMTR3_HA", "SMTR4_HA", "SMTR_HA"),
-                           labels = c("0.1-0.29m Ht", "0.3-1.3m Ht", ">1.3m Ht & \n<4cm DBH", "All"))) 
+                           labels = c("0.1-0.29m Ht", "0.3-1.3m Ht", ">1.3m Ht & \n<4cm DBH", "All"))) %>%
+      filter(!is.na(SPC_GRP1))
     
     p <- ggplot(smtr_dat, aes(x=size, fill=SPC_GRP1, y=sph)) + 
       geom_bar(position='stack', stat='identity', width = 0.7) +
       scale_fill_manual(values = tree_colors, name = NULL) +
-      scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+      scale_y_continuous( labels = scales::label_comma(), expand = expansion(mult = c(0, 0.1))) +
       labs(x='Size Class', y='Stems/ha', title = "Small Trees") +
       theme(
         #axis.line = element_line(colour="darkgray"), 

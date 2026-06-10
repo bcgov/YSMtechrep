@@ -5,7 +5,7 @@
 ###############################################.
 
 t1 <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   
   if (input$SelectCategory == "TSA_DESC"){
     t1_1 <- sample_data %>%
@@ -50,7 +50,7 @@ output$ysm_tables1 <- renderUI({
 
 
 t2 <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   t2 <- proc_freq(ysm_msyt_vdyp_volume %>%
                     filter(CLSTR_ID %in% clstr_id()) %>%
                     mutate(yt_source_label = fct_recode(yt_source_f, 
@@ -82,7 +82,7 @@ output$ysm_tables2 <- renderUI({
 })
 
 t3 <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   #t3 <- proc_freq(ysm_msyt_vdyp_volume  %>%
   #                  filter(CLSTR_ID %in% clstr_id()) %>%
   #                  mutate(occupancy = factor(ifelse(vol_wsv_ha != 0, "Treed", "Empty"),
@@ -122,7 +122,7 @@ output$ysm_tables3 <- renderUI({
 })
 
 t4 <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   t4 <- proc_freq(ysm_msyt_vdyp_volume  %>%
                     filter(CLSTR_ID %in% clstr_id()) %>%
                     mutate(xy_f = ifelse(is.na(xy), "Empty", xy),
@@ -153,7 +153,7 @@ output$ysm_tables4 <- renderUI({
 })
 
 t5 <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   t5 <- proc_freq(ysm_msyt_vdyp_volume  %>%
                     filter(CLSTR_ID %in% clstr_id())  %>%
                     mutate(TASS_ver = ifelse(is.na(TASS_ver), 1, TASS_ver),,
@@ -185,6 +185,59 @@ output$ysm_tables5 <- renderUI({
 
 
 
+t6 <- reactive({
+  req(input$SelectCategory)
+  
+  #smtr_table <- sample_data %>%
+  #  filter(CLSTR_ID %in% clstr_id()) %>%
+  #  select(CLSTR_ID) %>%
+  #  left_join(smtr_data  %>%
+  #              filter(CLSTR_ID %in% clstr_id())  %>%
+  #              group_by(CLSTR_ID) %>%
+  #              arrange(desc(SMTR_HA)) %>%
+  #              slice_head(n = 1) %>% data.table(), by = "CLSTR_ID") %>%
+  #  mutate(occupancy = case_when(is.na(SPECIES) ~ "Not Measured",
+  #                               SMTR_HA == 0 ~ "Empty",
+  #                               TRUE ~ "Measured")) %>%
+  #  mutate(occupancy = factor(occupancy,
+  #                            levels = c("Measured", "Empty", "Not Measured")))
+  
+  smtr_table <- smtr_data %>%
+    filter(CLSTR_ID %in% clstr_id()) %>%
+    group_by(CLSTR_ID) %>%
+    arrange(desc(SMTR_HA)) %>%
+    slice_head(n = 1)  %>%
+    mutate(occupancy = case_when(SMTR_HA_TOT == 0 ~ "Empty",
+                                 is.na(SPECIES) ~ "Not Measured",
+                                 TRUE ~ "Treed")) %>%
+    mutate(occupancy = factor(occupancy,
+                              levels = c("Treed", "Empty", "Not Measured"))) %>% data.table()
+  
+  
+  t6 <- proc_freq(smtr_table, "occupancy",
+                  include.row_percent = F,
+                  include.column_percent = F,
+                  include.table_percent = F) 
+  
+  t6 <- t6 %>%
+    add_header_lines(values = "YSM Plot Occupancy \nof trees <4cm DBH", top = T) %>%
+    delete_rows(i = 2, part = "header") %>%
+    merge_at(i = 1, j = 1:3, part = "header") %>%
+    bold(part = 'header', bold = TRUE) %>%
+    autofit()
+  
+  return(t6)
+})
+
+
+
+output$ysm_tables6 <- renderUI({
+  
+  htmltools_value(t6())
+  
+})
+
+
 output$sp_dam_header <- renderUI({
   
   HTML(paste0("<h3>Tree Species and Damage Agents Recorded from YSM Samples in ", title(),"</h3>"))
@@ -193,7 +246,7 @@ output$sp_dam_header <- renderUI({
 
 
 spcdtab <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   sp_cd <- tree_fh_data  %>%
     filter(CLSTR_ID %in% clstr_id(), S_F == "S") %>%
     pull(SPECIES) %>%
@@ -214,7 +267,7 @@ output$sp_table <- renderDT({
 })
 
 damcdtab <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   dam_agn <- tree_fh_data  %>%
     filter(CLSTR_ID %in% clstr_id(), S_F == "S") %>%
     pull(AGN) %>%
@@ -257,7 +310,7 @@ output$deploymentDate <- renderUI({
 
 
 assumptext <- reactive({
-  #req(input$SelectCategory, input$SelectVar)
+  #req(input$SelectCategory)
   
   assumptext <- paste0("
   
@@ -416,7 +469,7 @@ output$assumps <- renderUI({
 
 
 reftext <- reactive({
-  req(input$SelectCategory, input$SelectVar)
+  req(input$SelectCategory)
   
   reftext <- HTML("<p><b>General Overview of FAIB Ground Sample Inventories (including Data Access)</b></br>
   <a href='https://www2.gov.bc.ca/gov/content/industry/forestry/managing-our-forest-resources/forest-inventory/ground-sample-inventories' target='_blank'>
