@@ -73,8 +73,8 @@ ui <- dashboardPage(
           color: #FFFFFF !important;
         }
         .btn-download-custom {
-      background-color: #B9C9A2 !important;
-      border-color: #B9C9A2 !important;
+      background-color: #E2EFD3 !important;
+      border-color: #AEBC99 !important;
       color: #333 !important;
       font-size: 12px;
       padding: 4px 10px;
@@ -82,8 +82,8 @@ ui <- dashboardPage(
     }
 
     .btn-download-custom:hover {
-      background-color: #A9BC90 !important;
-      border-color: #A9BC90 !important;
+      background-color: #E2EFD3 !important;
+      border-color: #AEBC99 !important;
     }
       '))),
     
@@ -169,8 +169,8 @@ ui <- dashboardPage(
                uiOutput("download_ui")
              ),
              br(),
-             uiOutput("overviewflex"),
              br(),
+             uiOutput("overviewflex"),
              br()
     ),
     

@@ -180,7 +180,8 @@ output$downloadlist <- downloadHandler(
   },
   
   content = function(file) {
-    data <- location()
+    data <- location() %>%
+      select(-Longitude, -Latitude)
     write.csv(data, file)
   }
 )
@@ -192,7 +193,7 @@ output$download_ui <- renderUI({
     style = "text-align: right;",
     span(
       "Download the list of samples:",
-      style = "margin-right: 5px; font-size: 12px;"
+      style = "margin-right: 5px; font-size: 12px; font-weight: bold; font-family: Arial;"
     ),
     downloadButton(
       "downloadlist",
