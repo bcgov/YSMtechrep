@@ -138,7 +138,9 @@ output$overview <- renderUI({
   HTML(overview())
 })
 
-plotgraph <- reactive({
+
+
+location <- reactive({
   req(input$SelectCategory)
   if(!is.null(site_id())){
     
@@ -146,7 +148,7 @@ plotgraph <- reactive({
       filter(SITE_IDENTIFIER %in% site_id()) %>% 
       group_by(SITE_IDENTIFIER) %>% 
       mutate(visit_num = length(VISIT_NUMBER),
-             visit_year = paste0(MEAS_YR, collapse  = ',')) %>%
+             visit_year = paste0(as.character(MEAS_YR), collapse  = ', ')) %>%
       select(SITE_IDENTIFIER, SAMPLE_ESTABLISHMENT_TYPE, visit_num, visit_year, BECsub,
              MGMT_UNIT, TSA_DESC, BEC_ZONE, BEC_SBZ, BEC_VAR, GRID_SIZE,
              BC_ALBERS_X, BC_ALBERS_Y, Latitude, Longitude) %>% 
@@ -158,7 +160,75 @@ plotgraph <- reactive({
       left_join(ysm_msyt_vdyp_volume %>% 
                   filter(CLSTR_ID %in% clstr_id()) %>%
                   select(SITE_IDENTIFIER, grdnv),
-                by = "SITE_IDENTIFIER") 
+                by = "SITE_IDENTIFIER") %>%
+      select(MGMT_UNIT, SITE_IDENTIFIER, SAMPLE_ESTABLISHMENT_TYPE, 
+             VISIT_NUMBER = visit_num, VISITED_YEAR = visit_year, 
+             BEC_ZONE, BEC_SBZ, BEC_VAR, Longitude, Latitude, 
+             LEAD_SPECIES = SPECIES, LIVE_NET_VOLUME = grdnv)
+    
+    #location <- st_as_sf(x = location,                         
+    #                     coords = c("Longitude", "Latitude"),
+    #                     crs = 4326)
+  }
+})
+
+
+output$downloadlist <- downloadHandler(
+ 
+  filename = function() {
+    paste0('YSM_list_', title(), "_", Sys.Date(), ".csv")
+  },
+  
+  content = function(file) {
+    data <- location()
+    write.csv(data, file)
+  }
+)
+
+output$download_ui <- renderUI({
+  req(location())  # only show when input exists and is not NULL/empty
+  
+  div(
+    style = "text-align: right;",
+    span(
+      "Download the list of samples:",
+      style = "margin-right: 5px; font-size: 12px;"
+    ),
+    downloadButton(
+      "downloadlist",
+      "Download",
+      class = "btn-download-custom"
+    )
+  )
+})
+
+plotgraph <- reactive({
+  req(input$SelectCategory)
+  #if(!is.null(site_id())){
+    
+    #location <- sample_data %>% 
+    #  filter(SITE_IDENTIFIER %in% site_id()) %>% 
+    #  group_by(SITE_IDENTIFIER) %>% 
+    #  mutate(visit_num = length(VISIT_NUMBER),
+    #         visit_year = paste0(MEAS_YR, collapse  = ',')) %>%
+    #  select(SITE_IDENTIFIER, SAMPLE_ESTABLISHMENT_TYPE, visit_num, visit_year, BECsub,
+    #         MGMT_UNIT, TSA_DESC, BEC_ZONE, BEC_SBZ, BEC_VAR, GRID_SIZE,
+    #         BC_ALBERS_X, BC_ALBERS_Y, Latitude, Longitude) %>% 
+    #  distinct() %>%
+    #  left_join(LD_dat() %>% 
+    #              filter(CLSTR_ID %in% clstr_id()) %>%
+    #              select(SITE_IDENTIFIER, SPECIES),
+    #            by = "SITE_IDENTIFIER") %>%
+    #  left_join(ysm_msyt_vdyp_volume %>% 
+    #              filter(CLSTR_ID %in% clstr_id()) %>%
+    #              select(SITE_IDENTIFIER, grdnv),
+    #            by = "SITE_IDENTIFIER") 
+    #
+    #location <- st_as_sf(x = location,                         
+    #                     coords = c("Longitude", "Latitude"),
+    #                     crs = 4326)
+    
+    location <- location()
     
     location <- st_as_sf(x = location,                         
                          coords = c("Longitude", "Latitude"),
@@ -226,25 +296,25 @@ plotgraph <- reactive({
       addCircleMarkers(data = location,
                        radius = 5, stroke = FALSE, fillOpacity = 1,
                        popup = paste(sep = "<br/>",
-                                     paste(paste("<b>Management unit</b> - ", location$MGMT_UNIT, "<br/>"),
-                                           paste("<b>Sample ID</b> - ", location$SITE_IDENTIFIER, "<br/>"),
-                                           paste("<b>Sample type</b> - ", location$SAMPLE_ESTABLISHMENT_TYPE, "<br/>"),
+                                     paste(paste("<b>Management unit</b>: ", location$MGMT_UNIT, "<br/>"),
+                                           paste("<b>Sample ID</b>: ", location$SITE_IDENTIFIER, "<br/>"),
+                                           paste("<b>Sample type</b>: ", location$SAMPLE_ESTABLISHMENT_TYPE, "<br/>"),
                                            #paste("<b>BEC zone</b> - ", location$BEC_ZONE, "<br/>"), 
                                            #paste("<b>BEC subzone</b> - ", location$BEC_SBZ, "<br/>"),
                                            #paste("<b>BEC variant</b> - ", location$BEC_VAR, "<br/>"), 
                                            paste0("<b>BEC/subzone/variant</b>: ", location$BEC_ZONE, "/",
                                                   location$BEC_SBZ, "/",ifelse(is.na(location$BEC_VAR), "-", 
                                                                                location$BEC_VAR),"<br/>"), 
-                                           paste("<b># of measures</b> - ", location$visit_num, "<br/>"),
-                                           paste("<b>Visited year</b> - ",location$visit_year, "<br/>"),
-                                           paste("<b>Leading species</b>: ",location$SPECIES, "<br/>"),
+                                           paste("<b># of measures</b>: ", location$VISIT_NUMBER, "<br/>"),
+                                           paste("<b>Visited year</b>: ",location$VISITED_YEAR, "<br/>"),
+                                           paste("<b>Leading species</b>: ",location$LEAD_SPECIES, "<br/>"),
                                            #paste("<b>Stand age</b>: ",location$ref_age_adj, "(yrs)<br/>"),
-                                           paste("<b>Live net volume</b>: ",round(location$grdnv, 1), 
+                                           paste("<b>Live net volume</b>: ",round(location$LIVE_NET_VOLUME, 1), 
                                                  "(cubic m/ha)<br/>")
                                            )
                                      )
       )   
-  }
+  ##}
   return(plotgraph)
 })
 

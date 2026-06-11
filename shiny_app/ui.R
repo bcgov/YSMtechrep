@@ -72,6 +72,19 @@ ui <- dashboardPage(
         footer ul li a:hover {
           color: #FFFFFF !important;
         }
+        .btn-download-custom {
+      background-color: #B9C9A2 !important;
+      border-color: #B9C9A2 !important;
+      color: #333 !important;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    .btn-download-custom:hover {
+      background-color: #A9BC90 !important;
+      border-color: #A9BC90 !important;
+    }
       '))),
     
   box(title = "Select the area of interest", 
@@ -140,8 +153,24 @@ ui <- dashboardPage(
              uiOutput("overview"),
              br(),
              withSpinner(leafletOutput("plotgraph", height = "600px")),
+             #br(),
+             #downloadButton("downloadlist", "Download List of Samples"), 
+             div(
+               style = "text-align: right;",
+               #span(
+               #  "Download the list of samples:",
+               #  style = "margin-right: 5px; font-size: 12px;"
+               #),
+               #downloadButton(
+               #  "downloadlist",
+               #  "Download",
+               #  class = "btn-download-custom"
+               #)
+               uiOutput("download_ui")
+             ),
              br(),
              uiOutput("overviewflex"),
+             br(),
              br()
     ),
     
