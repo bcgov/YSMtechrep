@@ -72,6 +72,7 @@ ui <- dashboardPage(
         footer ul li a:hover {
           color: #FFFFFF !important;
         }
+        
         .btn-download-custom {
       background-color: #E2EFD3 !important;
       border-color: #AEBC99 !important;

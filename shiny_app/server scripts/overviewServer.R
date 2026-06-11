@@ -408,24 +408,24 @@ plotgraph_report <- reactive({
         addCircleMarkers(data = location,
                          radius = 5, stroke = FALSE, fillOpacity = 1,
                          popup = paste(sep = "<br/>",
-                                       paste(paste("<b>Management unit</b> - ", location$MGMT_UNIT, "<br/>"),
-                                             paste("<b>Sample ID</b> - ", location$SITE_IDENTIFIER, "<br/>"),
-                                             paste("<b>Sample type</b> - ", location$SAMPLE_ESTABLISHMENT_TYPE, "<br/>"),
+                                       paste(paste("<b>Management unit</b>: ", location$MGMT_UNIT, "<br/>"),
+                                             paste("<b>Sample ID</b>: ", location$SITE_IDENTIFIER, "<br/>"),
+                                             paste("<b>Sample type</b>: ", location$SAMPLE_ESTABLISHMENT_TYPE, "<br/>"),
                                              #paste("<b>BEC zone</b> - ", location$BEC_ZONE, "<br/>"), 
                                              #paste("<b>BEC subzone</b> - ", location$BEC_SBZ, "<br/>"),
                                              #paste("<b>BEC variant</b> - ", location$BEC_VAR, "<br/>"), 
                                              paste0("<b>BEC/subzone/variant</b>: ", location$BEC_ZONE, "/",
                                                     location$BEC_SBZ, "/",ifelse(is.na(location$BEC_VAR), "-", 
                                                                                  location$BEC_VAR),"<br/>"), 
-                                             paste("<b># of measures</b> - ", location$visit_num, "<br/>"),
-                                             paste("<b>Visited year</b> - ",location$visit_year, "<br/>"),
-                                             paste("<b>Leading species</b>: ",location$SPECIES, "<br/>"),
+                                             paste("<b># of measures</b>: ", location$VISIT_NUMBER, "<br/>"),
+                                             paste("<b>Visited year</b>: ",location$VISITED_YEAR, "<br/>"),
+                                             paste("<b>Leading species</b>: ",location$LEAD_SPECIES, "<br/>"),
                                              #paste("<b>Stand age</b>: ",location$ref_age_adj, "(yrs)<br/>"),
-                                             paste("<b>Live net volume</b>: ",round(location$grdnv, 1), 
+                                             paste("<b>Live net volume</b>: ",round(location$LIVE_NET_VOLUME, 1), 
                                                    "(cubic m/ha)<br/>")
                                        )
                          )
-        )   
+        )    
       
     } else {
       
@@ -448,20 +448,20 @@ plotgraph_report <- reactive({
       addCircleMarkers(data = location,
                        radius = 5, stroke = FALSE, fillOpacity = 1,
                        popup = paste(sep = "<br/>",
-                                     paste(paste("<b>Management unit</b> - ", location$MGMT_UNIT, "<br/>"),
-                                           paste("<b>Sample ID</b> - ", location$SITE_IDENTIFIER, "<br/>"),
-                                           paste("<b>Sample type</b> - ", location$SAMPLE_ESTABLISHMENT_TYPE, "<br/>"),
+                                     paste(paste("<b>Management unit</b>: ", location$MGMT_UNIT, "<br/>"),
+                                           paste("<b>Sample ID</b>: ", location$SITE_IDENTIFIER, "<br/>"),
+                                           paste("<b>Sample type</b>: ", location$SAMPLE_ESTABLISHMENT_TYPE, "<br/>"),
                                            #paste("<b>BEC zone</b> - ", location$BEC_ZONE, "<br/>"), 
                                            #paste("<b>BEC subzone</b> - ", location$BEC_SBZ, "<br/>"),
                                            #paste("<b>BEC variant</b> - ", location$BEC_VAR, "<br/>"), 
                                            paste0("<b>BEC/subzone/variant</b>: ", location$BEC_ZONE, "/",
                                                   location$BEC_SBZ, "/",ifelse(is.na(location$BEC_VAR), "-", 
                                                                                location$BEC_VAR),"<br/>"), 
-                                           paste("<b># of measures</b> - ", location$visit_num, "<br/>"),
-                                           paste("<b>Visited year</b> - ",location$visit_year, "<br/>"),
-                                           paste("<b>Leading species</b>: ",location$SPECIES, "<br/>"),
+                                           paste("<b># of measures</b>: ", location$VISIT_NUMBER, "<br/>"),
+                                           paste("<b>Visited year</b>: ",location$VISITED_YEAR, "<br/>"),
+                                           paste("<b>Leading species</b>: ",location$LEAD_SPECIES, "<br/>"),
                                            #paste("<b>Stand age</b>: ",location$ref_age_adj, "(yrs)<br/>"),
-                                           paste("<b>Live net volume</b>: ",round(location$grdnv, 1), 
+                                           paste("<b>Live net volume</b>: ",round(location$LIVE_NET_VOLUME, 1), 
                                                  "(cubic m/ha)<br/>")
                                      )
                        )
