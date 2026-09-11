@@ -65,7 +65,7 @@ additionlaphrase <- reactive({
     distinct(MGMT_UNIT) 
   mgmts <- paste(mgmt$MGMT_UNIT, collapse = "; ")
   
-  additionlaphrase <- ifelse(input$SelectCategory %in% c("BECsub", "BEC_ZONE", "manual"),
+  additionlaphrase <- ifelse(input$SelectCategory %in% c("BECsub", "BEC_ZONE", "FLP_Name", "manual"),
                              paste0("Sampled mangement units intersecting with the ",
                                     title(), " include: ", mgmts, "."), 
                              "")
@@ -75,7 +75,7 @@ additionlaphrase <- reactive({
 additionlaphrase2 <- reactive({
   req(input$SelectCategory)
   
-  additionlaphrase2 <- ifelse(input$SelectCategory %in% c("BECsub", "BEC_ZONE", "manual") && 
+  additionlaphrase2 <- ifelse(input$SelectCategory %in% c("BECsub", "BEC_ZONE", "FLP_Name", "manual") && 
                                 nrow(gridsize_all()) > 2,
                              paste0("The samples may be from different grid sizes; the
                                     summary results should be interpreted with caution."), 
@@ -199,6 +199,14 @@ plotgraph <- reactive({
       lat2 = as.numeric(st_bbox(aoimap)[4])
     } else if (input$SelectCategory == "manual"){
       aoimap <- tsa_sp 
+      
+      lng1 = as.numeric(st_bbox(aoimap)[1])
+      lat1 = as.numeric(st_bbox(aoimap)[2])
+      lng2 = as.numeric(st_bbox(aoimap)[3])
+      lat2 = as.numeric(st_bbox(aoimap)[4])
+    } else if (input$SelectCategory == "FLP_Name"){
+      aoimap <- flp_sp  %>%
+        filter(FLP_Name %in% input$SelectVar)
       
       lng1 = as.numeric(st_bbox(aoimap)[1])
       lat1 = as.numeric(st_bbox(aoimap)[2])
