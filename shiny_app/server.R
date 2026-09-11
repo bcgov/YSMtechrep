@@ -14,6 +14,8 @@ server <- function(input, output, session) {
                           c(Choose = "", bec_list )
                         } else if (input$SelectCategory == "BEC_ZONE"){
                           c(Choose = "", beczone_list )
+                        } else if (input$SelectCategory == "FLP_Name"){
+                          c(Choose = "", flp_list )
                         }
                       )
   })

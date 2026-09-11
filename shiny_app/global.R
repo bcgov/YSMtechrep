@@ -48,7 +48,7 @@ library(reshape2)
 # 2. required datafiles ------------------------------------------------------------
 
 # main datasets 
-sample_data <- readRDS("data/sample_data.rds")
+sample_data <- readRDS("data/sample_data1.rds")
 sample_data <- sample_data %>%
   dplyr::mutate(across(where(~ inherits(.x, "IDate")), as.Date))
 spcs_data <- readRDS("data/spcs_data.rds")
@@ -72,6 +72,7 @@ damcd<-readRDS("data/damcd.rds")
 tsa_sp <- st_transform(st_read("data/tsa_sp.shp"),4326)
 becmap <- st_transform(st_read("data/becmap.shp"),4326)
 beczonemap <- st_transform(st_read("data/beczone_lowres1000.shp"),4326)
+flp_sp <- st_transform(st_read("data/FLP_boundary.shp"),4326)
 
 
 # SPCD for deciduous 
@@ -113,6 +114,14 @@ beczone_list <- sample_data %>%
   sort() %>%
   unique()
 
+# for FLP selection
+flp_list <- sample_data %>%
+  filter(!is.na(FLP_Name)) %>%
+  count(FLP_Name) %>%
+  filter(n >= 10) %>%
+  pull(FLP_Name) %>%
+  sort() %>%
+  unique()
 
 # 4. chart themes  ----------------------------------------------------------------
 

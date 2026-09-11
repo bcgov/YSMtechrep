@@ -84,6 +84,7 @@ ui <- dashboardPage(
                                         choices = list("By TSA" = "TSA_DESC", 
                                                        "By BEC subzone" = "BECsub",
                                                        "By BEC zone" = "BEC_ZONE",
+                                                       "By FLP" = "FLP_Name",
                                                        "Enter list manually" = "manual")
                            ), style = "font-size:100%")), align = "center"
       ), 

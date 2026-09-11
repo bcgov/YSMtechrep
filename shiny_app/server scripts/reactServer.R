@@ -73,6 +73,12 @@ site_id <- reactive({
         filter(BEC_filter == "Y") %>% 
         filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
         pull(SITE_IDENTIFIER)
+      
+    } else if (input$SelectCategory == "FLP_Name") {
+      site_id <- sample_data %>% 
+        filter(!is.na(FLP_Name)) %>% 
+        filter(!!sym(input$SelectCategory) %in% input$SelectVar) %>%
+        pull(SITE_IDENTIFIER)
     }
   }
   
