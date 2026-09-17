@@ -234,6 +234,51 @@ output$dam_table <- renderDT({
 })
 
 
+
+
+output$mort_tab <- renderUI({
+  
+  mortality_tab <- tribble(
+    ~`Mortality class`, ~`Mortality code`, ~Description, ~`Damage code`,
+    "Immediate impact", "1", "Bear damage", "AB",
+    "Immediate impact", "1", "Root disease", "DRA, DRB, DRC, DRL, DRN, DRR, DRT", 
+    "Immediate impact", "1", "White pine blister rust", "DSB", 
+    "Immediate impact", "1", "Beetles", "IB, IBB, IBI, IBM, IBP, IBS, IBW",
+    "Immediate impact", "1", "Natural disaster",
+    "Drought (ND), flooding (NF), slide (NS), windthrow (NW, NWS), snow (NY), fire (NB) excluding FD & LW, chemical injury (TC)",
+    
+    "Immediate impact", "1",  "Foliage disease with over 80% severity", "DF, DFE, DFS",
+    "Incremental impact", "2", "Mistletoe", "DM, DMP, DMH",
+    "Incremental impact", "2", "Canker", "DSA, DSE", 
+    "Incremental impact", "2", "Insect damage with over 80% severity",
+    "Aphids (IAB), Budworm (IDW, IDB, IDE, IDH), Looper (IDI), Moth (IDT)",
+    "Incremental impact", "2", "Terminal weevil", "IWP, IWS"
+  )
+  
+  ft <- flextable(mortality_tab) |>
+    merge_v(j = c("Mortality class", "Mortality code")) |>
+    theme_booktabs() |>
+    hline(
+      i = 6,
+      #j = 4,
+      part = "body"
+    ) |>
+    font(fontname = "Arial", part = "all") |>
+    fontsize(size = 9, part = "all") |>
+    bold(part = "header") |>
+    align(align = "left", part = "all") |>
+    valign(valign = "top", part = "all") |>
+    padding(padding = 4, part = "all") |>
+    width(j = "Mortality class", width = 1.5) |>
+    width(j = "Mortality code", width = 1.0) |>
+    width(j = "Description", width = 2.0) |>
+    width(j = "Damage code", width = 3.0) |>
+    set_table_properties(layout = "fixed", width = 1)
+  
+  htmltools_value(ft)
+  
+})
+
 # App deployment date ----
 #output$deploymentDate <- renderText({
 #  paste0("This app was last updated on ",

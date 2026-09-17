@@ -10,7 +10,10 @@ title <- reactive({
                   as.character(input$SelectVar),
                   ifelse(input$SelectCategory == "manual",
                          "Selected Sites", 
-                         paste0(input$SelectVar, " zone")))
+                         ifelse(input$SelectCategory == "FLP_Name",
+                                paste0(input$SelectVar, " FLP"),
+                                paste0(input$SelectVar, " zone"))
+                         ))
   return(title)
 })
 

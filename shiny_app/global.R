@@ -21,7 +21,7 @@ library(shinydashboard)
 library(shinycssloaders)
 library(data.table)
 library(ggplot2)
-library(plotly)
+#library(plotly)
 library(dplyr)
 options(dplyr.summarize.inform = FALSE)
 library(sf)
@@ -41,7 +41,7 @@ library(kableExtra)
 library(pandoc)
 library(pagedown)
 library(htmltools)
-library(webshot)
+#library(webshot)
 library(reshape2)
 
 
@@ -73,6 +73,7 @@ tsa_sp <- st_transform(st_read("data/tsa_sp.shp"),4326)
 becmap <- st_transform(st_read("data/becmap.shp"),4326)
 beczonemap <- st_transform(st_read("data/beczone_lowres1000.shp"),4326)
 flp_sp <- st_transform(st_read("data/FLP_boundary.shp"),4326)
+flp_sp$FLP_Name[10] <- "tmíxʷ naqscn"
 
 
 # SPCD for deciduous 

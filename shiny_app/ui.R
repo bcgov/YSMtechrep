@@ -341,7 +341,10 @@ ui <- dashboardPage(
                       DT::dataTableOutput("sp_table")),
                column(width = 6,
                       h4("Damage Agent Codes / Names"),
-                      DT::dataTableOutput('dam_table'))
+                      DT::dataTableOutput('dam_table')),
+               column(width = 12,
+                      h4("Mortality Class / Damage Code"),
+                      uiOutput('mort_tab'))
              )
     ),
     tabPanel(title = "General Notes / Assumptions / References",
