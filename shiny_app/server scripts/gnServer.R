@@ -245,13 +245,13 @@ mort_tab <- reactive({
     "Immediate impact", "1", "White pine blister rust", "DSB", 
     "Immediate impact", "1", "Beetles", "IB, IBB, IBI, IBM, IBP, IBS, IBW",
     "Immediate impact", "1", "Natural disaster",
-    "Drought (ND), flooding (NF), slide (NS), windthrow (NW, NWS), snow (NY), fire (NB) excluding FD & LW, chemical injury (TC)",
+    "ND, NF, NS, NW, NWS, NY, NB (excluding FD & LW), TC",
     
     "Immediate impact", "1",  "Foliage disease with over 80% severity", "DF, DFE, DFS",
     "Incremental impact", "2", "Mistletoe", "DM, DMP, DMH",
     "Incremental impact", "2", "Canker", "DSA, DSE", 
     "Incremental impact", "2", "Insect damage with over 80% severity",
-    "Aphids (IAB), Budworm (IDW, IDB, IDE, IDH), Looper (IDI), Moth (IDT)",
+    "IAB, IDW, IDB, IDE, IDH, IDI, IDT",
     "Incremental impact", "2", "Terminal weevil", "IWP, IWS"
   )
   
@@ -297,7 +297,7 @@ output$deploymentDate <- renderUI({
   HTML(
     paste0(
       "This app was last updated on ",
-      "14 May, 2026", ". ",
+      "17 September, 2026", ". ",
       "The data and code for this app are available ",
       "<a href='https://github.com/bcgov/YSMtechrep' target='_blank'>here</a>."
     )
@@ -336,6 +336,11 @@ VRI</a> was completed.</p>
 
 <p>* All reported net merchantable volumes are at 12.5cm close utilization for 
 PL, 17.5cm for other species, and include all species (deciduous + conifer).</p>
+
+<p>* The <a href= 'https://catalogue.data.gov.bc.ca/dataset/forest-landscape-plans-boundary-current' target='_blank'>
+Forest Landscape Plans Boundary data layer</a> was downloaded from the BC Data Catalogue on September 11, 2026.</p>
+
+<p>* TSA, FLP, and BEC zone maps displayed in this report are simplified for mapping purposes.</p>
 
 </br><p><b>Young Stand Description</b></p>
 <p>* YSM leading species is compared to the VRI leading species for an 

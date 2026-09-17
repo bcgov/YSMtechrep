@@ -19,7 +19,8 @@ gridsize_all <- reactive({
     filter(SITE_IDENTIFIER %in% site_id()) %>% 
     select(GRID_SIZE) %>% 
     mutate(GRID_SIZE = ifelse(GRID_SIZE == "5km X 10km", "10km X 5km", GRID_SIZE),
-           GRID_SIZE = ifelse(GRID_SIZE == "4km X 4km", "4km X 8km", GRID_SIZE))
+           GRID_SIZE = ifelse(GRID_SIZE == "4km X 4km", "4km X 8km", GRID_SIZE)) %>%
+    filter(GRID_SIZE != "20km X 20km")
   
   gridsize_all <- data.frame(table(gridsize_all))
   
@@ -76,15 +77,15 @@ additionlaphrase2 <- reactive({
   req(input$SelectCategory)
   
   additionlaphrase2 <- ifelse(input$SelectCategory %in% c("BECsub", "BEC_ZONE", "FLP_Name", "manual") && 
-                                nrow(gridsize_all()) > 2,
+                                nrow(gridsize_all()) >= 2,
                              paste0("The samples may be from different grid sizes; the
                                     summary results should be interpreted with caution."), 
                              "")
   
-  additionlaphrase2 <- ifelse(input$SelectVar == "tmíxʷ naqscn",
-                              paste0("The samples may be from different grid sizes; the
-                                    summary results should be interpreted with caution."), 
-                              "")
+  #additionlaphrase2 <- ifelse(input$SelectVar == "tmíxʷ naqscn",
+  #                            paste0("The samples may be from different grid sizes; the
+  #                                  summary results should be interpreted with caution."), 
+  #                            "")
  
   return(additionlaphrase2)
 })
