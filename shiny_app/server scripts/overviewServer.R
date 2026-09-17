@@ -80,6 +80,11 @@ additionlaphrase2 <- reactive({
                              paste0("The samples may be from different grid sizes; the
                                     summary results should be interpreted with caution."), 
                              "")
+  
+  additionlaphrase2 <- ifelse(input$SelectVar == "tmíxʷ naqscn",
+                              paste0("The samples may be from different grid sizes; the
+                                    summary results should be interpreted with caution."), 
+                              "")
  
   return(additionlaphrase2)
 })

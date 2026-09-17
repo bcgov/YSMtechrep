@@ -572,8 +572,14 @@ if (input$format == "HTML"){
       kable(damcdtab())
       }
 ```
+
 :::
 ::::::::::::::
+#### Mortality Class / Damage Code
+```{r, include=T, echo=F, warning=FALSE, message = FALSE}
+mort_tab()
+```
+
 
 
 ## General Notes / Assumptions

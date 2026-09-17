@@ -236,7 +236,7 @@ output$dam_table <- renderDT({
 
 
 
-output$mort_tab <- renderUI({
+mort_tab <- reactive({
   
   mortality_tab <- tribble(
     ~`Mortality class`, ~`Mortality code`, ~Description, ~`Damage code`,
@@ -275,8 +275,13 @@ output$mort_tab <- renderUI({
     width(j = "Damage code", width = 3.0) |>
     set_table_properties(layout = "fixed", width = 1)
   
-  htmltools_value(ft)
+  ft
   
+})
+
+output$mort_tab <- renderUI({
+  
+  htmltools_value(mort_tab())
 })
 
 # App deployment date ----
