@@ -264,7 +264,7 @@ output$mort_tab <- renderUI({
       part = "body"
     ) |>
     font(fontname = "Arial", part = "all") |>
-    fontsize(size = 9, part = "all") |>
+    #fontsize(size = 9, part = "all") |>
     bold(part = "header") |>
     align(align = "left", part = "all") |>
     valign(valign = "top", part = "all") |>
