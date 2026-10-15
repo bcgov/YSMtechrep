@@ -512,3 +512,125 @@ output$pai_diff <- renderPlot({
   
   tassdiff()
 })
+
+
+
+
+siflex_tsr <- reactive({
+  req(input$SelectCategory, input$SelectVar)
+  
+  si_dat_1 <- SI_data %>%
+    filter(SITE_IDENTIFIER %in% site_id(), !is.na(MSYT_SI)) %>%
+    group_by(SITE_IDENTIFIER, SPECIES) %>%
+    slice(which.min(yrs_from_50)) 
+  
+  
+  si_dat1 <- si_dat_1 %>%
+    ungroup() %>%
+    group_by(SPECIES) %>%
+    summarise(n = n(),
+              age_avg = mean(meanage, na.rm = T),
+              grd_avg = mean(meansi, na.rm = T),
+              tsr_avg = mean(MSYT_SI, na.rm = T)) 
+  
+  si_dat1 <- si_dat1 %>%
+    ungroup() %>%
+    mutate(ROM = grd_avg/tsr_avg)
+  
+  si_dat2 <- si_dat_1 %>%
+    left_join(si_dat1, , by = "SPECIES")
+  
+  # *compute additional attribute to compute variance;
+  si_dat2 <- si_dat2 %>%
+    mutate(diffs_sqrd = (meansi - (ROM * MSYT_SI))**2)
+  
+  # *sum diffs squared;
+  si_dat3 <- si_dat2 %>%
+    group_by(SPECIES) %>%
+    summarise(sum_diffs_sqrd = sum(diffs_sqrd))
+  
+  # *merge differences squared back to sample by species detail;
+  si_dat4 <- si_dat2 %>%
+    left_join(si_dat3, by = "SPECIES")
+  
+  # *compute variance and confidence interval, and test for significiant ratio different from 1.0;
+  # *arbitrary set of miniumum number of obs per species to be 10;
+  si_dat4 <- si_dat4 %>%
+    rowwise() %>%
+    mutate(var_rom = ifelse(n >=2, sum_diffs_sqrd / (n * (n-1) * tsr_avg**2), NA),
+           l95_rom  = ifelse(n >=2, ROM - qt(0.975,n-1) * sqrt(var_rom), NA),
+           u95_rom  = ifelse(n >=2, ROM + qt(0.975,n-1) * sqrt(var_rom), NA),
+           # *standard signficance test;
+           sig_rom = ifelse(!is.na(l95_rom) & l95_rom < 1.0 & !is.na(u95_rom) & u95_rom > 1.0,
+                            "N", "Y"),
+           # *following review by p.ott 2021mar, recommend to use ROPE TO DEFINE ZONE OF PRACTICAL SIGNIFICANCE;
+           # *suggested to use 0.95 to 1.05 range of ratio to establish zone, rationale is that 5% rom is a 1m SI difference from a known;
+           # *SI of 20m, and results in a 10% change in culmination of MAI for a PL MSYT using TIPSY 4.4;
+           
+           # *95% confidence interval completely outside rope;
+           sig_rope = case_when((!is.na(l95_rom) & l95_rom > 1.05) | (!is.na(u95_rom) & u95_rom < 0.95) ~ "Y",
+                                # *95% confidence interval completely inside rope;
+                                (!is.na(l95_rom) & l95_rom > 0.95) & (!is.na(u95_rom) & u95_rom < 1.05) ~ "N",
+                                # *one 95% confidence limit inside rope, but the other outside rope, then inconclusive;
+                                (!is.na(l95_rom) & l95_rom < 1.05) & (!is.na(u95_rom) & u95_rom > 1.05) ~ "I",
+                                (!is.na(l95_rom) & l95_rom < 0.95) & (!is.na(u95_rom) & u95_rom > 0.95) ~ "I",
+                                # *both 95% confidence limits outside rope, then inconclusive;
+                                (!is.na(l95_rom) & l95_rom < 0.95) & (!is.na(u95_rom) & u95_rom > 1.05) ~ "I"
+           )
+    )
+  
+  si_dat5 <- si_dat4 %>%
+    ungroup() %>%
+    select(SPECIES, n, age_avg, grd_avg, tsr_avg, ROM, 
+           l95_rom, u95_rom, sig_rope) %>%
+    distinct() %>%
+    mutate(age_avg = round(age_avg, 0),
+           grd_avg = round(grd_avg, 1),
+           tsr_avg = round(tsr_avg, 1),
+           ROM = round(ROM, 2),
+           l95_rom = round(l95_rom, 2),
+           u95_rom = round(u95_rom, 2),
+           l95_rom = ifelse(n >= 10, l95_rom, "-"),
+           u95_rom = ifelse(n >= 10, u95_rom, "-"),
+           sig_rope = ifelse(n >= 10, sig_rope, "-")) %>%
+    arrange(SPECIES)
+  
+  si_dat6 <- si_dat5 %>%
+    filter(n >1)
+  
+  si_flex <- flextable(si_dat6) %>% 
+    bold(j = c(4,5,9), bold = TRUE, part = "all") %>%
+    color(i = ~ sig_rope == "Y", j = 9, color = 'red', part = "body") %>%
+    set_header_labels(values = c("Spc", "#Pairs", "YSM \nBHAge", "YSM", "TSR", "ROM", "L95%", "U95%", "ROPE \nTest")) %>% 
+    add_header_row(top = TRUE, values = c("Spc", "#Pairs", "YSM \nBHAge", "SI (m)", "Ratio of Means", "ROPE \nTest"), 
+                   colwidths = c(1,1,1,2,3,1)) %>%
+    merge_v(j = c(1, 2, 3, 9), part = "header") %>%
+    align(align = "center", part = "all")
+  
+  return(si_flex)   
+})
+
+
+output$comp_si_tab <- renderUI({
+  htmltools_value(siflex_tsr())
+})
+
+
+
+comp_si_text <- reactive({
+  req(input$SelectCategory, input$SelectVar)
+  sitext <- HTML("<ul>
+  <li>TSR SI values are based on PSPL values aggregated and averaged within each VRI polygon.</li>
+  <li>YSM ground-based site index (SI) values are compared with TSR SI values using the ratio of means (ROM) and a ROPE test with a 5% practical equivalence range.</li>
+  <li>Practical difference (Y) is indicated when the ROM confidence interval (CI) lies entirely outside the ROPE. No practical difference (N) is indicated when the ROM CI lies entirely within the ROPE. All other cases are classified as inconclusive (I).</li>
+  <li>When multiple measurements of site trees are available, the ground-based SI measurement closest to age 50 is selected.</li>
+  <li><strong>Species conversion:</strong> SX is converted to SS, SE, or SW, depending on the BEC zone. AC and AT are treated as interchangeable.</li>
+</ul>")
+  
+  return(sitext)
+})
+
+output$comp_si <- renderUI({
+  comp_si_text()
+})
+

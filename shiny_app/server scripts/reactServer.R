@@ -503,8 +503,13 @@ si_dat <- reactive({
   req(input$SelectCategory)
   input$genearate
   
+  #si_dat_1 <- SI_data %>%
+  #  filter(CLSTR_ID %in% clstr_id(), !is.na(ratio)) %>%
+  #  group_by(SITE_IDENTIFIER, SPECIES) %>%
+  #  slice(which.min(yrs_from_50))
+  
   si_dat_1 <- SI_data %>%
-    filter(CLSTR_ID %in% clstr_id(), !is.na(ratio)) %>%
+    filter(SITE_IDENTIFIER %in% site_id(), !is.na(ratio)) %>%
     group_by(SITE_IDENTIFIER, SPECIES) %>%
     slice(which.min(yrs_from_50))
   
